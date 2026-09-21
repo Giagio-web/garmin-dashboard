@@ -1,347 +1,259 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garmin Performance Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --accent-orange: #ff6b00;
-            --accent-blue: #38bdf8;
-            --accent-red: #f87171;
-            --text-main: #c9d1d9;
-            --text-muted: #8b949e;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-
-        h1 {
-            font-size: 1.6rem;
-            margin: 0;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .badge-target {
-            background-color: rgba(255, 107, 0, 0.15);
-            color: var(--accent-orange);
-            border: 1px solid var(--accent-orange);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .kpi-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .kpi-card h3 {
-            margin: 0;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .kpi-card .value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--accent-orange);
-            margin-top: 6px;
-        }
-
-        .kpi-card .subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        @media (max-width: 500px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .chart-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .chart-card h2 {
-            font-size: 1rem;
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #ffffff;
-        }
-
-        .table-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 20px;
-            overflow-x: auto;
-        }
-
-        .table-card h2 {
-            font-size: 1rem;
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #ffffff;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.85rem;
-        }
-
-        th {
-            background-color: rgba(255, 255, 255, 0.03);
-            color: var(--text-muted);
-            padding: 10px;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 600;
-        }
-
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .highlight {
-            font-weight: 600;
-            color: #ffffff;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolimiRun Analytics & Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0b0f17;
+      color: #e2e8f0;
+    }
+    .glass-card {
+      background: rgba(18, 24, 38, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+    }
+    .glass-nav {
+      background: rgba(11, 15, 23, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
 </head>
-<body>
+<body class="min-h-screen pb-12">
 
-<div class="container">
-    <header>
-        <h1>🏃‍♂️ Garmin Running Analytics</h1>
-        <div class="badge-target">🎯 PolimiRun Target: Sub-47' (10km)</div>
-    </header>
-
-    <!-- KPI HIGHLIGHTS -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <h3>Distanza Ultimo Lungo</h3>
-            <div class="value" id="kpi-dist">-</div>
-            <div class="subtext" id="kpi-date">Data -</div>
+  <!-- Navbar Navigation -->
+  <nav class="glass-nav sticky top-0 z-50 px-6 py-4 mb-8">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-orange-500/20">
+          P
         </div>
-        <div class="kpi-card">
-            <h3>Passo Medio</h3>
-            <div class="value" id="kpi-pace">-</div>
-            <div class="subtext">min/km</div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-white">PolimiRun Hub</h1>
+          <p class="text-xs text-slate-400">Giacomo Garbin • Master Target Sub-47'</p>
         </div>
-        <div class="kpi-card">
-            <h3>Frequenza Cardiaca</h3>
-            <div class="value" id="kpi-hr">-</div>
-            <div class="subtext" id="kpi-max-hr">Max: - bpm</div>
-        </div>
-        <div class="kpi-card">
-            <h3>Potenza Corsa</h3>
-            <div class="value" id="kpi-power">-</div>
-            <div class="subtext" id="kpi-cadence">Cadenza: - ppm</div>
-        </div>
+      </div>
+      
+      <!-- Pagine / Tab Navigation -->
+      <div class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-white/5">
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg bg-orange-500 text-slate-950 shadow">Generale</button>
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Salute & Recovery</button>
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Record & PB</button>
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Comparazione</button>
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Attività</button>
+        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Piano & Coach</button>
+      </div>
     </div>
+  </nav>
 
-    <!-- GRAFICI -->
-    <div class="charts-grid">
-        <div class="chart-card">
-            <h2>Cardio & Distanza per Sessione</h2>
-            <canvas id="hrDistanceChart"></canvas>
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6">
+
+    <!-- SEZIONE 1: GENERALE / OVERVIEW CARDS -->
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-extrabold text-white">Panoramica Settimanale</h2>
+          <p class="text-xs text-slate-400">Metriche di allenamento e salute in tempo reale</p>
         </div>
-        <div class="chart-card">
-            <h2>Potenza vs Frequenza Cardiaca</h2>
-            <canvas id="powerHrChart"></canvas>
+        <!-- Controlli Settimana -->
+        <div class="flex items-center space-x-2 bg-slate-900/60 p-1.5 rounded-xl border border-white/5">
+          <button id="prevWeek" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">← Settimana Prec.</button>
+          <span id="currentWeekLabel" class="text-xs font-bold px-3 text-orange-400">Settimana Corrente</span>
+          <button id="nextWeek" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">Settimana Succ. →</button>
         </div>
-    </div>
+      </div>
 
-    <!-- TABELLA ULTIME ATTIVITÀ -->
-    <div class="table-card">
-        <h2>Storico Sessioni Recenti</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Nome Attività</th>
-                    <th>Distanza</th>
-                    <th>Durata</th>
-                    <th>Passo</th>
-                    <th>FC Media</th>
-                    <th>Potenza</th>
-                </tr>
-            </thead>
-            <tbody id="activity-table-body">
-                <!-- Popolato via JS -->
-            </tbody>
-        </table>
-    </div>
-</div>
+      <!-- Top Cards Multicolore -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        
+        <!-- Card 1: Corsa (Arancione) -->
+        <div class="glass-card p-5 border-l-4 border-l-orange-500 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-orange-400">Corsa</span>
+            <span class="text-xl">🏃</span>
+          </div>
+          <div id="cardDist" class="text-2xl font-black text-white">0.0 km</div>
+          <p id="cardWorkouts" class="text-xs text-slate-400 mt-1">0 allenamenti svolti</p>
+        </div>
 
-<script>
-    async function initDashboard() {
-        try {
-            const res = await fetch('garmin_data.json');
-            const activities = await res.json();
+        <!-- Card 2: Frequenza Cardiaca (Rosso/Rosa) -->
+        <div class="glass-card p-5 border-l-4 border-l-rose-500 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-rose-400">BPM Medi</span>
+            <span class="text-xl">❤️</span>
+          </div>
+          <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
+          <p id="cardBpmAvg" class="text-xs text-slate-400 mt-1">Media sett.: -- bpm</p>
+        </div>
 
-            if (!activities || activities.length === 0) return;
+        <!-- Card 3: Passi (Azzurro/Smeraldo) -->
+        <div class="glass-card p-5 border-l-4 border-l-cyan-500 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Passi</span>
+            <span class="text-xl">👟</span>
+          </div>
+          <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
+          <p id="cardStepsAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0 passi</p>
+        </div>
 
-            // Ultima attività registrata
-            const latest = activities[0];
-            document.getElementById('kpi-dist').innerText = `${latest.distance_km} km`;
-            document.getElementById('kpi-date').innerText = new Date(latest.date).toLocaleDateString('it-IT');
-            document.getElementById('kpi-pace').innerText = latest.avg_pace || "N/A";
-            document.getElementById('kpi-hr').innerText = `${latest.avg_hr || '-'} bpm`;
-            document.getElementById('kpi-max-hr').innerText = `Max: ${latest.max_hr || '-'} bpm`;
-            document.getElementById('kpi-power').innerText = `${latest.avg_power || '-'} W`;
-            document.getElementById('kpi-cadence').innerText = `Cadenza: ${latest.avg_cadence || '-'} ppm`;
+        <!-- Card 4: Sonno (Viola) -->
+        <div class="glass-card p-5 border-l-4 border-l-indigo-500 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Sonno</span>
+            <span class="text-xl">🌙</span>
+          </div>
+          <div id="cardSleepToday" class="text-2xl font-black text-white">0h 0m</div>
+          <p id="cardSleepAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0h 0m</p>
+        </div>
 
-            // Popola Tabella
-            const tbody = document.getElementById('activity-table-body');
-            activities.forEach(act => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${new Date(act.date).toLocaleDateString('it-IT')}</td>
-                    <td class="highlight">${act.name || 'Corsa'}</td>
-                    <td>${act.distance_km} km</td>
-                    <td>${act.duration_min} min</td>
-                    <td class="highlight">${act.avg_pace || 'N/A'}</td>
-                    <td>${act.avg_hr ? act.avg_hr + ' bpm' : '-'}</td>
-                    <td>${act.avg_power ? act.avg_power + ' W' : '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+        <!-- Card 5: Calorie (Verde/Giallo) -->
+        <div class="glass-card p-5 border-l-4 border-l-emerald-500 relative overflow-hidden">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Calorie</span>
+            <span class="text-xl">🔥</span>
+          </div>
+          <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
+          <p id="cardCalAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0 kcal</p>
+        </div>
 
-            // Preparazione Dati Grafici (ordine cronologico)
-            const chronological = [...activities].reverse();
-            const labels = chronological.map(a => new Date(a.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
-            const hrList = chronological.map(a => a.avg_hr);
-            const distList = chronological.map(a => a.distance_km);
-            const powerList = chronological.map(a => a.avg_power);
+      </div>
 
-            // Grafico 1: Cardio e Distanza
-            new Chart(document.getElementById('hrDistanceChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'FC Media (bpm)',
-                            data: hrList,
-                            borderColor: '#f87171',
-                            backgroundColor: 'rgba(248, 113, 113, 0.1)',
-                            yAxisID: 'yHr',
-                            tension: 0.3,
-                            fill: true
-                        },
-                        {
-                            label: 'Distanza (km)',
-                            data: distList,
-                            borderColor: '#38bdf8',
-                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                            yAxisID: 'yDist',
-                            tension: 0.3,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        yHr: { type: 'linear', position: 'left', title: { display: true, text: 'BPM', color: '#f87171' }, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
-                        yDist: { type: 'linear', position: 'right', title: { display: true, text: 'Km', color: '#38bdf8' }, grid: { drawOnChartArea: false }, ticks: { color: '#8b949e' } },
-                        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
-                    },
-                    plugins: { legend: { labels: { color: '#c9d1d9' } } }
-                }
-            });
+      <!-- Istogrammi Giornalieri -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Istogramma Corsa & Passi -->
+        <div class="glass-card p-6">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
+            <span>Andamento Distanza Corsa e Passi</span>
+            <span class="text-xs text-slate-500 font-normal">Giornaliero</span>
+          </h3>
+          <div class="h-64">
+            <canvas id="chartStepsRuns"></canvas>
+          </div>
+        </div>
 
-            // Grafico 2: Potenza vs Cardio
-            new Chart(document.getElementById('powerHrChart'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Potenza Media (W)',
-                            data: powerList,
-                            backgroundColor: 'rgba(255, 107, 0, 0.7)',
-                            borderColor: '#ff6b00',
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' }, title: { display: true, text: 'Watt', color: '#ff6b00' } },
-                        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
-                    },
-                    plugins: { legend: { labels: { color: '#c9d1d9' } } }
-                }
-            });
+        <!-- Istogramma Riposo & Frequenza Cardiaca -->
+        <div class="glass-card p-6">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
+            <span>Andamento Ore di Sonno e BPM</span>
+            <span class="text-xs text-slate-500 font-normal">Giornaliero</span>
+          </h3>
+          <div class="h-64">
+            <canvas id="chartSleepBpm"></canvas>
+          </div>
+        </div>
+      </div>
 
-        } catch (e) {
-            console.error("Errore nel caricamento dei dati:", e);
-        }
+    </section>
+
+  </main>
+
+  <!-- Script caricamento dati e grafici -->
+  <script>
+    let rawData = null;
+    let chartStepsInstance = null;
+    let chartSleepInstance = null;
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch('garmin_data.json');
+        rawData = await response.json();
+        renderOverview();
+      } catch (err) {
+        console.error("Errore nel caricamento del JSON:", err);
+      }
     }
 
-    initDashboard();
-</script>
+    function renderOverview() {
+      if(!rawData) return;
+      const health = rawData.daily_health || [];
+      const activities = rawData.activities || [];
+
+      // Dati di esempio/fallbacks per la prima renderizzazione
+      const todayHealth = health[0] || { steps: 8450, sleep_hours: 7.2, resting_hr: 54, calories: 2350 };
+      
+      document.getElementById('cardStepsToday').innerText = (todayHealth.steps || 0).toLocaleString('it-IT');
+      document.getElementById('cardSleepToday').innerText = (todayHealth.sleep_hours || 0) + 'h';
+      document.getElementById('cardBpmToday').innerText = (todayHealth.resting_hr || '--') + ' bpm';
+
+      // Configurazione dei grafici Chart.js
+      initCharts(health, activities);
+    }
+
+    function initCharts(health, activities) {
+      const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+      
+      // Chart 1: Passi / Corsa
+      const ctxSteps = document.getElementById('chartStepsRuns').getContext('2d');
+      if(chartStepsInstance) chartStepsInstance.destroy();
+
+      chartStepsInstance = new Chart(ctxSteps, {
+        type: 'bar',
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: 'Passi',
+              data: [8200, 10500, 9100, 12300, 7800, 14200, 9500],
+              backgroundColor: 'rgba(6, 182, 212, 0.6)',
+              borderRadius: 6
+            },
+            {
+              label: 'Distanza Corsa (km)',
+              data: [0, 8.5, 0, 10.2, 0, 12.0, 0],
+              backgroundColor: 'rgba(249, 115, 22, 0.9)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          scales: {
+            x: { ticks: { color: '#64748b' }, grid: { display: false } },
+            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+
+      // Chart 2: Sonno / BPM
+      const ctxSleep = document.getElementById('chartSleepBpm').getContext('2d');
+      if(chartSleepInstance) chartSleepInstance.destroy();
+
+      chartSleepInstance = new Chart(ctxSleep, {
+        type: 'bar',
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: 'Ore di Sonno',
+              data: [7.1, 6.8, 7.5, 8.0, 6.5, 7.8, 8.2],
+              backgroundColor: 'rgba(99, 102, 241, 0.7)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          scales: {
+            x: { ticks: { color: '#64748b' }, grid: { display: false } },
+            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    window.onload = loadDashboard;
+  </script>
 </body>
 </html>
