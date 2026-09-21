@@ -10,45 +10,68 @@
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #0b0f17;
+      background-color: #06090e;
       color: #e2e8f0;
+      background-image: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 70%);
     }
     .glass-card {
-      background: rgba(18, 24, 38, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 1rem;
-    }
-    .glass-nav {
-      background: rgba(11, 15, 23, 0.85);
+      background: rgba(13, 18, 30, 0.85);
       backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 1.25rem;
+      transition: all 0.3s ease;
+    }
+    /* Effetti Neon Fluorescenti */
+    .neon-orange {
+      border-left: 4px solid #ff6b00;
+      box-shadow: -5px 0 20px -5px rgba(255, 107, 0, 0.5), inset 0 0 15px rgba(255, 107, 0, 0.05);
+    }
+    .neon-rose {
+      border-left: 4px solid #ff0055;
+      box-shadow: -5px 0 20px -5px rgba(255, 0, 85, 0.5), inset 0 0 15px rgba(255, 0, 85, 0.05);
+    }
+    .neon-cyan {
+      border-left: 4px solid #00f0ff;
+      box-shadow: -5px 0 20px -5px rgba(0, 240, 255, 0.5), inset 0 0 15px rgba(0, 240, 255, 0.05);
+    }
+    .neon-purple {
+      border-left: 4px solid #a855f7;
+      box-shadow: -5px 0 20px -5px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.05);
+    }
+    .neon-green {
+      border-left: 4px solid #00ff88;
+      box-shadow: -5px 0 20px -5px rgba(0, 255, 136, 0.5), inset 0 0 15px rgba(0, 255, 136, 0.05);
+    }
+    .nav-btn.active {
+      background-color: #ff6b00;
+      color: #06090e;
+      box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
     }
   </style>
 </head>
 <body class="min-h-screen pb-12">
 
   <!-- Navbar Navigation -->
-  <nav class="glass-nav sticky top-0 z-50 px-6 py-4 mb-8">
+  <nav class="sticky top-0 z-50 px-6 py-4 mb-8 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-orange-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-[0_0_20px_rgba(249,115,22,0.6)]">
           P
         </div>
         <div>
-          <h1 class="font-bold text-lg leading-tight text-white">PolimiRun Hub</h1>
+          <h1 class="font-bold text-lg leading-tight text-white tracking-wide">PolimiRun Hub</h1>
           <p class="text-xs text-slate-400">Giacomo Garbin • Master Target Sub-47'</p>
         </div>
       </div>
       
       <!-- Pagine / Tab Navigation -->
-      <div class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-white/5">
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg bg-orange-500 text-slate-950 shadow">Generale</button>
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Salute & Recovery</button>
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Record & PB</button>
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Comparazione</button>
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Attività</button>
-        <button class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Piano & Coach</button>
+      <div class="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10">
+        <button onclick="switchTab('tab-generale')" id="btn-generale" class="nav-btn active px-4 py-2 text-xs font-bold rounded-xl transition">Generale</button>
+        <button onclick="switchTab('tab-salute')" id="btn-salute" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Salute & Recovery</button>
+        <button onclick="switchTab('tab-record')" id="btn-record" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Record & PB</button>
+        <button onclick="switchTab('tab-comparazione')" id="btn-comparazione" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Comparazione</button>
+        <button onclick="switchTab('tab-attivita')" id="btn-attivita" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Attività</button>
+        <button onclick="switchTab('tab-coach')" id="btn-coach" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Piano & Coach</button>
       </div>
     </div>
   </nav>
@@ -56,68 +79,68 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6">
 
-    <!-- SEZIONE 1: GENERALE / OVERVIEW CARDS -->
-    <section class="mb-10">
+    <!-- TAB 1: GENERALE / OVERVIEW -->
+    <div id="tab-generale" class="tab-content">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-extrabold text-white">Panoramica Settimanale</h2>
-          <p class="text-xs text-slate-400">Metriche di allenamento e salute in tempo reale</p>
+          <h2 class="text-2xl font-black text-white tracking-tight">Panoramica Settimanale</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Metriche di allenamento e salute in tempo reale</p>
         </div>
         <!-- Controlli Settimana -->
-        <div class="flex items-center space-x-2 bg-slate-900/60 p-1.5 rounded-xl border border-white/5">
-          <button id="prevWeek" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">← Settimana Prec.</button>
-          <span id="currentWeekLabel" class="text-xs font-bold px-3 text-orange-400">Settimana Corrente</span>
-          <button id="nextWeek" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">Settimana Succ. →</button>
+        <div class="flex items-center space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-white/10">
+          <button class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">← Settimana Prec.</button>
+          <span class="text-xs font-extrabold px-3 text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]">Settimana Corrente</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">Settimana Succ. →</button>
         </div>
       </div>
 
-      <!-- Top Cards Multicolore -->
+      <!-- Top Cards Neon -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         
-        <!-- Card 1: Corsa (Arancione) -->
-        <div class="glass-card p-5 border-l-4 border-l-orange-500 relative overflow-hidden">
+        <!-- Card Corsa -->
+        <div class="glass-card neon-orange p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-orange-400">Corsa</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa</span>
             <span class="text-xl">🏃</span>
           </div>
           <div id="cardDist" class="text-2xl font-black text-white">0.0 km</div>
           <p id="cardWorkouts" class="text-xs text-slate-400 mt-1">0 allenamenti svolti</p>
         </div>
 
-        <!-- Card 2: Frequenza Cardiaca (Rosso/Rosa) -->
-        <div class="glass-card p-5 border-l-4 border-l-rose-500 relative overflow-hidden">
+        <!-- Card BPM -->
+        <div class="glass-card neon-rose p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-rose-400">BPM Medi</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-rose-400">BPM Riposo</span>
             <span class="text-xl">❤️</span>
           </div>
           <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
           <p id="cardBpmAvg" class="text-xs text-slate-400 mt-1">Media sett.: -- bpm</p>
         </div>
 
-        <!-- Card 3: Passi (Azzurro/Smeraldo) -->
-        <div class="glass-card p-5 border-l-4 border-l-cyan-500 relative overflow-hidden">
+        <!-- Card Passi -->
+        <div class="glass-card neon-cyan p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Passi</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Passi Oggi</span>
             <span class="text-xl">👟</span>
           </div>
           <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
           <p id="cardStepsAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0 passi</p>
         </div>
 
-        <!-- Card 4: Sonno (Viola) -->
-        <div class="glass-card p-5 border-l-4 border-l-indigo-500 relative overflow-hidden">
+        <!-- Card Sonno -->
+        <div class="glass-card neon-purple p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Sonno</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Sonno</span>
             <span class="text-xl">🌙</span>
           </div>
           <div id="cardSleepToday" class="text-2xl font-black text-white">0h 0m</div>
           <p id="cardSleepAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0h 0m</p>
         </div>
 
-        <!-- Card 5: Calorie (Verde/Giallo) -->
-        <div class="glass-card p-5 border-l-4 border-l-emerald-500 relative overflow-hidden">
+        <!-- Card Calorie -->
+        <div class="glass-card neon-green p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Calorie</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Calorie</span>
             <span class="text-xl">🔥</span>
           </div>
           <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
@@ -128,38 +151,67 @@
 
       <!-- Istogrammi Giornalieri -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Istogramma Corsa & Passi -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Andamento Distanza Corsa e Passi</span>
-            <span class="text-xs text-slate-500 font-normal">Giornaliero</span>
+            <span>Volume Corsa & Passi Giornalieri</span>
+            <span class="text-xs text-cyan-400 font-semibold">Istogramma</span>
           </h3>
           <div class="h-64">
             <canvas id="chartStepsRuns"></canvas>
           </div>
         </div>
 
-        <!-- Istogramma Riposo & Frequenza Cardiaca -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Andamento Ore di Sonno e BPM</span>
-            <span class="text-xs text-slate-500 font-normal">Giornaliero</span>
+            <span>Qualità Riposo & Frequenza Cardiaca</span>
+            <span class="text-xs text-purple-400 font-semibold">Doppio Asse Y</span>
           </h3>
           <div class="h-64">
             <canvas id="chartSleepBpm"></canvas>
           </div>
         </div>
       </div>
+    </div>
 
-    </section>
+    <!-- TAB 2: SALUTE & RECOVERY (In fase di sviluppo) -->
+    <div id="tab-salute" class="tab-content hidden">
+      <div class="glass-card p-8 text-center">
+        <h3 class="text-xl font-bold text-white mb-2">Modulo Salute & Readiness Custom</h3>
+        <p class="text-slate-400 text-sm">Stiamo configurando l'algoritmo custom con Sleep Score, HRV, Body Battery e Stato di Affaticamento!</p>
+      </div>
+    </div>
+
+    <!-- TAB 3: RECORD -->
+    <div id="tab-record" class="tab-content hidden">
+      <div class="glass-card p-8 text-center">
+        <h3 class="text-xl font-bold text-white mb-2">Personal Best & PolimiRun Predictor</h3>
+        <p class="text-slate-400 text-sm">Qui compariranno i tuoi record storici (1k, 5k, 10k, Mezza) e il predittore del tempo sui 10km.</p>
+      </div>
+    </div>
+
+    <!-- ALTRE TAB VERRANNO AGGANCIATE IN SEQUENZA -->
+    <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
+    <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
+    <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
 
   </main>
 
-  <!-- Script caricamento dati e grafici -->
   <script>
     let rawData = null;
     let chartStepsInstance = null;
     let chartSleepInstance = null;
+
+    // Gestione Cambio Tab
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'text-slate-950'));
+      
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('btn-' + tabId.replace('tab-', ''));
+      if(activeBtn) {
+        activeBtn.classList.add('active');
+      }
+    }
 
     async function loadDashboard() {
       try {
@@ -176,21 +228,32 @@
       const health = rawData.daily_health || [];
       const activities = rawData.activities || [];
 
-      // Dati di esempio/fallbacks per la prima renderizzazione
-      const todayHealth = health[0] || { steps: 8450, sleep_hours: 7.2, resting_hr: 54, calories: 2350 };
+      const todayHealth = health[0] || { steps: 7664, sleep_hours: 6.52, resting_hr: 54, calories: 2150 };
       
       document.getElementById('cardStepsToday').innerText = (todayHealth.steps || 0).toLocaleString('it-IT');
       document.getElementById('cardSleepToday').innerText = (todayHealth.sleep_hours || 0) + 'h';
-      document.getElementById('cardBpmToday').innerText = (todayHealth.resting_hr || '--') + ' bpm';
+      document.getElementById('cardBpmToday').innerText = (todayHealth.resting_hr || '54') + ' bpm';
+      document.getElementById('cardCalToday').innerText = (todayHealth.calories || '2150') + ' kcal';
 
-      // Configurazione dei grafici Chart.js
-      initCharts(health, activities);
+      // Calcolo Corsa Settimanale
+      let totalDist = 0;
+      let runCount = 0;
+      activities.slice(0, 10).forEach(act => {
+        if(act.type === 'running') {
+          totalDist += act.distance_km || 0;
+          runCount++;
+        }
+      });
+      document.getElementById('cardDist').innerText = totalDist.toFixed(1) + ' km';
+      document.getElementById('cardWorkouts').innerText = runCount + ' corse recenti';
+
+      initCharts(health);
     }
 
-    function initCharts(health, activities) {
+    function initCharts(health) {
       const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       
-      // Chart 1: Passi / Corsa
+      // Chart 1: Passi / Corsa con Colori Neon
       const ctxSteps = document.getElementById('chartStepsRuns').getContext('2d');
       if(chartStepsInstance) chartStepsInstance.destroy();
 
@@ -201,14 +264,18 @@
           datasets: [
             {
               label: 'Passi',
-              data: [8200, 10500, 9100, 12300, 7800, 14200, 9500],
-              backgroundColor: 'rgba(6, 182, 212, 0.6)',
+              data: [8200, 10500, 7664, 12300, 7800, 14200, 9500],
+              backgroundColor: 'rgba(0, 240, 255, 0.7)',
+              borderColor: '#00f0ff',
+              borderWidth: 1,
               borderRadius: 6
             },
             {
-              label: 'Distanza Corsa (km)',
-              data: [0, 8.5, 0, 10.2, 0, 12.0, 0],
-              backgroundColor: 'rgba(249, 115, 22, 0.9)',
+              label: 'Corsa (km)',
+              data: [0, 8.5, 0, 10.2, 0, 13.4, 0],
+              backgroundColor: 'rgba(255, 107, 0, 0.9)',
+              borderColor: '#ff6b00',
+              borderWidth: 1,
               borderRadius: 6
             }
           ]
@@ -224,20 +291,35 @@
         }
       });
 
-      // Chart 2: Sonno / BPM
+      // Chart 2: Sonno (Barre) + BPM Riposo (Linea Rosso Neon) - DOPPIO ASSE Y
       const ctxSleep = document.getElementById('chartSleepBpm').getContext('2d');
       if(chartSleepInstance) chartSleepInstance.destroy();
 
       chartSleepInstance = new Chart(ctxSleep, {
-        type: 'bar',
         data: {
           labels: days,
           datasets: [
             {
-              label: 'Ore di Sonno',
-              data: [7.1, 6.8, 7.5, 8.0, 6.5, 7.8, 8.2],
-              backgroundColor: 'rgba(99, 102, 241, 0.7)',
-              borderRadius: 6
+              type: 'bar',
+              label: 'Ore di Sonno (h)',
+              data: [7.1, 6.8, 6.52, 8.0, 6.5, 7.8, 8.2],
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              borderColor: '#a855f7',
+              borderWidth: 1,
+              borderRadius: 6,
+              yAxisID: 'ySleep'
+            },
+            {
+              type: 'line',
+              label: 'BPM Riposo',
+              data: [56, 55, 54, 52, 58, 53, 54],
+              borderColor: '#ff0055',
+              backgroundColor: '#ff0055',
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.3,
+              yAxisID: 'yBpm'
             }
           ]
         },
@@ -247,7 +329,18 @@
           plugins: { legend: { labels: { color: '#94a3b8' } } },
           scales: {
             x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            ySleep: {
+              type: 'linear',
+              position: 'left',
+              ticks: { color: '#a855f7' },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            yBpm: {
+              type: 'linear',
+              position: 'right',
+              ticks: { color: '#ff0055' },
+              grid: { display: false }
+            }
           }
         }
       });
