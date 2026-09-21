@@ -3,123 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garmin Running Dashboard</title>
+    <title>Garmin Performance Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --accent-orange: #ff6b00;
+            --accent-blue: #38bdf8;
+            --accent-red: #f87171;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
         }
+
         .container {
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
         }
-        h1 {
-            text-align: center;
-            color: #38bdf8;
-            font-size: 1.8rem;
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
             margin-bottom: 25px;
         }
-        .stats-grid {
+
+        h1 {
+            font-size: 1.6rem;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-target {
+            background-color: rgba(255, 107, 0, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid var(--accent-orange);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
         }
-        .card {
-            background-color: #1e293b;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+
+        .kpi-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
             text-align: center;
         }
-        .card h3 {
+
+        .kpi-card h3 {
             margin: 0;
-            font-size: 0.85rem;
-            color: #94a3b8;
+            font-size: 0.75rem;
+            color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .card .value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #f35627;
-            margin-top: 5px;
+
+        .kpi-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+            margin-top: 6px;
         }
-        .chart-container {
-            background-color: #1e293b;
+
+        .kpi-card .subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 500px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
             padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+        }
+
+        .chart-card h2 {
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .table-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .table-card h2 {
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .highlight {
+            font-weight: 600;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏃‍♂️ Garmin Running Dashboard</h1>
-        
-        <div class="stats-grid">
-            <div class="card">
-                <h3>Ultima Corsa</h3>
-                <div class="value" id="last-dist">- km</div>
-            </div>
-            <div class="card">
-                <h3>FC Media</h3>
-                <div class="value" id="last-hr">- bpm</div>
-            </div>
-            <div class="card">
-                <h3>Potenza Media</h3>
-                <div class="value" id="last-power">- W</div>
-            </div>
-        </div>
 
-        <div class="chart-container">
-            <canvas id="hrChart"></canvas>
+<div class="container">
+    <header>
+        <h1>🏃‍♂️ Garmin Running Analytics</h1>
+        <div class="badge-target">🎯 PolimiRun Target: Sub-47' (10km)</div>
+    </header>
+
+    <!-- KPI HIGHLIGHTS -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <h3>Distanza Ultimo Lungo</h3>
+            <div class="value" id="kpi-dist">-</div>
+            <div class="subtext" id="kpi-date">Data -</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Passo Medio</h3>
+            <div class="value" id="kpi-pace">-</div>
+            <div class="subtext">min/km</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Frequenza Cardiaca</h3>
+            <div class="value" id="kpi-hr">-</div>
+            <div class="subtext" id="kpi-max-hr">Max: - bpm</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Potenza Corsa</h3>
+            <div class="value" id="kpi-power">-</div>
+            <div class="subtext" id="kpi-cadence">Cadenza: - ppm</div>
         </div>
     </div>
 
-    <script>
-        async function loadDashboard() {
-            const response = await fetch('garmin_data.json');
-            const data = await response.json();
-            
-            // Ordina dal meno recente al più recente per il grafico
-            const sortedData = data.slice().reverse();
+    <!-- GRAFICI -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h2>Cardio & Distanza per Sessione</h2>
+            <canvas id="hrDistanceChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h2>Potenza vs Frequenza Cardiaca</h2>
+            <canvas id="powerHrChart"></canvas>
+        </div>
+    </div>
 
-            if (data.length > 0) {
-                const latest = data[0];
-                document.getElementById('last-dist').innerText = `${latest.distance_km} km`;
-                document.getElementById('last-hr').innerText = `${latest.avg_hr || '-'} bpm`;
-                document.getElementById('last-power').innerText = `${latest.avg_power || '-'} W`;
-            }
+    <!-- TABELLA ULTIME ATTIVITÀ -->
+    <div class="table-card">
+        <h2>Storico Sessioni Recenti</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Nome Attività</th>
+                    <th>Distanza</th>
+                    <th>Durata</th>
+                    <th>Passo</th>
+                    <th>FC Media</th>
+                    <th>Potenza</th>
+                </tr>
+            </thead>
+            <tbody id="activity-table-body">
+                <!-- Popolato via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
-            const labels = sortedData.map(d => new Date(d.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
-            const hrData = sortedData.map(d => d.avg_hr);
-            const distData = sortedData.map(d => d.distance_km);
+<script>
+    async function initDashboard() {
+        try {
+            const res = await fetch('garmin_data.json');
+            const activities = await res.json();
 
-            const ctx = document.getElementById('hrChart').getContext('2d');
-            new Chart(ctx, {
+            if (!activities || activities.length === 0) return;
+
+            // Ultima attività registrata
+            const latest = activities[0];
+            document.getElementById('kpi-dist').innerText = `${latest.distance_km} km`;
+            document.getElementById('kpi-date').innerText = new Date(latest.date).toLocaleDateString('it-IT');
+            document.getElementById('kpi-pace').innerText = latest.avg_pace || "N/A";
+            document.getElementById('kpi-hr').innerText = `${latest.avg_hr || '-'} bpm`;
+            document.getElementById('kpi-max-hr').innerText = `Max: ${latest.max_hr || '-'} bpm`;
+            document.getElementById('kpi-power').innerText = `${latest.avg_power || '-'} W`;
+            document.getElementById('kpi-cadence').innerText = `Cadenza: ${latest.avg_cadence || '-'} ppm`;
+
+            // Popola Tabella
+            const tbody = document.getElementById('activity-table-body');
+            activities.forEach(act => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(act.date).toLocaleDateString('it-IT')}</td>
+                    <td class="highlight">${act.name || 'Corsa'}</td>
+                    <td>${act.distance_km} km</td>
+                    <td>${act.duration_min} min</td>
+                    <td class="highlight">${act.avg_pace || 'N/A'}</td>
+                    <td>${act.avg_hr ? act.avg_hr + ' bpm' : '-'}</td>
+                    <td>${act.avg_power ? act.avg_power + ' W' : '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Preparazione Dati Grafici (ordine cronologico)
+            const chronological = [...activities].reverse();
+            const labels = chronological.map(a => new Date(a.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+            const hrList = chronological.map(a => a.avg_hr);
+            const distList = chronological.map(a => a.distance_km);
+            const powerList = chronological.map(a => a.avg_power);
+
+            // Grafico 1: Cardio e Distanza
+            new Chart(document.getElementById('hrDistanceChart'), {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [
                         {
                             label: 'FC Media (bpm)',
-                            data: hrData,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            yAxisID: 'y1',
+                            data: hrList,
+                            borderColor: '#f87171',
+                            backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                            yAxisID: 'yHr',
                             tension: 0.3,
                             fill: true
                         },
                         {
                             label: 'Distanza (km)',
-                            data: distData,
+                            data: distList,
                             borderColor: '#38bdf8',
                             backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                            yAxisID: 'y2',
+                            yAxisID: 'yDist',
                             tension: 0.3,
                             fill: true
                         }
@@ -128,35 +302,46 @@
                 options: {
                     responsive: true,
                     scales: {
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'BPM', color: '#ef4444' },
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        y2: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'Km', color: '#38bdf8' },
-                            grid: { drawOnChartArea: false },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        x: {
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        }
+                        yHr: { type: 'linear', position: 'left', title: { display: true, text: 'BPM', color: '#f87171' }, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+                        yDist: { type: 'linear', position: 'right', title: { display: true, text: 'Km', color: '#38bdf8' }, grid: { drawOnChartArea: false }, ticks: { color: '#8b949e' } },
+                        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
                     },
-                    plugins: {
-                        legend: { labels: { color: '#f8fafc' } }
-                    }
+                    plugins: { legend: { labels: { color: '#c9d1d9' } } }
                 }
             });
-        }
 
-        loadDashboard();
-    </script>
+            // Grafico 2: Potenza vs Cardio
+            new Chart(document.getElementById('powerHrChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Potenza Media (W)',
+                            data: powerList,
+                            backgroundColor: 'rgba(255, 107, 0, 0.7)',
+                            borderColor: '#ff6b00',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' }, title: { display: true, text: 'Watt', color: '#ff6b00' } },
+                        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
+                    },
+                    plugins: { legend: { labels: { color: '#c9d1d9' } } }
+                }
+            });
+
+        } catch (e) {
+            console.error("Errore nel caricamento dei dati:", e);
+        }
+    }
+
+    initDashboard();
+</script>
 </body>
 </html>
