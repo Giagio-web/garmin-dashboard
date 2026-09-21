@@ -10,63 +10,69 @@
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #06090e;
+      background-color: #050811;
       color: #e2e8f0;
-      background-image: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 70%);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(255, 107, 0, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(0, 212, 255, 0.12) 0%, transparent 40%);
+      background-attachment: fixed;
     }
     .glass-card {
-      background: rgba(13, 18, 30, 0.85);
+      background: rgba(10, 16, 28, 0.85);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 1.25rem;
       transition: all 0.3s ease;
     }
-    /* Effetti Neon Fluorescenti */
-    .neon-orange {
+    
+    /* Neon Themes: Gradazioni Arancione e Azzurro */
+    .neon-orange-bright {
       border-left: 4px solid #ff6b00;
-      box-shadow: -5px 0 20px -5px rgba(255, 107, 0, 0.5), inset 0 0 15px rgba(255, 107, 0, 0.05);
+      box-shadow: -5px 0 25px -3px rgba(255, 107, 0, 0.6), inset 0 0 15px rgba(255, 107, 0, 0.08);
     }
-    .neon-rose {
-      border-left: 4px solid #ff0055;
-      box-shadow: -5px 0 20px -5px rgba(255, 0, 85, 0.5), inset 0 0 15px rgba(255, 0, 85, 0.05);
-    }
-    .neon-cyan {
+    .neon-cyan-bright {
       border-left: 4px solid #00f0ff;
-      box-shadow: -5px 0 20px -5px rgba(0, 240, 255, 0.5), inset 0 0 15px rgba(0, 240, 255, 0.05);
+      box-shadow: -5px 0 25px -3px rgba(0, 240, 255, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.08);
     }
-    .neon-purple {
-      border-left: 4px solid #a855f7;
-      box-shadow: -5px 0 20px -5px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.05);
+    .neon-amber {
+      border-left: 4px solid #ff9d00;
+      box-shadow: -5px 0 25px -3px rgba(255, 157, 0, 0.5), inset 0 0 15px rgba(255, 157, 0, 0.08);
     }
-    .neon-green {
-      border-left: 4px solid #00ff88;
-      box-shadow: -5px 0 20px -5px rgba(0, 255, 136, 0.5), inset 0 0 15px rgba(0, 255, 136, 0.05);
+    .neon-azure {
+      border-left: 4px solid #00a6ff;
+      box-shadow: -5px 0 25px -3px rgba(0, 166, 255, 0.5), inset 0 0 15px rgba(0, 166, 255, 0.08);
     }
+    .neon-coral {
+      border-left: 4px solid #ff4500;
+      box-shadow: -5px 0 25px -3px rgba(255, 69, 0, 0.6), inset 0 0 15px rgba(255, 69, 0, 0.08);
+    }
+
     .nav-btn.active {
-      background-color: #ff6b00;
-      color: #06090e;
-      box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
+      background: linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%);
+      color: #050811;
+      font-weight: 800;
+      box-shadow: 0 0 20px rgba(255, 107, 0, 0.7);
     }
   </style>
 </head>
 <body class="min-h-screen pb-12">
 
   <!-- Navbar Navigation -->
-  <nav class="sticky top-0 z-50 px-6 py-4 mb-8 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+  <nav class="sticky top-0 z-50 px-6 py-4 mb-8 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-[0_0_20px_rgba(249,115,22,0.6)]">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-cyan-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-[0_0_20px_rgba(249,115,22,0.6)]">
           P
         </div>
         <div>
           <h1 class="font-bold text-lg leading-tight text-white tracking-wide">PolimiRun Hub</h1>
-          <p class="text-xs text-slate-400">Giacomo Garbin • Master Target Sub-47'</p>
+          <p class="text-xs text-cyan-400 font-medium">Giacomo Garbin • Target Sub-47'</p>
         </div>
       </div>
       
       <!-- Pagine / Tab Navigation -->
       <div class="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10">
-        <button onclick="switchTab('tab-generale')" id="btn-generale" class="nav-btn active px-4 py-2 text-xs font-bold rounded-xl transition">Generale</button>
+        <button onclick="switchTab('tab-generale')" id="btn-generale" class="nav-btn active px-4 py-2 text-xs rounded-xl transition">Generale</button>
         <button onclick="switchTab('tab-salute')" id="btn-salute" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Salute & Recovery</button>
         <button onclick="switchTab('tab-record')" id="btn-record" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Record & PB</button>
         <button onclick="switchTab('tab-comparazione')" id="btn-comparazione" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Comparazione</button>
@@ -84,67 +90,67 @@
       <div class="flex items-center justify-between mb-6">
         <div>
           <h2 class="text-2xl font-black text-white tracking-tight">Panoramica Settimanale</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Metriche di allenamento e salute in tempo reale</p>
+          <p class="text-xs text-slate-400 mt-0.5">Metriche degli ultimi 7 giorni aggiornate in tempo reale</p>
         </div>
         <!-- Controlli Settimana -->
         <div class="flex items-center space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-white/10">
           <button class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">← Settimana Prec.</button>
-          <span class="text-xs font-extrabold px-3 text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]">Settimana Corrente</span>
+          <span class="text-xs font-extrabold px-3 text-orange-400 drop-shadow-[0_0_8px_rgba(255,107,0,0.8)]">Settimana Corrente</span>
           <button class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold">Settimana Succ. →</button>
         </div>
       </div>
 
-      <!-- Top Cards Neon -->
+      <!-- Top Cards Neon (Orange & Azure Palette) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         
-        <!-- Card Corsa -->
-        <div class="glass-card neon-orange p-5">
+        <!-- Card 1: Corsa (Arancione Neon) -->
+        <div class="glass-card neon-orange-bright p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa (7 gg)</span>
             <span class="text-xl">🏃</span>
           </div>
           <div id="cardDist" class="text-2xl font-black text-white">0.0 km</div>
-          <p id="cardWorkouts" class="text-xs text-slate-400 mt-1">0 allenamenti svolti</p>
+          <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 allenamenti negli ultimi 7 giorni</p>
         </div>
 
-        <!-- Card BPM -->
-        <div class="glass-card neon-rose p-5">
+        <!-- Card 2: BPM (Azzurro Neon) -->
+        <div class="glass-card neon-cyan-bright p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-rose-400">BPM Riposo</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">BPM Riposo</span>
             <span class="text-xl">❤️</span>
           </div>
           <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
-          <p id="cardBpmAvg" class="text-xs text-slate-400 mt-1">Media sett.: -- bpm</p>
+          <p id="cardBpmAvg" class="text-xs text-cyan-300/80 mt-1">Media sett.: -- bpm</p>
         </div>
 
-        <!-- Card Passi -->
-        <div class="glass-card neon-cyan p-5">
+        <!-- Card 3: Passi (Amber Neon) -->
+        <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Passi Oggi</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Passi Oggi</span>
             <span class="text-xl">👟</span>
           </div>
           <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
-          <p id="cardStepsAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0 passi</p>
+          <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi</p>
         </div>
 
-        <!-- Card Sonno -->
-        <div class="glass-card neon-purple p-5">
+        <!-- Card 4: Sonno (Azure Neon) -->
+        <div class="glass-card neon-azure p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Sonno</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">Sonno</span>
             <span class="text-xl">🌙</span>
           </div>
           <div id="cardSleepToday" class="text-2xl font-black text-white">0h 0m</div>
-          <p id="cardSleepAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0h 0m</p>
+          <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h 0m</p>
         </div>
 
-        <!-- Card Calorie -->
-        <div class="glass-card neon-green p-5">
+        <!-- Card 5: Calorie (Coral Orange) -->
+        <div class="glass-card neon-coral p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Calorie</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-500">Calorie</span>
             <span class="text-xl">🔥</span>
           </div>
           <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
-          <p id="cardCalAvg" class="text-xs text-slate-400 mt-1">Media sett.: 0 kcal</p>
+          <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal</p>
         </div>
 
       </div>
@@ -154,7 +160,7 @@
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Volume Corsa & Passi Giornalieri</span>
-            <span class="text-xs text-cyan-400 font-semibold">Istogramma</span>
+            <span class="text-xs text-orange-400 font-semibold">Arancione & Azzurro</span>
           </h3>
           <div class="h-64">
             <canvas id="chartStepsRuns"></canvas>
@@ -164,7 +170,7 @@
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Qualità Riposo & Frequenza Cardiaca</span>
-            <span class="text-xs text-purple-400 font-semibold">Doppio Asse Y</span>
+            <span class="text-xs text-cyan-400 font-semibold">Doppio Asse Y</span>
           </h3>
           <div class="h-64">
             <canvas id="chartSleepBpm"></canvas>
@@ -173,23 +179,9 @@
       </div>
     </div>
 
-    <!-- TAB 2: SALUTE & RECOVERY (In fase di sviluppo) -->
-    <div id="tab-salute" class="tab-content hidden">
-      <div class="glass-card p-8 text-center">
-        <h3 class="text-xl font-bold text-white mb-2">Modulo Salute & Readiness Custom</h3>
-        <p class="text-slate-400 text-sm">Stiamo configurando l'algoritmo custom con Sleep Score, HRV, Body Battery e Stato di Affaticamento!</p>
-      </div>
-    </div>
-
-    <!-- TAB 3: RECORD -->
-    <div id="tab-record" class="tab-content hidden">
-      <div class="glass-card p-8 text-center">
-        <h3 class="text-xl font-bold text-white mb-2">Personal Best & PolimiRun Predictor</h3>
-        <p class="text-slate-400 text-sm">Qui compariranno i tuoi record storici (1k, 5k, 10k, Mezza) e il predittore del tempo sui 10km.</p>
-      </div>
-    </div>
-
-    <!-- ALTRE TAB VERRANNO AGGANCIATE IN SEQUENZA -->
+    <!-- TAB DUMMY / FUTURE -->
+    <div id="tab-salute" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Salute & Readiness Custom</div></div>
+    <div id="tab-record" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Personal Best & Predictor</div></div>
     <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
     <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
     <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
@@ -201,16 +193,13 @@
     let chartStepsInstance = null;
     let chartSleepInstance = null;
 
-    // Gestione Cambio Tab
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'text-slate-950'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       
       document.getElementById(tabId).classList.remove('hidden');
       const activeBtn = document.getElementById('btn-' + tabId.replace('tab-', ''));
-      if(activeBtn) {
-        activeBtn.classList.add('active');
-      }
+      if(activeBtn) activeBtn.classList.add('active');
     }
 
     async function loadDashboard() {
@@ -235,17 +224,26 @@
       document.getElementById('cardBpmToday').innerText = (todayHealth.resting_hr || '54') + ' bpm';
       document.getElementById('cardCalToday').innerText = (todayHealth.calories || '2150') + ' kcal';
 
-      // Calcolo Corsa Settimanale
-      let totalDist = 0;
-      let runCount = 0;
-      activities.slice(0, 10).forEach(act => {
-        if(act.type === 'running') {
-          totalDist += act.distance_km || 0;
-          runCount++;
+      // CALCOLO CORSA SOLO ULTIMI 7 GIORNI
+      const now = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+
+      let totalDist7Days = 0;
+      let runCount7Days = 0;
+
+      activities.forEach(act => {
+        if (act.type === 'running' && act.date) {
+          const actDate = new Date(act.date);
+          if (actDate >= sevenDaysAgo && actDate <= now) {
+            totalDist7Days += act.distance_km || 0;
+            runCount7Days++;
+          }
         }
       });
-      document.getElementById('cardDist').innerText = totalDist.toFixed(1) + ' km';
-      document.getElementById('cardWorkouts').innerText = runCount + ' corse recenti';
+
+      document.getElementById('cardDist').innerText = totalDist7Days.toFixed(1) + ' km';
+      document.getElementById('cardWorkouts').innerText = runCount7Days + ' corse negli ultimi 7 giorni';
 
       initCharts(health);
     }
@@ -253,7 +251,7 @@
     function initCharts(health) {
       const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       
-      // Chart 1: Passi / Corsa con Colori Neon
+      // Chart 1: Passi (Azzurro) & Corsa (Arancione)
       const ctxSteps = document.getElementById('chartStepsRuns').getContext('2d');
       if(chartStepsInstance) chartStepsInstance.destroy();
 
@@ -265,7 +263,7 @@
             {
               label: 'Passi',
               data: [8200, 10500, 7664, 12300, 7800, 14200, 9500],
-              backgroundColor: 'rgba(0, 240, 255, 0.7)',
+              backgroundColor: 'rgba(0, 240, 255, 0.75)',
               borderColor: '#00f0ff',
               borderWidth: 1,
               borderRadius: 6
@@ -273,7 +271,7 @@
             {
               label: 'Corsa (km)',
               data: [0, 8.5, 0, 10.2, 0, 13.4, 0],
-              backgroundColor: 'rgba(255, 107, 0, 0.9)',
+              backgroundColor: 'rgba(255, 107, 0, 0.85)',
               borderColor: '#ff6b00',
               borderWidth: 1,
               borderRadius: 6
@@ -291,7 +289,7 @@
         }
       });
 
-      // Chart 2: Sonno (Barre) + BPM Riposo (Linea Rosso Neon) - DOPPIO ASSE Y
+      // Chart 2: Sonno (Azzurro Scuro/Sky) + BPM Riposo (Arancione Neon)
       const ctxSleep = document.getElementById('chartSleepBpm').getContext('2d');
       if(chartSleepInstance) chartSleepInstance.destroy();
 
@@ -303,8 +301,8 @@
               type: 'bar',
               label: 'Ore di Sonno (h)',
               data: [7.1, 6.8, 6.52, 8.0, 6.5, 7.8, 8.2],
-              backgroundColor: 'rgba(168, 85, 247, 0.7)',
-              borderColor: '#a855f7',
+              backgroundColor: 'rgba(0, 166, 255, 0.7)',
+              borderColor: '#00a6ff',
               borderWidth: 1,
               borderRadius: 6,
               yAxisID: 'ySleep'
@@ -313,8 +311,8 @@
               type: 'line',
               label: 'BPM Riposo',
               data: [56, 55, 54, 52, 58, 53, 54],
-              borderColor: '#ff0055',
-              backgroundColor: '#ff0055',
+              borderColor: '#ff6b00',
+              backgroundColor: '#ff6b00',
               borderWidth: 3,
               pointRadius: 4,
               pointHoverRadius: 6,
@@ -332,13 +330,13 @@
             ySleep: {
               type: 'linear',
               position: 'left',
-              ticks: { color: '#a855f7' },
+              ticks: { color: '#00a6ff' },
               grid: { color: 'rgba(255,255,255,0.05)' }
             },
             yBpm: {
               type: 'linear',
               position: 'right',
-              ticks: { color: '#ff0055' },
+              ticks: { color: '#ff6b00' },
               grid: { display: false }
             }
           }
