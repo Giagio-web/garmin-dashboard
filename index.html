@@ -1,473 +1,530 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Garmin Performance Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #050811;
-      color: #e2e8f0;
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(255, 107, 0, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(0, 212, 255, 0.12) 0%, transparent 40%);
-      background-attachment: fixed;
-    }
-    .glass-card {
-      background: rgba(10, 16, 28, 0.85);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 1.25rem;
-      transition: all 0.3s ease;
-    }
-    
-    .neon-orange-bright {
-      border-left: 4px solid #ff6b00;
-      box-shadow: -5px 0 25px -3px rgba(255, 107, 0, 0.6), inset 0 0 15px rgba(255, 107, 0, 0.08);
-    }
-    .neon-cyan-bright {
-      border-left: 4px solid #00f0ff;
-      box-shadow: -5px 0 25px -3px rgba(0, 240, 255, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.08);
-    }
-    .neon-amber {
-      border-left: 4px solid #ff9d00;
-      box-shadow: -5px 0 25px -3px rgba(255, 157, 0, 0.5), inset 0 0 15px rgba(255, 157, 0, 0.08);
-    }
-    .neon-azure {
-      border-left: 4px solid #00a6ff;
-      box-shadow: -5px 0 25px -3px rgba(0, 166, 255, 0.5), inset 0 0 15px rgba(0, 166, 255, 0.08);
-    }
-    .neon-coral {
-      border-left: 4px solid #ff4500;
-      box-shadow: -5px 0 25px -3px rgba(255, 69, 0, 0.6), inset 0 0 15px rgba(255, 69, 0, 0.08);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garmin & Running Dashboard</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --accent-orange: #f97316;
+            --accent-blue: #38bdf8;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
 
-    .nav-btn.active {
-      background: linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%);
-      color: #050811;
-      font-weight: 800;
-      box-shadow: 0 0 20px rgba(255, 107, 0, 0.7);
-    }
-  </style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            overflow-x: auto;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-orange);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Grid layouts */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Readiness Score Gauge / Box */
+        .readiness-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .score-badge {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            border: 5px solid currentColor;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen pb-12">
+<body>
 
-  <!-- Navbar Navigation -->
-  <nav class="sticky top-0 z-50 px-6 py-4 mb-8 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-cyan-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-[0_0_20px_rgba(249,115,22,0.6)]">
-          G
-        </div>
-        <div>
-          <h1 class="font-bold text-lg leading-tight text-white tracking-wide">Garmin Performance Hub</h1>
-          <p class="text-xs text-cyan-400 font-medium">Prossimo evento: PolimiRun 10K • Obiettivo Sub-47'</p>
-        </div>
-      </div>
-      
-      <!-- Tab Navigation -->
-      <div class="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10">
-        <button onclick="switchTab('tab-generale')" id="btn-generale" class="nav-btn active px-4 py-2 text-xs rounded-xl transition">Generale</button>
-        <button onclick="switchTab('tab-salute')" id="btn-salute" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Salute & Recovery</button>
-        <button onclick="switchTab('tab-record')" id="btn-record" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Record & PB</button>
-        <button onclick="switchTab('tab-comparazione')" id="btn-comparazione" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Comparazione</button>
-        <button onclick="switchTab('tab-attivita')" id="btn-attivita" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Attività</button>
-        <button onclick="switchTab('tab-coach')" id="btn-coach" class="nav-btn px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition">Piano & Coach</button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6">
+    <header>
+        <h1>Garmin Performance & Recovery</h1>
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('generale')">Generale</button>
+            <button class="nav-btn" onclick="switchTab('recovery')">Salute & Recovery</button>
+            <button class="nav-btn" onclick="switchTab('pb')">Record & PB</button>
+            <button class="nav-btn" onclick="switchTab('comparazione')">Comparazione</button>
+            <button class="nav-btn" onclick="switchTab('attivita')">Attività</button>
+        </nav>
+    </header>
 
     <!-- TAB 1: GENERALE -->
-    <div id="tab-generale" class="tab-content">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-black text-white tracking-tight">Panoramica Settimanale</h2>
-          <p id="weekSubHeader" class="text-xs text-slate-400 mt-0.5">Caricamento data...</p>
-        </div>
-        <!-- Controlli Settimana Dinamica -->
-        <div class="flex items-center space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-white/10">
-          <button onclick="changeWeek(-1)" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold transition">← Settimana Prec.</button>
-          <span id="currentWeekRange" class="text-xs font-extrabold px-3 text-orange-400 drop-shadow-[0_0_8px_rgba(255,107,0,0.8)]">--</span>
-          <button onclick="changeWeek(1)" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold transition">Settimana Succ. →</button>
-        </div>
-      </div>
-
-      <!-- Top Cards Neon -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        
-        <!-- Card 1: Corsa -->
-        <div class="glass-card neon-orange-bright p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa Settimana</span>
-            <span class="text-xl">🏃</span>
-          </div>
-          <div id="cardDist" class="text-2xl font-black text-white">0.0 km</div>
-          <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 corse svolte</p>
+    <div id="tab-generale" class="tab-content active">
+        <div class="grid-4">
+            <div class="card">
+                <div class="card-header"><span class="card-title">FC Media Oggi</span>❤️</div>
+                <div class="card-value" id="gen-hr">-- bpm</div>
+                <div class="card-subtitle" id="gen-hr-sub">Media sett.: -- bpm</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Passi Oggi</span>👟</div>
+                <div class="card-value" id="gen-steps">--</div>
+                <div class="card-subtitle" id="gen-steps-sub">Media sett.: -- passi/gg</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Sonno</span>🌙</div>
+                <div class="card-value" id="gen-sleep">-- h</div>
+                <div class="card-subtitle" id="gen-sleep-sub">Media sett.: -- h/gg</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Calorie</span>🔥</div>
+                <div class="card-value" id="gen-cal">-- kcal</div>
+                <div class="card-subtitle" id="gen-cal-sub">Media sett.: -- kcal/gg</div>
+            </div>
         </div>
 
-        <!-- Card 2: FC Media Giornaliera -->
-        <div class="glass-card neon-cyan-bright p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC Media Oggi</span>
-            <span class="text-xl">❤️</span>
-          </div>
-          <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
-          <p id="cardBpmAvg" class="text-xs text-cyan-300/80 mt-1">Media sett.: -- bpm</p>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title" style="margin-bottom:15px;">Volume Corsa Settimanale (km)</div>
+                <div class="chart-container"><canvas id="chartGenRun"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="margin-bottom:15px;">FC Media Giornaliera & Ore di Sonno</div>
+                <div class="chart-container"><canvas id="chartGenHealth"></canvas></div>
+            </div>
         </div>
-
-        <!-- Card 3: Passi -->
-        <div class="glass-card neon-amber p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Passi Oggi</span>
-            <span class="text-xl">👟</span>
-          </div>
-          <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
-          <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi/gg</p>
-        </div>
-
-        <!-- Card 4: Sonno -->
-        <div class="glass-card neon-azure p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">Sonno</span>
-            <span class="text-xl">🌙</span>
-          </div>
-          <div id="cardSleepToday" class="text-2xl font-black text-white">0h 0m</div>
-          <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h/gg</p>
-        </div>
-
-        <!-- Card 5: Calorie -->
-        <div class="glass-card neon-coral p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-500">Calorie</span>
-            <span class="text-xl">🔥</span>
-          </div>
-          <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
-          <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal/gg</p>
-        </div>
-
-      </div>
-
-      <!-- Grafici Affiancati -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Grafico 1: Corsa & Passi -->
-        <div class="glass-card p-6">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Distanza Corsa & Passi</span>
-            <span id="diffRunsStepsLabel" class="text-xs text-orange-400 font-semibold">vs sett. precedente: --</span>
-          </h3>
-          <div class="h-72">
-            <canvas id="chartStepsRuns"></canvas>
-          </div>
-        </div>
-
-        <!-- Grafico 2: FC Media & Sonno -->
-        <div class="glass-card p-6">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>FC Media Giornaliera & Ore di Sonno</span>
-            <span id="diffBpmSleepLabel" class="text-xs text-cyan-400 font-semibold">vs sett. precedente: --</span>
-          </h3>
-          <div class="h-72">
-            <canvas id="chartBpmSleepCombined"></canvas>
-          </div>
-        </div>
-
-      </div>
     </div>
 
-    <!-- ALTRE TAB -->
-    <div id="tab-salute" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Salute & Readiness Custom</div></div>
-    <div id="tab-record" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Personal Best & Predictor</div></div>
-    <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
-    <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
-    <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
+    <!-- TAB 2: SALUTE & RECOVERY -->
+    <div id="tab-recovery" class="tab-content">
+        <div class="grid-2">
+            <!-- Readiness Score Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Readiness Score Custom</span>⚡
+                </div>
+                <div class="readiness-box" style="margin-top: 10px;">
+                    <div>
+                        <div class="card-value" id="rec-status">In Calcolo...</div>
+                        <div class="card-subtitle" id="rec-status-desc">Valutazione basata su sonno, FC a riposo e bilancio di carico.</div>
+                    </div>
+                    <div class="score-badge" id="rec-score-badge">--</div>
+                </div>
+            </div>
 
-  </main>
+            <!-- Dettaglio Recupero Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">FC a Riposo vs Media Settimanale</span>🫀
+                </div>
+                <div class="readiness-box" style="margin-top: 10px;">
+                    <div>
+                        <div class="card-value" id="rec-rhr">-- bpm</div>
+                        <div class="card-subtitle" id="rec-rhr-sub">Media ultimi 7 giorni: -- bpm</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span id="rec-rhr-delta" style="font-size: 1.2rem; font-weight: 700;">--</span>
+                        <div class="card-subtitle">Scostamento</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <script>
-    let rawData = null;
-    let chartStepsInstance = null;
-    let chartBpmSleepInstance = null;
+        <div class="grid-4">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Sonno Ultima Notte</span>💤</div>
+                <div class="card-value" id="rec-sleep-val">-- h</div>
+                <div class="card-subtitle" id="rec-sleep-score">Punteggio: N/D</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Stato FC H24</span>📈</div>
+                <div class="card-value" id="rec-avghr-val">-- bpm</div>
+                <div class="card-subtitle">Media dinamica giornata</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Attività Passi</span>🚶‍♂️</div>
+                <div class="card-value" id="rec-steps-val">--</div>
+                <div class="card-subtitle" id="rec-steps-target">Target: 10.000</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Calorie Totali</span>🔥</div>
+                <div class="card-value" id="rec-cal-val">-- kcal</div>
+                <div class="card-subtitle">Incluso BMR + Attività</div>
+            </div>
+        </div>
 
-    let weekOffset = 0;
+        <!-- Grafico 14 giorni Recovery -->
+        <div class="card">
+            <div class="card-title" style="margin-bottom:15px;">Andamento Recupero & Salute (Ultimi 14 Giorni)</div>
+            <div class="chart-container"><canvas id="chartRecovery14"></canvas></div>
+        </div>
+    </div>
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.remove('hidden');
-      const activeBtn = document.getElementById('btn-' + tabId.replace('tab-', ''));
-      if(activeBtn) activeBtn.classList.add('active');
-    }
+    <!-- TAB 3: RECORD & PB (Placeholder) -->
+    <div id="tab-pb" class="tab-content">
+        <div class="card">
+            <div class="card-title">Record Personali</div>
+            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 3!</p>
+        </div>
+    </div>
 
-    function getMonday(d) {
-      d = new Date(d);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
-    }
+    <!-- TAB 4: COMPARAZIONE (Placeholder) -->
+    <div id="tab-comparazione" class="tab-content">
+        <div class="card">
+            <div class="card-title">Comparazione Periodi</div>
+            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 4!</p>
+        </div>
+    </div>
 
-    function formatDateShort(dateObj) {
-      const monthNames = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giug", "Lug", "Ago", "Sett", "Ott", "Nov", "Dic"];
-      return dateObj.getDate() + " " + monthNames[dateObj.getMonth()];
-    }
+    <!-- TAB 5: ATTIVITA (Placeholder) -->
+    <div id="tab-attivita" class="tab-content">
+        <div class="card">
+            <div class="card-title">Storico Attività</div>
+            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 5!</p>
+        </div>
+    </div>
 
-    function formatDateYMD(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
+    <div class="last-updated" id="last-updated">Ultimo aggiornamento: --</div>
 
-    function changeWeek(direction) {
-      weekOffset += direction;
-      renderOverview();
-    }
+    <script>
+        let garminData = null;
+        let chartGenRunObj = null;
+        let chartGenHealthObj = null;
+        let chartRecovery14Obj = null;
 
-    async function loadDashboard() {
-      try {
-        const response = await fetch('garmin_data.json');
-        rawData = await response.json();
-        renderOverview();
-      } catch (err) {
-        console.error("Errore nel caricamento del JSON:", err);
-      }
-    }
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
-    function getWeekMetrics(mondayObj) {
-      if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
-      
-      const health = rawData.daily_health || [];
-      const activities = rawData.activities || [];
-
-      const weekDatesYMD = [];
-      for(let i=0; i<7; i++) {
-        const d = new Date(mondayObj);
-        d.setDate(d.getDate() + i);
-        weekDatesYMD.push(formatDateYMD(d));
-      }
-
-      const steps = [];
-      const sleep = [];
-      const bpm = [];
-      const calories = [];
-      const runs = [0, 0, 0, 0, 0, 0, 0];
-      let totalDist = 0;
-
-      weekDatesYMD.forEach((dateStr) => {
-        const match = health.find(h => h.date === dateStr);
-        if(match) {
-          if(match.steps !== undefined && match.steps !== null) steps.push(match.steps); else steps.push(null);
-          if(match.sleep_hours !== undefined && match.sleep_hours !== null) sleep.push(match.sleep_hours); else sleep.push(null);
-          
-          // FC Media stimata o registrata
-          const hrVal = match.avg_hr || match.resting_hr;
-          if(hrVal !== undefined && hrVal !== null) bpm.push(hrVal); else bpm.push(null);
-          if(match.calories !== undefined && match.calories !== null) calories.push(match.calories); else calories.push(null);
-        } else {
-          steps.push(null);
-          sleep.push(null);
-          bpm.push(null);
-          calories.push(null);
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
         }
-      });
 
-      activities.forEach(act => {
-        if (act.type === 'running' && act.date) {
-          const actDateStr = act.date.split('T')[0].split(' ')[0];
-          const dayIndex = weekDatesYMD.indexOf(actDateStr);
-          if(dayIndex !== -1) {
-            runs[dayIndex] += (act.distance_km || 0);
-            totalDist += (act.distance_km || 0);
-          }
-        }
-      });
+        async function loadData() {
+            try {
+                const res = await fetch('garmin_data.json?v=' + new Date().getTime());
+                garminData = await res.json();
+                
+                document.getElementById('last-updated').innerText = 'Ultimo aggiornamento: ' + garminData.last_updated;
 
-      // FILTRAGGIO GIORNI EFFETTIVI (Esclude giorni futuri senza dati per calcolare medie reali)
-      const validSteps = steps.filter(v => v !== null && v > 0);
-      const validBpm = bpm.filter(v => v !== null && v > 0);
-      const validSleep = sleep.filter(v => v !== null && v > 0);
-      const validCal = calories.filter(v => v !== null && v > 0);
-
-      const avgSteps = validSteps.length ? Math.round(validSteps.reduce((a,b)=>a+b,0)/validSteps.length) : 0;
-      const avgBpm = validBpm.length ? Math.round(validBpm.reduce((a,b)=>a+b,0)/validBpm.length) : 0;
-      const avgSleep = validSleep.length ? (validSleep.reduce((a,b)=>a+b,0)/validSleep.length).toFixed(1) : 0;
-      const avgCal = validCal.length ? Math.round(validCal.reduce((a,b)=>a+b,0)/validCal.length) : 0;
-
-      return { steps, runs, bpm, sleep, calories, totalDist, avgSteps, avgBpm, avgSleep, avgCal };
-    }
-
-    function renderOverview() {
-      if(!rawData) return;
-
-      const today = new Date();
-      const currentMonday = getMonday(today);
-      currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
-      currentMonday.setHours(0, 0, 0, 0);
-
-      const currentSunday = new Date(currentMonday);
-      currentSunday.setDate(currentSunday.getDate() + 6);
-
-      const prevMonday = new Date(currentMonday);
-      prevMonday.setDate(prevMonday.getDate() - 7);
-
-      const rangeText = `${formatDateShort(currentMonday)} – ${formatDateShort(currentSunday)}`;
-      document.getElementById('currentWeekRange').innerText = rangeText;
-      document.getElementById('weekSubHeader').innerText = `Settimana Solare: ${rangeText}`;
-
-      const currData = getWeekMetrics(currentMonday);
-      const prevData = getWeekMetrics(prevMonday);
-
-      // Calcolo Differenze per Etichette in alto a destra
-      const diffSteps = currData.avgSteps - prevData.avgSteps;
-      const diffRuns = currData.totalDist - prevData.totalDist;
-      const diffBpm = currData.avgBpm - prevData.avgBpm;
-      const diffSleep = (currData.avgSleep - prevData.avgSleep).toFixed(1);
-
-      const stepsDiffStr = diffSteps >= 0 ? `+${diffSteps.toLocaleString('it-IT')}` : `${diffSteps.toLocaleString('it-IT')}`;
-      const runsDiffStr = diffRuns >= 0 ? `+${diffRuns.toFixed(1)}` : `${diffRuns.toFixed(1)}`;
-      const bpmDiffStr = diffBpm >= 0 ? `+${diffBpm}` : `${diffBpm}`;
-      const sleepDiffStr = diffSleep >= 0 ? `+${diffSleep}` : `${diffSleep}`;
-
-      document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
-      document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
-
-      // Aggiorna Top Cards
-      const health = rawData.daily_health || [];
-      const todayYMD = formatDateYMD(today);
-      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
-
-      document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
-      document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
-      
-      document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
-      document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
-
-      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
-      document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
-
-      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
-      document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
-
-      document.getElementById('cardCalToday').innerText = (todayMatch.calories || 0).toLocaleString('it-IT') + ' kcal';
-      document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
-
-      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-      const weekDays = dayLabels.map((lbl, idx) => {
-        const d = new Date(currentMonday);
-        d.setDate(d.getDate() + idx);
-        return `${lbl} ${d.getDate()}`;
-      });
-
-      initCharts(weekDays, currData.steps, currData.runs, currData.bpm, currData.sleep);
-    }
-
-    function initCharts(labels, steps, runs, bpm, sleep) {
-      // Chart 1: Passi & Corsa
-      const ctxSteps = document.getElementById('chartStepsRuns').getContext('2d');
-      if(chartStepsInstance) chartStepsInstance.destroy();
-
-      chartStepsInstance = new Chart(ctxSteps, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Passi',
-              data: steps,
-              backgroundColor: 'rgba(0, 240, 255, 0.75)',
-              borderColor: '#00f0ff',
-              borderWidth: 1,
-              borderRadius: 6
-            },
-            {
-              label: 'Corsa (km)',
-              data: runs,
-              backgroundColor: 'rgba(255, 107, 0, 0.85)',
-              borderColor: '#ff6b00',
-              borderWidth: 1,
-              borderRadius: 6
+                renderGenerale();
+                renderRecovery();
+            } catch (err) {
+                console.error("Errore caricamento garmin_data.json:", err);
             }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-          }
         }
-      });
 
-      // Chart 2: COMBINATO - Ore di Sonno (Sfondo) + FC Media (Primo piano)
-      const ctxBpmSleep = document.getElementById('chartBpmSleepCombined').getContext('2d');
-      if(chartBpmSleepInstance) chartBpmSleepInstance.destroy();
+        function renderGenerale() {
+            const health = garminData.daily_health;
+            if (!health || health.length === 0) return;
 
-      chartBpmSleepInstance = new Chart(ctxBpmSleep, {
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'line',
-              label: 'FC Media (bpm)',
-              data: bpm,
-              borderColor: '#00f0ff',
-              backgroundColor: '#00f0ff',
-              borderWidth: 3.5,
-              pointRadius: 5,
-              pointHoverRadius: 7,
-              tension: 0.3,
-              order: 1,
-              yAxisID: 'yBpm'
-            },
-            {
-              type: 'bar',
-              label: 'Ore di Sonno (h)',
-              data: sleep,
-              backgroundColor: 'rgba(255, 107, 0, 0.35)',
-              borderColor: '#ff6b00',
-              borderWidth: 1,
-              borderRadius: 6,
-              order: 2,
-              yAxisID: 'ySleep'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            yBpm: {
-              type: 'linear',
-              position: 'left',
-              title: { display: true, text: 'BPM Media', color: '#00f0ff' },
-              ticks: { color: '#00f0ff' },
-              grid: { color: 'rgba(255,255,255,0.05)' }
-            },
-            ySleep: {
-              type: 'linear',
-              position: 'right',
-              title: { display: true, text: 'Ore Sonno (h)', color: '#ff6b00' },
-              ticks: { color: '#ff6b00' },
-              grid: { display: false }
-            }
-          }
+            const today = health[0];
+            const past7 = health.slice(0, 7);
+
+            // Metric Cards
+            document.getElementById('gen-hr').innerText = (today.avg_hr || '--') + ' bpm';
+            document.getElementById('gen-steps').innerText = (today.steps || 0).toLocaleString();
+            document.getElementById('gen-sleep').innerText = (today.sleep_hours || 0) + ' h';
+            document.getElementById('gen-cal').innerText = (today.calories || 0).toLocaleString() + ' kcal';
+
+            const avgHr7 = Math.round(past7.reduce((acc, curr) => acc + (curr.avg_hr || 0), 0) / past7.length);
+            const avgSteps7 = Math.round(past7.reduce((acc, curr) => acc + (curr.steps || 0), 0) / past7.length);
+            const avgSleep7 = (past7.reduce((acc, curr) => acc + (curr.sleep_hours || 0), 0) / past7.length).toFixed(1);
+            const avgCal7 = Math.round(past7.reduce((acc, curr) => acc + (curr.calories || 0), 0) / past7.length);
+
+            document.getElementById('gen-hr-sub').innerText = 'Media sett.: ' + avgHr7 + ' bpm';
+            document.getElementById('gen-steps-sub').innerText = 'Media sett.: ' + avgSteps7.toLocaleString() + ' passi/gg';
+            document.getElementById('gen-sleep-sub').innerText = 'Media sett.: ' + avgSleep7 + ' h/gg';
+            document.getElementById('gen-cal-sub').innerText = 'Media sett.: ' + avgCal7.toLocaleString() + ' kcal/gg';
+
+            // Chart Health (Invertito per ordine cronologico)
+            const labels = health.map(h => h.date.slice(5)).reverse();
+            const hrData = health.map(h => h.avg_hr).reverse();
+            const sleepData = health.map(h => h.sleep_hours).reverse();
+
+            const ctxH = document.getElementById('chartGenHealth').getContext('2d');
+            if (chartGenHealthObj) chartGenHealthObj.destroy();
+            chartGenHealthObj = new Chart(ctxH, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ore di Sonno (h)',
+                            data: sleepData,
+                            backgroundColor: 'rgba(249, 115, 22, 0.7)',
+                            borderRadius: 6,
+                            yAxisID: 'ySleep'
+                        },
+                        {
+                            label: 'FC Media (bpm)',
+                            data: hrData,
+                            type: 'line',
+                            borderColor: '#38bdf8',
+                            backgroundColor: '#38bdf8',
+                            tension: 0.3,
+                            yAxisID: 'yHr'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        ySleep: { position: 'left', grid: { color: '#334155' } },
+                        yHr: { position: 'right', grid: { drawOnChartArea: false } },
+                        x: { grid: { color: '#334155' } }
+                    }
+                }
+            });
         }
-      });
-    }
 
-    window.onload = loadDashboard;
-  </script>
+        function renderRecovery() {
+            const health = garminData.daily_health;
+            if (!health || health.length === 0) return;
+
+            const today = health[0];
+            const past7 = health.slice(0, 7);
+
+            // 1. Calcolo Readiness Score Custom
+            let score = 70;
+            const sleep = today.sleep_hours || 0;
+            if (sleep >= 7.5) score += 15;
+            else if (sleep >= 6.5) score += 5;
+            else if (sleep < 5.5) score -= 15;
+
+            const validRhr = past7.map(d => d.resting_hr).filter(r => r && r > 0);
+            let avgRhr = 0;
+            if (validRhr.length > 0) {
+                avgRhr = Math.round(validRhr.reduce((a, b) => a + b, 0) / validRhr.length);
+                if (today.resting_hr) {
+                    const diff = today.resting_hr - avgRhr;
+                    if (diff <= -2) score += 15;
+                    else if (diff > 3) score -= 15;
+                }
+            }
+
+            score = Math.min(100, Math.max(0, score));
+
+            let status = "Ottimo Recupero";
+            let color = "#10b981"; // Verde
+            if (score < 60) {
+                status = "Affaticato / Riposo Consigliato";
+                color = "#ef4444"; // Rosso
+            } else if (score < 80) {
+                status = "Recupero Moderato";
+                color = "#f59e0b"; // Giallo
+            }
+
+            const badge = document.getElementById('rec-score-badge');
+            badge.innerText = score;
+            badge.style.color = color;
+
+            document.getElementById('rec-status').innerText = status;
+            document.getElementById('rec-status').style.color = color;
+
+            // RHR Details
+            document.getElementById('rec-rhr').innerText = (today.resting_hr || '--') + ' bpm';
+            document.getElementById('rec-rhr-sub').innerText = 'Media 7gg: ' + (avgRhr || '--') + ' bpm';
+            
+            const rhrDeltaEl = document.getElementById('rec-rhr-delta');
+            if (today.resting_hr && avgRhr) {
+                const diff = today.resting_hr - avgRhr;
+                rhrDeltaEl.innerText = (diff > 0 ? '+' : '') + diff + ' bpm';
+                rhrDeltaEl.style.color = diff <= 0 ? '#10b981' : '#ef4444';
+            } else {
+                rhrDeltaEl.innerText = '--';
+            }
+
+            // Cards secondarie
+            document.getElementById('rec-sleep-val').innerText = (today.sleep_hours || 0) + ' h';
+            document.getElementById('rec-sleep-score').innerText = 'Punteggio: ' + (today.sleep_score || 'N/D');
+            document.getElementById('rec-avghr-val').innerText = (today.avg_hr || '--') + ' bpm';
+            document.getElementById('rec-steps-val').innerText = (today.steps || 0).toLocaleString();
+            document.getElementById('rec-cal-val').innerText = (today.calories || 0).toLocaleString() + ' kcal';
+
+            // Grafico 14gg
+            const labels = health.map(h => h.date.slice(5)).reverse();
+            const rhrTrend = health.map(h => h.resting_hr).reverse();
+            const sleepTrend = health.map(h => h.sleep_hours).reverse();
+
+            const ctxR = document.getElementById('chartRecovery14').getContext('2d');
+            if (chartRecovery14Obj) chartRecovery14Obj.destroy();
+            chartRecovery14Obj = new Chart(ctxR, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'FC a Riposo (bpm)',
+                            data: rhrTrend,
+                            borderColor: '#ef4444',
+                            backgroundColor: '#ef4444',
+                            tension: 0.3,
+                            yAxisID: 'yRhr'
+                        },
+                        {
+                            label: 'Ore di Sonno (h)',
+                            data: sleepTrend,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'ySleep'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        yRhr: { position: 'left', grid: { color: '#334155' } },
+                        ySleep: { position: 'right', grid: { drawOnChartArea: false } },
+                        x: { grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
 </body>
 </html>
