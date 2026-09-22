@@ -37,8 +37,8 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute + Passo e FC Live
-    print("Estrazione dati salute...")
+    # 2. Estrazione Dati Salute + Passo, FC Live e Dettagli Sonno
+    print("Estrazione dati salute e recovery...")
     daily_health = []
     
     for i in range(14):
@@ -50,39 +50,34 @@ def fetch_garmin():
             sleep = client.get_sleep_data(day_str)
             
             sleep_hours = 0
+            sleep_score = None
             if sleep and 'dailySleepDTO' in sleep and sleep['dailySleepDTO']:
-                sleep_sec = sleep['dailySleepDTO'].get('sleepTimeSeconds', 0)
+                dto = sleep['dailySleepDTO']
+                sleep_sec = dto.get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
+                sleep_score = dto.get('sleepScores', {}).get('overall', {}).get('value', None)
             
-            # --- RECUPERO PASSI ROBUSTO MULTI-LIVELLO ---
+            # --- RECUPERO PASSI ROBUSTO ---
             possible_steps = []
-            
-            # 1. Da summary principale
             if isinstance(stats, dict):
                 possible_steps.append(stats.get("totalSteps") or 0)
                 possible_steps.append(stats.get("steps") or 0)
             
-            # 2. Da intervalli passo di dettaglio (get_steps_data)
             try:
                 steps_data = client.get_steps_data(day_str)
                 if steps_data and isinstance(steps_data, list):
-                    live_steps_sum = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
-                    possible_steps.append(live_steps_sum)
+                    possible_steps.append(sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict)))
             except Exception:
                 pass
 
-            # 3. Da storico passi specifico (get_daily_step_data)
             try:
                 daily_step_data = client.get_daily_step_data(day_str)
                 if daily_step_data and isinstance(daily_step_data, list):
-                    max_step_val = max([item.get("totalSteps", 0) for item in daily_step_data if isinstance(item, dict)], default=0)
-                    possible_steps.append(max_step_val)
+                    possible_steps.append(max([item.get("totalSteps", 0) for item in daily_step_data if isinstance(item, dict)], default=0))
             except Exception:
                 pass
 
-            # Prende sempre il valore più alto trovato
             steps = max(possible_steps) if possible_steps else 0
-
             resting_hr = stats.get("restingHeartRate", None) if isinstance(stats, dict) else None
 
             # --- RECUPERO FC MEDIA REALE ---
@@ -93,8 +88,8 @@ def fetch_garmin():
                     valid_samples = [item[1] for item in hr_data['heartRateValues'] if item and len(item) > 1 and item[1] is not None and item[1] > 0]
                     if valid_samples:
                         real_avg_hr = round(sum(valid_samples) / len(valid_samples))
-            except Exception as hr_err:
-                print(f"Impossibile campionare HR di dettaglio per {day_str}: {hr_err}")
+            except Exception:
+                pass
 
             if not real_avg_hr and isinstance(stats, dict):
                 real_avg_hr = stats.get("averageHeartRate", resting_hr)
@@ -107,6 +102,7 @@ def fetch_garmin():
                 "resting_hr": resting_hr,
                 "avg_hr": real_avg_hr,
                 "sleep_hours": sleep_hours,
+                "sleep_score": sleep_score,
                 "calories": calories
             })
         except Exception as e:
@@ -121,7 +117,7 @@ def fetch_garmin():
     with open("garmin_data.json", "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print("Dati Garmin aggiornati con successo in garmin_data.json!")
+    print("Dati Garmin e Recovery aggiornati con successo!")
 
 if __name__ == "__main__":
     fetch_garmin()
