@@ -16,9 +16,8 @@ def fetch_garmin():
     client.login()
 
     today = datetime.now()
-    start_date = today - timedelta(days=14)
 
-    # 1. Estrazione Attività di Corsa
+    # 1. Estrazione Attività di Corsa (ultimi 14 giorni)
     print("Estrazione attività...")
     activities = client.get_activities(0, 50)
     parsed_activities = []
@@ -38,7 +37,7 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute Giornalieri (Passi, Sonno, FC Media, FC Riposo)
+    # 2. Estrazione Dati Salute Giornalieri
     print("Estrazione dati salute...")
     daily_health = []
     
@@ -56,11 +55,21 @@ def fetch_garmin():
                 sleep_sec = sleep['dailySleepDTO'].get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
             
+            # Gestione Frequenza Cardiaca: Separazione tra Riposo e Media Reale
+            resting_hr = stats.get("restingHeartRate", None)
+            raw_avg_hr = stats.get("averageHeartRate", None)
+            
+            # Se la media da API è identica alla RHR (es. 47 bpm), la scartiamo
+            if raw_avg_hr and raw_avg_hr != resting_hr:
+                avg_hr = raw_avg_hr
+            else:
+                avg_hr = None
+
             daily_health.append({
                 "date": day_str,
                 "steps": stats.get("totalSteps", 0),
-                "resting_hr": stats.get("restingHeartRate", None),
-                "avg_hr": stats.get("averageHeartRate", stats.get("restingHeartRate", None)), # FC Media Giornaliera
+                "resting_hr": resting_hr,
+                "avg_hr": avg_hr,
                 "sleep_hours": sleep_hours,
                 "calories": stats.get("totalKilocalories", 0)
             })
