@@ -1,0 +1,59 @@
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #050811;
+  color: #e2e8f0;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(255, 107, 0, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(0, 212, 255, 0.12) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+.glass-card {
+  background: rgba(10, 16, 28, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.neon-orange-bright {
+  border-left: 4px solid #ff6b00;
+  box-shadow: -5px 0 25px -3px rgba(255, 107, 0, 0.6), inset 0 0 15px rgba(255, 107, 0, 0.08);
+}
+
+.neon-cyan-bright {
+  border-left: 4px solid #00f0ff;
+  box-shadow: -5px 0 25px -3px rgba(0, 240, 255, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.08);
+}
+
+.neon-amber {
+  border-left: 4px solid #ff9d00;
+  box-shadow: -5px 0 25px -3px rgba(255, 157, 0, 0.5), inset 0 0 15px rgba(255, 157, 0, 0.08);
+}
+
+.neon-azure {
+  border-left: 4px solid #00a6ff;
+  box-shadow: -5px 0 25px -3px rgba(0, 166, 255, 0.5), inset 0 0 15px rgba(0, 166, 255, 0.08);
+}
+
+.neon-coral {
+  border-left: 4px solid #ff4500;
+  box-shadow: -5px 0 25px -3px rgba(255, 69, 0, 0.6), inset 0 0 15px rgba(255, 69, 0, 0.08);
+}
+
+.neon-emerald {
+  border-left: 4px solid #10b981;
+  box-shadow: -5px 0 25px -3px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.08);
+}
+
+.neon-purple {
+  border-left: 4px solid #a855f7;
+  box-shadow: -5px 0 25px -3px rgba(168, 85, 247, 0.6), inset 0 0 15px rgba(168, 85, 247, 0.08);
+}
+
+.nav-btn.active {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%);
+  color: #050811;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.7);
+}
