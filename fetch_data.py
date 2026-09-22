@@ -127,13 +127,20 @@ def fetch_garmin():
             except Exception:
                 pass
 
-            # --- RECUPERO TEMPO DI RECUPERO (RECOVERY TIME IN ORE) ---
+            # --- RECUPERO TEMPO DI RECUPERO REALE CUMULATIVO ---
             recovery_time_val = None
-            if isinstance(stats, dict):
+            try:
+                training_status = client.get_training_status(day_str)
+                if training_status and isinstance(training_status, dict):
+                    recovery_time_val = training_status.get("mostRecentRecoveryTime") or training_status.get("recoveryTime")
+            except Exception:
+                pass
+
+            if recovery_time_val is None and isinstance(stats, dict):
                 recovery_time_val = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
+            
             try:
                 if recovery_time_val is None:
-                    # Garmin a volte restituisce i minuti di recupero
                     rec_min = stats.get("timeToRecovery")
                     if rec_min is not None:
                         recovery_time_val = round(rec_min / 60)
