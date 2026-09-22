@@ -8,141 +8,192 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --card-border: #334155;
-            --accent-orange: #f97316;
-            --accent-blue: #38bdf8;
-            --accent-green: #10b981;
-            --accent-yellow: #f59e0b;
-            --accent-red: #ef4444;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            --bg-dark: #0a0e17;
+            --card-bg: rgba(18, 25, 41, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --neon-orange: #ff7300;
+            --neon-blue: #00d2ff;
+            --neon-green: #00ff88;
+            --neon-yellow: #ffcc00;
+            --neon-purple: #a855f7;
+            --neon-red: #ff3366;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            padding: 20px;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(0, 210, 255, 0.05) 0px, transparent 50%),
+                radial-gradient(at 90% 20%, rgba(255, 115, 0, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
+            padding: 24px;
             min-height: 100vh;
         }
 
-        header {
-            max-width: 1200px;
-            margin: 0 auto 20px auto;
+        /* Top Header & Navigation */
+        .header-container {
+            max-width: 1300px;
+            margin: 0 auto 24px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 16px;
         }
 
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        nav {
+        .nav-tabs {
             display: flex;
-            gap: 10px;
-            background: var(--card-bg);
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.6);
             padding: 6px;
-            border-radius: 12px;
+            border-radius: 20px;
             border: 1px solid var(--card-border);
-            overflow-x: auto;
+            backdrop-filter: blur(10px);
         }
 
-        .nav-btn {
+        .tab-btn {
             background: transparent;
             border: none;
-            color: var(--text-secondary);
-            padding: 8px 16px;
-            border-radius: 8px;
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 14px;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
             white-space: nowrap;
         }
 
-        .nav-btn.active {
-            background: var(--accent-orange);
-            color: white;
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--neon-orange);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 115, 0, 0.4);
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .week-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-btn:hover {
+            border-color: var(--neon-blue);
+        }
+
+        /* Main Grid & Cards */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
         }
 
         .tab-content {
             display: none;
-            max-width: 1200px;
-            margin: 0 auto;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        /* Grid layouts */
         .grid-4 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .grid-2 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 22px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
         }
+
+        /* Neon Accent Top Bars */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: transparent;
+        }
+
+        .card.accent-red::before { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
+        .card.accent-orange::before { background: var(--neon-orange); box-shadow: 0 0 10px var(--neon-orange); }
+        .card.accent-blue::before { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+        .card.accent-green::before { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+        .card.accent-purple::before { background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .card-title {
-            font-size: 0.85rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .card-icon {
+            font-size: 1.2rem;
         }
 
         .card-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-primary);
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1.1;
         }
 
         .card-subtitle {
             font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
+            color: var(--text-muted);
+            margin-top: 6px;
         }
 
-        /* Readiness Score Gauge / Box */
+        /* Readiness Circle Glow Badge */
         .readiness-box {
             display: flex;
             align-items: center;
@@ -150,17 +201,19 @@
             gap: 20px;
         }
 
-        .score-badge {
-            width: 90px;
-            height: 90px;
+        .score-circle {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 900;
-            border: 5px solid currentColor;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            background: rgba(10, 14, 23, 0.8);
+            border: 4px solid var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            color: var(--neon-green);
         }
 
         .chart-container {
@@ -169,173 +222,155 @@
             height: 320px;
         }
 
-        .last-updated {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+        .footer-updated {
             text-align: right;
-            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 20px;
         }
 
         @media (max-width: 600px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
+            .grid-2 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Garmin Performance & Recovery</h1>
-        <nav>
-            <button class="nav-btn active" onclick="switchTab('generale')">Generale</button>
-            <button class="nav-btn" onclick="switchTab('recovery')">Salute & Recovery</button>
-            <button class="nav-btn" onclick="switchTab('pb')">Record & PB</button>
-            <button class="nav-btn" onclick="switchTab('comparazione')">Comparazione</button>
-            <button class="nav-btn" onclick="switchTab('attivita')">Attività</button>
-        </nav>
-    </header>
-
-    <!-- TAB 1: GENERALE -->
-    <div id="tab-generale" class="tab-content active">
-        <div class="grid-4">
-            <div class="card">
-                <div class="card-header"><span class="card-title">FC Media Oggi</span>❤️</div>
-                <div class="card-value" id="gen-hr">-- bpm</div>
-                <div class="card-subtitle" id="gen-hr-sub">Media sett.: -- bpm</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Passi Oggi</span>👟</div>
-                <div class="card-value" id="gen-steps">--</div>
-                <div class="card-subtitle" id="gen-steps-sub">Media sett.: -- passi/gg</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Sonno</span>🌙</div>
-                <div class="card-value" id="gen-sleep">-- h</div>
-                <div class="card-subtitle" id="gen-sleep-sub">Media sett.: -- h/gg</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Calorie</span>🔥</div>
-                <div class="card-value" id="gen-cal">-- kcal</div>
-                <div class="card-subtitle" id="gen-cal-sub">Media sett.: -- kcal/gg</div>
-            </div>
+    <div class="header-container">
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('generale', this)">Generale</button>
+            <button class="tab-btn" onclick="switchTab('recovery', this)">Salute & Recovery</button>
+            <button class="tab-btn" onclick="switchTab('pb', this)">Record & PB</button>
+            <button class="tab-btn" onclick="switchTab('comparazione', this)">Comparazione</button>
+            <button class="tab-btn" onclick="switchTab('attivita', this)">Attività</button>
         </div>
 
-        <div class="grid-2">
-            <div class="card">
-                <div class="card-title" style="margin-bottom:15px;">Volume Corsa Settimanale (km)</div>
-                <div class="chart-container"><canvas id="chartGenRun"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-title" style="margin-bottom:15px;">FC Media Giornaliera & Ore di Sonno</div>
-                <div class="chart-container"><canvas id="chartGenHealth"></canvas></div>
-            </div>
+        <div class="week-selector">
+            <button class="week-btn">← Settimana Prec.</button>
+            <span>21 Sett - 27 Sett</span>
+            <button class="week-btn">Sett. Succ. →</button>
         </div>
     </div>
 
-    <!-- TAB 2: SALUTE & RECOVERY -->
-    <div id="tab-recovery" class="tab-content">
-        <div class="grid-2">
-            <!-- Readiness Score Card -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Readiness Score Custom</span>⚡
+    <div class="container">
+
+        <!-- TAB 1: GENERALE -->
+        <div id="tab-generale" class="tab-content active">
+            <div class="grid-4">
+                <div class="card accent-red">
+                    <div class="card-header"><span class="card-title">FC Media Oggi</span><span class="card-icon">❤️</span></div>
+                    <div class="card-value" id="gen-hr">-- bpm</div>
+                    <div class="card-subtitle" id="gen-hr-sub">Media sett.: -- bpm</div>
                 </div>
-                <div class="readiness-box" style="margin-top: 10px;">
-                    <div>
-                        <div class="card-value" id="rec-status">In Calcolo...</div>
-                        <div class="card-subtitle" id="rec-status-desc">Valutazione basata su sonno, FC a riposo e bilancio di carico.</div>
-                    </div>
-                    <div class="score-badge" id="rec-score-badge">--</div>
+                <div class="card accent-orange">
+                    <div class="card-header"><span class="card-title">Passi Oggi</span><span class="card-icon">👟</span></div>
+                    <div class="card-value" id="gen-steps">--</div>
+                    <div class="card-subtitle" id="gen-steps-sub">Media sett.: -- passi/gg</div>
+                </div>
+                <div class="card accent-blue">
+                    <div class="card-header"><span class="card-title">Sonno</span><span class="card-icon">🌙</span></div>
+                    <div class="card-value" id="gen-sleep">-- h</div>
+                    <div class="card-subtitle" id="gen-sleep-sub">Media sett.: -- h/gg</div>
+                </div>
+                <div class="card accent-orange">
+                    <div class="card-header"><span class="card-title">Calorie</span><span class="card-icon">🔥</span></div>
+                    <div class="card-value" id="gen-cal">-- kcal</div>
+                    <div class="card-subtitle" id="gen-cal-sub">Media sett.: -- kcal/gg</div>
                 </div>
             </div>
 
-            <!-- Dettaglio Recupero Card -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">FC a Riposo vs Media Settimanale</span>🫀
+            <div class="grid-2">
+                <div class="card accent-orange">
+                    <div class="card-title" style="margin-bottom: 16px;">Corsa: -13.4 km | Passi: +4768/gg</div>
+                    <div class="chart-container"><canvas id="chartGenRun"></canvas></div>
                 </div>
-                <div class="readiness-box" style="margin-top: 10px;">
-                    <div>
-                        <div class="card-value" id="rec-rhr">-- bpm</div>
-                        <div class="card-subtitle" id="rec-rhr-sub">Media ultimi 7 giorni: -- bpm</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <span id="rec-rhr-delta" style="font-size: 1.2rem; font-weight: 700;">--</span>
-                        <div class="card-subtitle">Scostamento</div>
+                <div class="card accent-blue">
+                    <div class="card-title" style="margin-bottom: 16px;">FC Media Giornaliera & Ore di Sonno</div>
+                    <div class="chart-container"><canvas id="chartGenHealth"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: SALUTE & RECOVERY -->
+        <div id="tab-recovery" class="tab-content">
+            <div class="grid-2">
+                <!-- Readiness Box -->
+                <div class="card accent-green">
+                    <div class="card-header"><span class="card-title">Readiness Score Custom</span><span class="card-icon">⚡</span></div>
+                    <div class="readiness-box" style="margin-top: 10px;">
+                        <div>
+                            <div class="card-value" id="rec-status" style="color: var(--neon-green);">In Calcolo...</div>
+                            <div class="card-subtitle">Algoritmo basato su Sonno, FC a riposo e Carico.</div>
+                        </div>
+                        <div class="score-circle" id="rec-score-circle">--</div>
                     </div>
                 </div>
+
+                <!-- RHR Box -->
+                <div class="card accent-red">
+                    <div class="card-header"><span class="card-title">FC a Riposo vs Media Settimanale</span><span class="card-icon">🫀</span></div>
+                    <div class="readiness-box" style="margin-top: 10px;">
+                        <div>
+                            <div class="card-value" id="rec-rhr">-- bpm</div>
+                            <div class="card-subtitle" id="rec-rhr-sub">Media ultimi 7 giorni: -- bpm</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span id="rec-rhr-delta" style="font-size: 1.4rem; font-weight: 800;">--</span>
+                            <div class="card-subtitle">Scostamento</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="card accent-blue">
+                    <div class="card-header"><span class="card-title">Sonno Ultima Notte</span><span class="card-icon">💤</span></div>
+                    <div class="card-value" id="rec-sleep-val">-- h</div>
+                    <div class="card-subtitle" id="rec-sleep-score">Punteggio: N/D</div>
+                </div>
+                <div class="card accent-purple">
+                    <div class="card-header"><span class="card-title">FC Media H24</span><span class="card-icon">📈</span></div>
+                    <div class="card-value" id="rec-avghr-val">-- bpm</div>
+                    <div class="card-subtitle">Media continua giornata</div>
+                </div>
+                <div class="card accent-green">
+                    <div class="card-header"><span class="card-title">Attività Passi</span><span class="card-icon">🚶‍♂️</span></div>
+                    <div class="card-value" id="rec-steps-val">--</div>
+                    <div class="card-subtitle">Obiettivo: 10.000</div>
+                </div>
+                <div class="card accent-orange">
+                    <div class="card-header"><span class="card-title">Calorie Totali</span><span class="card-icon">🔥</span></div>
+                    <div class="card-value" id="rec-cal-val">-- kcal</div>
+                    <div class="card-subtitle">Basale + Attive</div>
+                </div>
+            </div>
+
+            <div class="card accent-blue">
+                <div class="card-title" style="margin-bottom: 16px;">Andamento Recupero & FC a Riposo (14 Giorni)</div>
+                <div class="chart-container"><canvas id="chartRecovery14"></canvas></div>
             </div>
         </div>
 
-        <div class="grid-4">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Sonno Ultima Notte</span>💤</div>
-                <div class="card-value" id="rec-sleep-val">-- h</div>
-                <div class="card-subtitle" id="rec-sleep-score">Punteggio: N/D</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Stato FC H24</span>📈</div>
-                <div class="card-value" id="rec-avghr-val">-- bpm</div>
-                <div class="card-subtitle">Media dinamica giornata</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Attività Passi</span>🚶‍♂️</div>
-                <div class="card-value" id="rec-steps-val">--</div>
-                <div class="card-subtitle" id="rec-steps-target">Target: 10.000</div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Calorie Totali</span>🔥</div>
-                <div class="card-value" id="rec-cal-val">-- kcal</div>
-                <div class="card-subtitle">Incluso BMR + Attività</div>
-            </div>
-        </div>
+        <!-- PLACEHOLDERS PER LE PROSSIME FASI -->
+        <div id="tab-pb" class="tab-content"><div class="card accent-orange"><div class="card-title">Record & PB in arrivo...</div></div></div>
+        <div id="tab-comparazione" class="tab-content"><div class="card accent-blue"><div class="card-title">Comparazione in arrivo...</div></div></div>
+        <div id="tab-attivita" class="tab-content"><div class="card accent-purple"><div class="card-title">Storico Attività in arrivo...</div></div></div>
 
-        <!-- Grafico 14 giorni Recovery -->
-        <div class="card">
-            <div class="card-title" style="margin-bottom:15px;">Andamento Recupero & Salute (Ultimi 14 Giorni)</div>
-            <div class="chart-container"><canvas id="chartRecovery14"></canvas></div>
-        </div>
+        <div class="footer-updated" id="last-updated">Ultimo aggiornamento: --</div>
+
     </div>
-
-    <!-- TAB 3: RECORD & PB (Placeholder) -->
-    <div id="tab-pb" class="tab-content">
-        <div class="card">
-            <div class="card-title">Record Personali</div>
-            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 3!</p>
-        </div>
-    </div>
-
-    <!-- TAB 4: COMPARAZIONE (Placeholder) -->
-    <div id="tab-comparazione" class="tab-content">
-        <div class="card">
-            <div class="card-title">Comparazione Periodi</div>
-            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 4!</p>
-        </div>
-    </div>
-
-    <!-- TAB 5: ATTIVITA (Placeholder) -->
-    <div id="tab-attivita" class="tab-content">
-        <div class="card">
-            <div class="card-title">Storico Attività</div>
-            <p style="margin-top:10px; color:var(--text-secondary);">Scheda in arrivo nella Fase 5!</p>
-        </div>
-    </div>
-
-    <div class="last-updated" id="last-updated">Ultimo aggiornamento: --</div>
 
     <script>
         let garminData = null;
-        let chartGenRunObj = null;
         let chartGenHealthObj = null;
         let chartRecovery14Obj = null;
 
-        function switchTab(tabName) {
+        function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
             document.getElementById('tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
+            btn.classList.add('active');
         }
 
         async function loadData() {
@@ -348,7 +383,7 @@
                 renderGenerale();
                 renderRecovery();
             } catch (err) {
-                console.error("Errore caricamento garmin_data.json:", err);
+                console.error("Errore nel caricamento dei dati:", err);
             }
         }
 
@@ -359,30 +394,30 @@
             const today = health[0];
             const past7 = health.slice(0, 7);
 
-            // Metric Cards
             document.getElementById('gen-hr').innerText = (today.avg_hr || '--') + ' bpm';
             document.getElementById('gen-steps').innerText = (today.steps || 0).toLocaleString();
             document.getElementById('gen-sleep').innerText = (today.sleep_hours || 0) + ' h';
             document.getElementById('gen-cal').innerText = (today.calories || 0).toLocaleString() + ' kcal';
 
-            const avgHr7 = Math.round(past7.reduce((acc, curr) => acc + (curr.avg_hr || 0), 0) / past7.length);
-            const avgSteps7 = Math.round(past7.reduce((acc, curr) => acc + (curr.steps || 0), 0) / past7.length);
-            const avgSleep7 = (past7.reduce((acc, curr) => acc + (curr.sleep_hours || 0), 0) / past7.length).toFixed(1);
-            const avgCal7 = Math.round(past7.reduce((acc, curr) => acc + (curr.calories || 0), 0) / past7.length);
+            const avgHr7 = Math.round(past7.reduce((a, b) => a + (b.avg_hr || 0), 0) / past7.length);
+            const avgSteps7 = Math.round(past7.reduce((a, b) => a + (b.steps || 0), 0) / past7.length);
+            const avgSleep7 = (past7.reduce((a, b) => a + (b.sleep_hours || 0), 0) / past7.length).toFixed(1);
+            const avgCal7 = Math.round(past7.reduce((a, b) => a + (b.calories || 0), 0) / past7.length);
 
             document.getElementById('gen-hr-sub').innerText = 'Media sett.: ' + avgHr7 + ' bpm';
             document.getElementById('gen-steps-sub').innerText = 'Media sett.: ' + avgSteps7.toLocaleString() + ' passi/gg';
             document.getElementById('gen-sleep-sub').innerText = 'Media sett.: ' + avgSleep7 + ' h/gg';
             document.getElementById('gen-cal-sub').innerText = 'Media sett.: ' + avgCal7.toLocaleString() + ' kcal/gg';
 
-            // Chart Health (Invertito per ordine cronologico)
+            // Grafico
             const labels = health.map(h => h.date.slice(5)).reverse();
             const hrData = health.map(h => h.avg_hr).reverse();
             const sleepData = health.map(h => h.sleep_hours).reverse();
 
-            const ctxH = document.getElementById('chartGenHealth').getContext('2d');
+            const ctx = document.getElementById('chartGenHealth').getContext('2d');
             if (chartGenHealthObj) chartGenHealthObj.destroy();
-            chartGenHealthObj = new Chart(ctxH, {
+
+            chartGenHealthObj = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -390,7 +425,7 @@
                         {
                             label: 'Ore di Sonno (h)',
                             data: sleepData,
-                            backgroundColor: 'rgba(249, 115, 22, 0.7)',
+                            backgroundColor: 'rgba(255, 115, 0, 0.75)',
                             borderRadius: 6,
                             yAxisID: 'ySleep'
                         },
@@ -398,8 +433,10 @@
                             label: 'FC Media (bpm)',
                             data: hrData,
                             type: 'line',
-                            borderColor: '#38bdf8',
-                            backgroundColor: '#38bdf8',
+                            borderColor: '#00d2ff',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#00d2ff',
+                            pointRadius: 4,
                             tension: 0.3,
                             yAxisID: 'yHr'
                         }
@@ -409,10 +446,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        ySleep: { position: 'left', grid: { color: '#334155' } },
-                        yHr: { position: 'right', grid: { drawOnChartArea: false } },
-                        x: { grid: { color: '#334155' } }
-                    }
+                        ySleep: { position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        yHr: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#00d2ff' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } }
                 }
             });
         }
@@ -424,7 +462,7 @@
             const today = health[0];
             const past7 = health.slice(0, 7);
 
-            // 1. Calcolo Readiness Score Custom
+            // Algoritmo Readiness Score
             let score = 70;
             const sleep = today.sleep_hours || 0;
             if (sleep >= 7.5) score += 15;
@@ -445,36 +483,41 @@
             score = Math.min(100, Math.max(0, score));
 
             let status = "Ottimo Recupero";
-            let color = "#10b981"; // Verde
+            let color = "var(--neon-green)";
+            let shadow = "rgba(0, 255, 136, 0.3)";
+
             if (score < 60) {
-                status = "Affaticato / Riposo Consigliato";
-                color = "#ef4444"; // Rosso
+                status = "Affaticato / Riposo";
+                color = "var(--neon-red)";
+                shadow = "rgba(255, 51, 102, 0.3)";
             } else if (score < 80) {
                 status = "Recupero Moderato";
-                color = "#f59e0b"; // Giallo
+                color = "var(--neon-yellow)";
+                shadow = "rgba(255, 204, 0, 0.3)";
             }
 
-            const badge = document.getElementById('rec-score-badge');
-            badge.innerText = score;
-            badge.style.color = color;
+            const circle = document.getElementById('rec-score-circle');
+            circle.innerText = score;
+            circle.style.borderColor = color;
+            circle.style.color = color;
+            circle.style.boxShadow = `0 0 20px ${shadow}`;
 
-            document.getElementById('rec-status').innerText = status;
-            document.getElementById('rec-status').style.color = color;
+            const statusEl = document.getElementById('rec-status');
+            statusEl.innerText = status;
+            statusEl.style.color = color;
 
-            // RHR Details
             document.getElementById('rec-rhr').innerText = (today.resting_hr || '--') + ' bpm';
             document.getElementById('rec-rhr-sub').innerText = 'Media 7gg: ' + (avgRhr || '--') + ' bpm';
-            
+
             const rhrDeltaEl = document.getElementById('rec-rhr-delta');
             if (today.resting_hr && avgRhr) {
                 const diff = today.resting_hr - avgRhr;
                 rhrDeltaEl.innerText = (diff > 0 ? '+' : '') + diff + ' bpm';
-                rhrDeltaEl.style.color = diff <= 0 ? '#10b981' : '#ef4444';
+                rhrDeltaEl.style.color = diff <= 0 ? 'var(--neon-green)' : 'var(--neon-red)';
             } else {
                 rhrDeltaEl.innerText = '--';
             }
 
-            // Cards secondarie
             document.getElementById('rec-sleep-val').innerText = (today.sleep_hours || 0) + ' h';
             document.getElementById('rec-sleep-score').innerText = 'Punteggio: ' + (today.sleep_score || 'N/D');
             document.getElementById('rec-avghr-val').innerText = (today.avg_hr || '--') + ' bpm';
@@ -488,6 +531,7 @@
 
             const ctxR = document.getElementById('chartRecovery14').getContext('2d');
             if (chartRecovery14Obj) chartRecovery14Obj.destroy();
+
             chartRecovery14Obj = new Chart(ctxR, {
                 type: 'line',
                 data: {
@@ -496,17 +540,20 @@
                         {
                             label: 'FC a Riposo (bpm)',
                             data: rhrTrend,
-                            borderColor: '#ef4444',
-                            backgroundColor: '#ef4444',
+                            borderColor: '#ff3366',
+                            backgroundColor: '#ff3366',
+                            borderWidth: 3,
+                            pointRadius: 4,
                             tension: 0.3,
                             yAxisID: 'yRhr'
                         },
                         {
                             label: 'Ore di Sonno (h)',
                             data: sleepTrend,
-                            borderColor: '#38bdf8',
-                            backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                            borderColor: '#00d2ff',
+                            backgroundColor: 'rgba(0, 210, 255, 0.1)',
                             fill: true,
+                            borderWidth: 2,
                             tension: 0.3,
                             yAxisID: 'ySleep'
                         }
@@ -516,10 +563,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        yRhr: { position: 'left', grid: { color: '#334155' } },
-                        ySleep: { position: 'right', grid: { drawOnChartArea: false } },
-                        x: { grid: { color: '#334155' } }
-                    }
+                        yRhr: { position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#ff3366' } },
+                        ySleep: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#00d2ff' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } }
                 }
             });
         }
