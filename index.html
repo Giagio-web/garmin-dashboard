@@ -109,6 +109,8 @@
 
       <!-- Top Cards Neon -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        
+        <!-- Card 1: Corsa -->
         <div class="glass-card neon-orange-bright p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa Settimana</span>
@@ -118,24 +120,27 @@
           <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 corse svolte</p>
         </div>
 
+        <!-- Card 2: FC Media Giornaliera -->
         <div class="glass-card neon-cyan-bright p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC Media Giorno</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC Media Oggi</span>
             <span class="text-xl">❤️</span>
           </div>
           <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
           <p id="cardBpmAvg" class="text-xs text-cyan-300/80 mt-1">Media sett.: -- bpm</p>
         </div>
 
+        <!-- Card 3: Passi -->
         <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Passi Giorno</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Passi Oggi</span>
             <span class="text-xl">👟</span>
           </div>
           <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
           <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi/gg</p>
         </div>
 
+        <!-- Card 4: Sonno -->
         <div class="glass-card neon-azure p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">Sonno</span>
@@ -145,6 +150,7 @@
           <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h/gg</p>
         </div>
 
+        <!-- Card 5: Calorie -->
         <div class="glass-card neon-coral p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-orange-500">Calorie</span>
@@ -153,10 +159,13 @@
           <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
           <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal/gg</p>
         </div>
+
       </div>
 
       <!-- Grafici Affiancati -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Grafico 1: Corsa & Passi -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Distanza Corsa & Passi</span>
@@ -167,6 +176,7 @@
           </div>
         </div>
 
+        <!-- Grafico 2: FC Media & Sonno -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>FC Media Giornaliera & Ore di Sonno</span>
@@ -176,6 +186,7 @@
             <canvas id="chartBpmSleepCombined"></canvas>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -188,46 +199,10 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div class="glass-card neon-orange-bright p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Stato Forma & Prontezza</span>
-              <span class="text-2xl">🔥</span>
-            </div>
-            <div id="cardFormScore" class="text-4xl font-black text-white">-- %</div>
-          </div>
-          <div class="mt-4">
-            <p id="cardFormStatus" class="text-sm font-bold text-orange-300">Calcolo in corso...</p>
-            <p id="cardFormAdvice" class="text-xs text-slate-400 mt-1">Aggiornamento biometrico basato su VFC, Body Battery e Stress.</p>
-          </div>
-        </div>
-
-        <div class="glass-card neon-azure p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">VO2 Max & Idoneità</span>
-              <span class="text-2xl">🫁</span>
-            </div>
-            <div id="cardVo2Max" class="text-4xl font-black text-white">--</div>
-          </div>
-          <div class="mt-4">
-            <p id="cardFitnessAge" class="text-sm font-bold text-sky-300">Età Fitness: -- anni</p>
-            <p class="text-xs text-slate-400 mt-1">Capacità aerobica massima calcolata tramite dati di corsa</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="glass-card neon-cyan-bright p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
-            <span class="text-xl">⚡</span>
-          </div>
-          <div id="cardHrvToday" class="text-2xl font-black text-white">-- ms</div>
-          <p id="cardHrvStatus" class="text-xs text-cyan-300/80 mt-1">Bilanciato</p>
-        </div>
-
+      <!-- Top Cards Salute Neon -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        
+        <!-- Card 1: Body Battery -->
         <div class="glass-card neon-emerald p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Body Battery</span>
@@ -237,6 +212,17 @@
           <p id="cardBodyBatteryStatus" class="text-xs text-emerald-300/80 mt-1">Carica Ottimale</p>
         </div>
 
+        <!-- Card 2: Stato VFC / HRV -->
+        <div class="glass-card neon-cyan-bright p-5">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
+            <span class="text-xl">⚡</span>
+          </div>
+          <div id="cardHrvToday" class="text-2xl font-black text-white">-- ms</div>
+          <p id="cardHrvStatus" class="text-xs text-cyan-300/80 mt-1">Bilanciato</p>
+        </div>
+
+        <!-- Card 3: Livello di Stress -->
         <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Livello Stress</span>
@@ -246,6 +232,7 @@
           <p id="cardStressStatus" class="text-xs text-amber-300/80 mt-1">Stress Basso</p>
         </div>
 
+        <!-- Card 4: Punteggio Sonno -->
         <div class="glass-card neon-purple p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Punteggio Sonno</span>
@@ -254,9 +241,23 @@
           <div id="cardSleepScoreToday" class="text-2xl font-black text-white">-- / 100</div>
           <p id="cardSleepScoreStatus" class="text-xs text-purple-300/80 mt-1">Buon Riposo</p>
         </div>
+
+        <!-- Card 5: VO2 Max & Età Fitness -->
+        <div class="glass-card neon-orange-bright p-5">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">VO2 Max</span>
+            <span class="text-xl">🫁</span>
+          </div>
+          <div id="cardVo2Max" class="text-2xl font-black text-white">--</div>
+          <p id="cardFitnessAge" class="text-xs text-orange-300/80 mt-1">Età Fitness: -- anni</p>
+        </div>
+
       </div>
 
+      <!-- Grafici Salute -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        
+        <!-- Grafico 1: Body Battery & Stress -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Body Battery & Livello Stress</span>
@@ -267,6 +268,7 @@
           </div>
         </div>
 
+        <!-- Grafico 2: VFC (HRV) & FC a Riposo -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Variabilità Frequenza Cardiaca (VFC) & FC Riposo</span>
@@ -276,8 +278,10 @@
             <canvas id="chartHrvRhr"></canvas>
           </div>
         </div>
+
       </div>
 
+      <!-- Sezione Dettagli Fisiologici Integrati -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="glass-card p-5">
           <div class="flex justify-between items-center mb-3">
@@ -306,6 +310,7 @@
           <p class="text-xs text-slate-400 mt-1">Tempo stimato per il ripristino completo</p>
         </div>
       </div>
+
     </div>
 
     <!-- ALTRE TAB -->
@@ -318,13 +323,12 @@
 
   <script>
     let rawData = null;
-    let baseDate = new Date();
-    let weekOffset = 0;
-
     let chartStepsInstance = null;
     let chartBpmSleepInstance = null;
     let chartBodyBatteryStressInstance = null;
     let chartHrvRhrInstance = null;
+
+    let weekOffset = 0;
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -335,21 +339,11 @@
       if(activeBtn) activeBtn.classList.add('active');
     }
 
-    // Crea un oggetto Date Locale senza sfasi UTC
-    function createLocalDate(ymdString) {
-      if(!ymdString) return new Date();
-      const parts = ymdString.split('T')[0].split(' ')[0].split('-');
-      if(parts.length === 3) {
-        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      }
-      return new Date(ymdString);
-    }
-
     function getMonday(d) {
-      const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(date.setDate(diff));
+      d = new Date(d);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
     }
 
     function formatDateShort(dateObj) {
@@ -364,36 +358,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    // Estrattore universale ricorsivo per chiavi piane o annidate (es: 'hrv.weeklyAvg', 'bodyBattery.charged')
-    function getVal(obj, keys, defaultVal = null) {
-      if (!obj) return defaultVal;
-
-      for (let keyPath of keys) {
-        const parts = keyPath.split('.');
-        let curr = obj;
-        let found = true;
-
-        for (let p of parts) {
-          if (curr !== null && curr !== undefined && curr[p] !== undefined) {
-            curr = curr[p];
-          } else {
-            found = false;
-            break;
-          }
-        }
-
-        if (found && curr !== null && curr !== undefined && curr !== '') {
-          if (typeof curr === 'object') {
-            const innerVal = curr.value || curr.charged || curr.highest || curr.max || curr.avg || curr.weeklyAvg || curr.lastNightAvg;
-            if (innerVal !== undefined && innerVal !== null) return innerVal;
-          } else {
-            return curr;
-          }
-        }
-      }
-      return defaultVal;
-    }
-
     function changeWeek(direction) {
       weekOffset += direction;
       renderOverview();
@@ -403,31 +367,18 @@
     async function loadDashboard() {
       try {
         const response = await fetch('garmin_data.json');
-        if (!response.ok) throw new Error('File JSON non trovato');
         rawData = await response.json();
-        
-        const health = rawData.daily_health || rawData.health_data || [];
-        if (health.length > 0) {
-          const lastEntry = health[health.length - 1];
-          const rawDate = getVal(lastEntry, ['date', 'timestamp', 'day', 'calendarDate']);
-          if (rawDate) {
-            baseDate = createLocalDate(String(rawDate));
-          }
-        }
-
         renderOverview();
         renderHealthTab();
       } catch (err) {
         console.error("Errore nel caricamento del JSON:", err);
-        const subHeader = document.getElementById('weekSubHeader');
-        if (subHeader) subHeader.innerText = "Impossibile caricare garmin_data.json";
       }
     }
 
     function getWeekMetrics(mondayObj) {
       if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
       
-      const health = rawData.daily_health || rawData.health_data || [];
+      const health = rawData.daily_health || [];
       const activities = rawData.activities || [];
 
       const weekDatesYMD = [];
@@ -445,23 +396,14 @@
       let totalDist = 0;
 
       weekDatesYMD.forEach((dateStr) => {
-        const match = health.find(h => {
-          const hDate = String(getVal(h, ['date', 'timestamp', 'day', 'calendarDate'], '')).split('T')[0].split(' ')[0];
-          return hDate === dateStr;
-        });
-
+        const match = health.find(h => h.date === dateStr);
         if(match) {
-          const st = getVal(match, ['steps', 'totalSteps', 'step_count', 'total_steps']);
-          steps.push(st !== null ? Number(st) : null);
-
-          const sl = getVal(match, ['sleep_hours', 'sleepTime', 'sleep_time', 'total_sleep_hours', 'sleepHours', 'sleep.totalSleepSeconds']);
-          sleep.push(sl !== null ? (sl > 100 ? Number((sl / 3600).toFixed(1)) : Number(sl)) : null);
-
-          const hr = getVal(match, ['avg_hr', 'resting_hr', 'restingHeartRate', 'resting_heart_rate', 'avg_heart_rate', 'average_hr', 'heartRate.resting']);
-          bpm.push(hr !== null ? Number(hr) : null);
-
-          const cal = getVal(match, ['calories', 'totalCalories', 'total_calories', 'active_calories']);
-          calories.push(cal !== null ? Number(cal) : null);
+          if(match.steps !== undefined && match.steps !== null) steps.push(match.steps); else steps.push(null);
+          if(match.sleep_hours !== undefined && match.sleep_hours !== null) sleep.push(match.sleep_hours); else sleep.push(null);
+          
+          const hrVal = match.avg_hr || match.resting_hr;
+          if(hrVal !== undefined && hrVal !== null) bpm.push(hrVal); else bpm.push(null);
+          if(match.calories !== undefined && match.calories !== null) calories.push(match.calories); else calories.push(null);
         } else {
           steps.push(null);
           sleep.push(null);
@@ -471,16 +413,12 @@
       });
 
       activities.forEach(act => {
-        const actDateRaw = getVal(act, ['date', 'start_time', 'startTimeLocal', 'start_time_local']);
-        if (actDateRaw) {
-          const actDateStr = String(actDateRaw).split('T')[0].split(' ')[0];
+        if (act.type === 'running' && act.date) {
+          const actDateStr = act.date.split('T')[0].split(' ')[0];
           const dayIndex = weekDatesYMD.indexOf(actDateStr);
-          const actType = String(getVal(act, ['type', 'activity_type', 'activityType', 'activityType.typeKey'], '')).toLowerCase();
-          if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running')) {
-            let dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
-            if(dist > 100) dist = dist / 1000; // Converte metri in km se necessario
-            runs[dayIndex] += dist;
-            totalDist += dist;
+          if(dayIndex !== -1) {
+            runs[dayIndex] += (act.distance_km || 0);
+            totalDist += (act.distance_km || 0);
           }
         }
       });
@@ -501,8 +439,10 @@
     function renderOverview() {
       if(!rawData) return;
 
-      const currentMonday = getMonday(baseDate);
+      const today = new Date();
+      const currentMonday = getMonday(today);
       currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
+      currentMonday.setHours(0, 0, 0, 0);
 
       const currentSunday = new Date(currentMonday);
       currentSunday.setDate(currentSunday.getDate() + 6);
@@ -530,35 +470,23 @@
       document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
       document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
-      const health = rawData.daily_health || rawData.health_data || [];
-      const currentMondayYMD = formatDateYMD(currentMonday);
-      const currentSundayYMD = formatDateYMD(currentSunday);
-
-      const weekHealth = health.filter(h => {
-        const dStr = String(getVal(h, ['date', 'timestamp', 'day', 'calendarDate'], '')).split('T')[0].split(' ')[0];
-        return dStr >= currentMondayYMD && dStr <= currentSundayYMD;
-      });
-      
-      const todayMatch = weekHealth.length > 0 ? weekHealth[weekHealth.length - 1] : (health[health.length - 1] || {});
+      const health = rawData.daily_health || [];
+      const todayYMD = formatDateYMD(today);
+      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
 
       document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
       document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
       
-      const hrVal = getVal(todayMatch, ['avg_hr', 'resting_hr', 'restingHeartRate', 'resting_heart_rate', 'avg_heart_rate', 'heartRate.resting'], '--');
-      document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
+      document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
       document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
 
-      const stepsVal = getVal(todayMatch, ['steps', 'totalSteps', 'step_count', 'total_steps'], 0);
-      document.getElementById('cardStepsToday').innerText = Number(stepsVal).toLocaleString('it-IT');
+      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
       document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
 
-      let sleepVal = getVal(todayMatch, ['sleep_hours', 'sleepTime', 'sleep_time', 'total_sleep_hours', 'sleepHours', 'sleep.totalSleepSeconds'], 0);
-      if (sleepVal > 100) sleepVal = (sleepVal / 3600).toFixed(1);
-      document.getElementById('cardSleepToday').innerText = sleepVal + 'h';
+      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
       document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
 
-      const calVal = getVal(todayMatch, ['calories', 'totalCalories', 'total_calories', 'active_calories'], 0);
-      document.getElementById('cardCalToday').innerText = Number(calVal).toLocaleString('it-IT') + ' kcal';
+      document.getElementById('cardCalToday').innerText = (todayMatch.calories || 0).toLocaleString('it-IT') + ' kcal';
       document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
 
       const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -574,18 +502,17 @@
     function renderHealthTab() {
       if(!rawData) return;
 
-      const currentMonday = getMonday(baseDate);
+      const today = new Date();
+      const currentMonday = getMonday(today);
       currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
+      currentMonday.setHours(0, 0, 0, 0);
 
-      const currentSunday = new Date(currentMonday);
-      currentSunday.setDate(currentSunday.getDate() + 6);
-
-      const health = rawData.daily_health || rawData.health_data || [];
-      const userProfile = rawData.user_profile || rawData.profile || {};
+      const health = rawData.daily_health || [];
+      const userProfile = rawData.user_profile || {};
 
       const weekDatesYMD = [];
       for(let i=0; i<7; i++) {
-        const d = new Date(currentMonday);
+        const d = new Date(mondayObj = currentMonday);
         d.setDate(d.getDate() + i);
         weekDatesYMD.push(formatDateYMD(d));
       }
@@ -596,23 +523,12 @@
       const rhr = [];
 
       weekDatesYMD.forEach((dateStr) => {
-        const match = health.find(h => {
-          const hDate = String(getVal(h, ['date', 'timestamp', 'day', 'calendarDate'], '')).split('T')[0].split(' ')[0];
-          return hDate === dateStr;
-        });
-
+        const match = health.find(h => h.date === dateStr);
         if(match) {
-          const bb = getVal(match, ['body_battery', 'bodyBattery', 'bodyBattery.charged', 'body_battery_highest', 'body_battery_max', 'charged']);
-          bodyBattery.push(bb !== null ? Number(bb) : null);
-
-          const st = getVal(match, ['stress_level', 'avg_stress', 'stress', 'average_stress_level', 'stress.avg']);
-          stress.push(st !== null ? Number(st) : null);
-
-          const hv = getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'weekly_avg', 'last_night_avg', 'hrv_status', 'hrv.weeklyAvg', 'hrv.lastNightAvg']);
-          hrv.push(hv !== null ? Number(hv) : null);
-
-          const rh = getVal(match, ['resting_hr', 'restingHeartRate', 'resting_heart_rate', 'rhr', 'heartRate.resting']);
-          rhr.push(rh !== null ? Number(rh) : null);
+          bodyBattery.push(match.body_battery || match.body_battery_max || null);
+          stress.push(match.stress_level || match.avg_stress || null);
+          hrv.push(match.hrv || match.hrv_weekly_avg || null);
+          rhr.push(match.resting_hr || null);
         } else {
           bodyBattery.push(null);
           stress.push(null);
@@ -621,65 +537,20 @@
         }
       });
 
-      const currentMondayYMD = formatDateYMD(currentMonday);
-      const currentSundayYMD = formatDateYMD(currentSunday);
+      const todayYMD = formatDateYMD(today);
+      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
 
-      const weekHealth = health.filter(h => {
-        const dStr = String(getVal(h, ['date', 'timestamp', 'day', 'calendarDate'], '')).split('T')[0].split(' ')[0];
-        return dStr >= currentMondayYMD && dStr <= currentSundayYMD;
-      });
-      const todayMatch = weekHealth.length > 0 ? weekHealth[weekHealth.length - 1] : (health[health.length - 1] || {});
-
-      // STATO FORMA & PRONTEZZA
-      const bbVal = Number(getVal(todayMatch, ['body_battery', 'bodyBattery', 'bodyBattery.charged', 'body_battery_highest', 'charged'], 70));
-      const hrvVal = Number(getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'hrv.weeklyAvg', 'hrv.lastNightAvg'], 50));
-      const stressVal = Number(getVal(todayMatch, ['stress_level', 'avg_stress', 'stress', 'average_stress_level', 'stress.avg'], 25));
+      document.getElementById('cardBodyBattery').innerText = (todayMatch.body_battery || todayMatch.body_battery_max || '--') + ' / 100';
+      document.getElementById('cardHrvToday').innerText = (todayMatch.hrv || todayMatch.hrv_weekly_avg || '--') + ' ms';
+      document.getElementById('cardStressToday').innerText = (todayMatch.stress_level || todayMatch.avg_stress || '--') + ' / 100';
+      document.getElementById('cardSleepScoreToday').innerText = (todayMatch.sleep_score || '--') + ' / 100';
       
-      let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
-      formScore = Math.min(100, Math.max(0, formScore));
+      document.getElementById('cardVo2Max').innerText = userProfile.vo2_max ? userProfile.vo2_max + ' ml/kg/min' : '--';
+      document.getElementById('cardFitnessAge').innerText = userProfile.fitness_age ? `Età Fitness: ${userProfile.fitness_age} anni` : 'Età Fitness: --';
 
-      document.getElementById('cardFormScore').innerText = formScore + ' %';
-      
-      let statusText = "Forma Ottimale";
-      let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-      
-      if(formScore < 50) {
-        statusText = "Affaticamento Elevato";
-        adviceText = "Si consiglia riposo attivo, stretching o corsa leggera di recupero.";
-      } else if(formScore < 75) {
-        statusText = "Forma Moderata";
-        adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
-      }
-
-      document.getElementById('cardFormStatus').innerText = statusText;
-      document.getElementById('cardFormAdvice').innerText = adviceText;
-
-      const vo2 = getVal(userProfile, ['vo2_max', 'vo2max', 'vo2'], getVal(todayMatch, ['vo2_max', 'vo2max', 'vo2_max_precise'], null));
-      document.getElementById('cardVo2Max').innerText = vo2 !== null ? vo2 + ' ml/kg/min' : '--';
-
-      const fitAge = getVal(userProfile, ['fitness_age', 'fitnessAge'], getVal(todayMatch, ['fitness_age', 'fitnessAge'], null));
-      document.getElementById('cardFitnessAge').innerText = fitAge !== null ? `Età Fitness: ${fitAge} anni` : 'Età Fitness: --';
-
-      const hrvToday = getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'weekly_avg', 'last_night_avg', 'hrv_status', 'hrv.weeklyAvg', 'hrv.lastNightAvg']);
-      document.getElementById('cardHrvToday').innerText = hrvToday !== null ? hrvToday + ' ms' : '-- ms';
-
-      const bbToday = getVal(todayMatch, ['body_battery', 'bodyBattery', 'bodyBattery.charged', 'body_battery_highest', 'charged']);
-      document.getElementById('cardBodyBattery').innerText = bbToday !== null ? bbToday + ' / 100' : '--';
-
-      const stressToday = getVal(todayMatch, ['stress_level', 'avg_stress', 'stress', 'average_stress_level', 'stress.avg']);
-      document.getElementById('cardStressToday').innerText = stressToday !== null ? stressToday + ' / 100' : '--';
-
-      const sleepScoreToday = getVal(todayMatch, ['sleep_score', 'sleepScore', 'overall_score', 'quality_score', 'sleep.qualifier', 'sleep.score']);
-      document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday !== null ? sleepScoreToday + ' / 100' : '-- / 100';
-
-      const rhrToday = getVal(todayMatch, ['resting_hr', 'restingHeartRate', 'resting_heart_rate', 'rhr', 'heartRate.resting']);
-      document.getElementById('valRhr').innerText = rhrToday !== null ? rhrToday + ' bpm' : '-- bpm';
-
-      const respToday = getVal(todayMatch, ['respiration_rate', 'avg_respiration', 'respiration', 'avg_waking_respiration_value', 'respiration.avg']);
-      document.getElementById('valRespiration').innerText = respToday !== null ? respToday + ' brm' : '-- brm';
-
-      const recToday = getVal(todayMatch, ['recovery_time_hours', 'recovery_time', 'recovery', 'recoveryTime', 'recovery_time_seconds']);
-      document.getElementById('valRecoveryTime').innerText = recToday !== null ? (recToday > 200 ? Math.round(recToday / 3600) : recToday) + ' ore' : '-- ore';
+      document.getElementById('valRhr').innerText = (todayMatch.resting_hr || '--') + ' bpm';
+      document.getElementById('valRespiration').innerText = (todayMatch.respiration_rate || '--') + ' brm';
+      document.getElementById('valRecoveryTime').innerText = (todayMatch.recovery_time_hours || '--') + ' ore';
 
       const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       const weekDays = dayLabels.map((lbl, idx) => {
