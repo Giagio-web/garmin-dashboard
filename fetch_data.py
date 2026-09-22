@@ -37,8 +37,8 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute e Calcolo FC Media Giornaliera
-    print("Estrazione dati salute...")
+    # 2. Estrazione Dati Salute + Campionamento H24 Frequenza Cardiaca
+    print("Estrazione dati salute con campionamento H24...")
     daily_health = []
     
     for i in range(14):
@@ -55,34 +55,29 @@ def fetch_garmin():
                 sleep_hours = round(sleep_sec / 3600, 2)
             
             steps = stats.get("totalSteps", 0)
-            resting_hr = stats.get("restingHeartRate", 50) or 50
+            resting_hr = stats.get("restingHeartRate", None)
 
-            # Calcolo ore e FC media degli allenamenti del giorno
-            day_workouts = [a for a in parsed_activities if a["date"].startswith(day_str)]
-            workout_hours = sum(w["duration_min"] for w in day_workouts) / 60.0
-            
-            if day_workouts:
-                total_hr_dur = sum((w["avg_hr"] or 140) * (w["duration_min"] / 60.0) for w in day_workouts)
-                workout_avg_hr = total_hr_dur / workout_hours
-            else:
-                workout_avg_hr = 0
+            # Campionamento puntuale del tracciato FC H24
+            real_avg_hr = None
+            try:
+                hr_data = client.get_heart_rates(day_str)
+                if hr_data and 'heartRateValues' in hr_data and hr_data['heartRateValues']:
+                    # Filtra solo i campioni con battito valido (>0)
+                    valid_samples = [item[1] for item in hr_data['heartRateValues'] if item and len(item) > 1 and item[1] is not None and item[1] > 0]
+                    if valid_samples:
+                        real_avg_hr = round(sum(valid_samples) / len(valid_samples))
+            except Exception as hr_err:
+                print(f"Impossibile campionare HR di dettaglio per {day_str}: {hr_err}")
 
-            # Ore di sonno e ore di veglia
-            s_hours = sleep_hours if sleep_hours > 0 else 8.0
-            awake_hours = max(0, 24.0 - s_hours - workout_hours)
-
-            # Stima FC durante le ore di veglia basata sui passi
-            awake_hr = resting_hr * (1.3 + min(steps / 30000.0, 0.4))
-
-            # Algoritmo Media Pesata H24
-            total_bpm_hours = (resting_hr * s_hours) + (awake_hr * awake_hours) + (workout_avg_hr * workout_hours)
-            estimated_avg_hr = round(total_bpm_hours / 24.0)
+            # Fallback se il campionamento non restituisce dati
+            if not real_avg_hr:
+                real_avg_hr = stats.get("averageHeartRate", resting_hr)
 
             daily_health.append({
                 "date": day_str,
                 "steps": steps,
                 "resting_hr": resting_hr,
-                "avg_hr": estimated_avg_hr,
+                "avg_hr": real_avg_hr,
                 "sleep_hours": sleep_hours,
                 "calories": stats.get("totalKilocalories", 0)
             })
