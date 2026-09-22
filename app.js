@@ -35,10 +35,24 @@ function formatDateYMD(dateObj) {
   return `${y}-${m}-${d}`;
 }
 
+// Helper ricorsivo e flessibile per estrarre valori anche da oggetti annidati
 function getVal(obj, keys, defaultVal = null) {
   if (!obj) return defaultVal;
   for (let k of keys) {
-    if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+    if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') {
+      return obj[k];
+    }
+  }
+  // Controllo in sotto-oggetti comuni (wellness, stats, metrics, summary)
+  const subKeys = ['wellness', 'stats', 'metrics', 'summary', 'user_summary'];
+  for (let sub of subKeys) {
+    if (obj[sub] && typeof obj[sub] === 'object') {
+      for (let k of keys) {
+        if (obj[sub][k] !== undefined && obj[sub][k] !== null && obj[sub][k] !== '') {
+          return obj[sub][k];
+        }
+      }
+    }
   }
   return defaultVal;
 }
@@ -55,11 +69,18 @@ async function loadDashboard() {
     if (!response.ok) throw new Error('File JSON non trovato');
     rawData = await response.json();
     
-    const health = rawData.daily_health || rawData.health_data || rawData.user_summary || [];
+    // LOG DI DEBUG IN CONSOLE (Premi F12 nel browser per vederlo)
+    console.log("=== DEBUG GARMIN DATA ===");
+    console.log("Chiavi di primo livello trovate nel JSON:", Object.keys(rawData));
+
+    const health = getHealthArray();
+    console.log("Array salute identificato:", health);
     if (health.length > 0) {
+      console.log("Ultimo elemento disponibile nel dataset:", health[health.length - 1]);
       const lastEntry = health[health.length - 1];
-      if (lastEntry && lastEntry.date) {
-        const parts = lastEntry.date.split('-');
+      const dateStr = getVal(lastEntry, ['date', 'calendarDate', 'day']);
+      if (dateStr) {
+        const parts = String(dateStr).split('T')[0].split('-');
         if (parts.length === 3) {
           baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
         }
@@ -75,11 +96,17 @@ async function loadDashboard() {
   }
 }
 
+function getHealthArray() {
+  if (!rawData) return [];
+  if (Array.isArray(rawData)) return rawData;
+  return rawData.daily_health || rawData.health_data || rawData.user_summary || rawData.wellness || rawData.stats || [];
+}
+
 function getWeekMetrics(mondayObj) {
   if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
   
-  const health = rawData.daily_health || rawData.health_data || [];
-  const activities = rawData.activities || [];
+  const health = getHealthArray();
+  const activities = rawData.activities || rawData.workouts || [];
 
   const weekDatesYMD = [];
   for(let i=0; i<7; i++) {
@@ -96,18 +123,23 @@ function getWeekMetrics(mondayObj) {
   let totalDist = 0;
 
   weekDatesYMD.forEach((dateStr) => {
-    const match = health.find(h => h.date === dateStr);
+    const match = health.find(h => {
+      const d = getVal(h, ['date', 'calendarDate', 'day']);
+      return d && String(d).startsWith(dateStr);
+    });
+
     if(match) {
-      const st = getVal(match, ['steps', 'total_steps', 'step_count']);
+      const st = getVal(match, ['steps', 'total_steps', 'step_count', 'totalSteps']);
       steps.push(st !== null ? Number(st) : null);
 
-      const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours', 'sleepHours']);
-      sleep.push(sl !== null ? Number(sl) : null);
+      const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours', 'sleepHours', 'totalSleepSeconds']);
+      const slHours = (sl !== null && sl > 24) ? (sl / 3600) : sl; // Conversione da secondi ad ore se necessario
+      sleep.push(slHours !== null ? Number(slHours) : null);
 
-      const hr = getVal(match, ['avg_hr', 'resting_hr', 'resting_heart_rate', 'avg_heart_rate']);
+      const hr = getVal(match, ['avg_hr', 'resting_hr', 'resting_heart_rate', 'avg_heart_rate', 'restingHeartRate']);
       bpm.push(hr !== null ? Number(hr) : null);
 
-      const cal = getVal(match, ['calories', 'total_calories', 'active_calories']);
+      const cal = getVal(match, ['calories', 'total_calories', 'active_calories', 'totalKilocalories']);
       calories.push(cal !== null ? Number(cal) : null);
     } else {
       steps.push(null);
@@ -118,13 +150,14 @@ function getWeekMetrics(mondayObj) {
   });
 
   activities.forEach(act => {
-    const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
+    const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local', 'startTimeLocal']);
     if (actDateRaw) {
       const actDateStr = String(actDateRaw).split('T')[0].split(' ')[0];
       const dayIndex = weekDatesYMD.indexOf(actDateStr);
       const actType = String(getVal(act, ['type', 'activity_type', 'activityType'], '')).toLowerCase();
       if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running')) {
-        const dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
+        let dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
+        if (dist > 1000) dist = dist / 1000; // Conversione da metri a km se necessario
         runs[dayIndex] += dist;
         totalDist += dist;
       }
@@ -177,26 +210,30 @@ function renderOverview() {
   document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
   document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
-  const health = rawData.daily_health || rawData.health_data || [];
+  const health = getHealthArray();
   const todayYMD = formatDateYMD(new Date());
-  const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
+  const todayMatch = health.find(h => {
+    const d = getVal(h, ['date', 'calendarDate', 'day']);
+    return d && String(d).startsWith(todayYMD);
+  }) || (health.length > 0 ? health[health.length - 1] : {});
 
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
   
-  const hrVal = getVal(todayMatch, ['avg_hr', 'resting_hr', 'resting_heart_rate'], '--');
+  const hrVal = getVal(todayMatch, ['avg_hr', 'resting_hr', 'resting_heart_rate', 'restingHeartRate'], '--');
   document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
   document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
 
-  const stepsVal = getVal(todayMatch, ['steps', 'total_steps', 'step_count'], 0);
+  const stepsVal = getVal(todayMatch, ['steps', 'total_steps', 'step_count', 'totalSteps'], 0);
   document.getElementById('cardStepsToday').innerText = Number(stepsVal).toLocaleString('it-IT');
   document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
 
-  const sleepVal = getVal(todayMatch, ['sleep_hours', 'sleep_time', 'total_sleep_hours'], 0);
+  let sleepVal = getVal(todayMatch, ['sleep_hours', 'sleep_time', 'total_sleep_hours', 'sleepHours'], 0);
+  if (sleepVal > 24) sleepVal = (sleepVal / 3600).toFixed(1);
   document.getElementById('cardSleepToday').innerText = sleepVal + 'h';
   document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
 
-  const calVal = getVal(todayMatch, ['calories', 'total_calories', 'active_calories'], 0);
+  const calVal = getVal(todayMatch, ['calories', 'total_calories', 'active_calories', 'totalKilocalories'], 0);
   document.getElementById('cardCalToday').innerText = Number(calVal).toLocaleString('it-IT') + ' kcal';
   document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
 
@@ -213,11 +250,11 @@ function renderOverview() {
 function renderHealthTab() {
   if (!rawData) return;
 
-  const health = rawData.daily_health || rawData.health_data || rawData.user_summary || [];
+  const health = getHealthArray();
   const userProfile = rawData.user_profile || rawData.profile || {};
 
   if (health.length === 0) {
-    console.warn("Nessun dato trovato nell'array daily_health.");
+    console.warn("Nessun dato di salute reperibile nel file JSON.");
     return;
   }
 
@@ -238,11 +275,15 @@ function renderHealthTab() {
   const rhr = [];
 
   weekDatesYMD.forEach((dateStr) => {
-    const match = health.find(h => h.date === dateStr);
+    const match = health.find(h => {
+      const d = getVal(h, ['date', 'calendarDate', 'day']);
+      return d && String(d).startsWith(dateStr);
+    });
+
     if (match) {
-      bodyBattery.push(getVal(match, ['body_battery', 'bodyBattery', 'body_battery_max', 'max_body_battery'], null));
-      stress.push(getVal(match, ['stress_level', 'avg_stress', 'stress', 'averageStressLevel'], null));
-      hrv.push(getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'hrvSummary'], null));
+      bodyBattery.push(getVal(match, ['body_battery', 'bodyBattery', 'body_battery_max', 'max_body_battery', 'bodyBatteryMostRecentValue'], null));
+      stress.push(getVal(match, ['stress_level', 'avg_stress', 'stress', 'averageStressLevel', 'stressScore'], null));
+      hrv.push(getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'hrvSummary', 'weeklyAvg', 'lastNightAvg'], null));
       rhr.push(getVal(match, ['resting_hr', 'resting_heart_rate', 'rhr', 'restingHeartRate'], null));
     } else {
       bodyBattery.push(null);
@@ -253,14 +294,18 @@ function renderHealthTab() {
   });
 
   const todayYMD = formatDateYMD(new Date());
-  let targetEntry = health.find(h => h.date === todayYMD);
+  let targetEntry = health.find(h => {
+    const d = getVal(h, ['date', 'calendarDate', 'day']);
+    return d && String(d).startsWith(todayYMD);
+  });
+
   if (!targetEntry) {
-    targetEntry = health[health.length - 1];
+    targetEntry = health[health.length - 1]; // Fallback all'ultimo giorno salvato
   }
 
-  const bbVal = Number(getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max'], 70));
-  const hrvVal = Number(getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value'], 50));
-  const stressVal = Number(getVal(targetEntry, ['stress_level', 'avg_stress', 'stress'], 25));
+  const bbVal = Number(getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max', 'bodyBatteryMostRecentValue'], 70));
+  const hrvVal = Number(getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'weeklyAvg', 'lastNightAvg'], 50));
+  const stressVal = Number(getVal(targetEntry, ['stress_level', 'avg_stress', 'stress', 'averageStressLevel'], 25));
 
   let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
   formScore = Math.min(100, Math.max(0, formScore));
@@ -280,31 +325,31 @@ function renderHealthTab() {
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  const vo2 = getVal(userProfile, ['vo2_max', 'vo2max'], getVal(targetEntry, ['vo2_max', 'vo2max'], null));
+  const vo2 = getVal(userProfile, ['vo2_max', 'vo2max'], getVal(targetEntry, ['vo2_max', 'vo2max', 'genericVo2Max'], null));
   document.getElementById('cardVo2Max').innerText = vo2 !== null ? vo2 + ' ml/kg/min' : '--';
 
   const fitAge = getVal(userProfile, ['fitness_age', 'fitnessAge'], getVal(targetEntry, ['fitness_age', 'fitnessAge'], null));
   document.getElementById('cardFitnessAge').innerText = fitAge !== null ? `Età Fitness: ${fitAge} anni` : 'Età Fitness: --';
 
-  const hrvToday = getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
+  const hrvToday = getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'weeklyAvg', 'lastNightAvg']);
   document.getElementById('cardHrvToday').innerText = hrvToday !== null ? hrvToday + ' ms' : '-- ms';
 
-  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max']);
+  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max', 'bodyBatteryMostRecentValue']);
   document.getElementById('cardBodyBattery').innerText = bbToday !== null ? bbToday + ' / 100' : '-- / 100';
 
-  const stressToday = getVal(targetEntry, ['stress_level', 'avg_stress', 'stress']);
+  const stressToday = getVal(targetEntry, ['stress_level', 'avg_stress', 'stress', 'averageStressLevel']);
   document.getElementById('cardStressToday').innerText = stressToday !== null ? stressToday + ' / 100' : '-- / 100';
 
-  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore', 'sleep_quality_score']);
+  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore', 'sleep_quality_score', 'overallSleepScore']);
   document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday !== null ? sleepScoreToday + ' / 100' : '-- / 100';
 
-  const rhrToday = getVal(targetEntry, ['resting_hr', 'resting_heart_rate', 'rhr']);
+  const rhrToday = getVal(targetEntry, ['resting_hr', 'resting_heart_rate', 'rhr', 'restingHeartRate']);
   document.getElementById('valRhr').innerText = rhrToday !== null ? rhrToday + ' bpm' : '-- bpm';
 
-  const respToday = getVal(targetEntry, ['respiration_rate', 'avg_respiration', 'respiration']);
+  const respToday = getVal(targetEntry, ['respiration_rate', 'avg_respiration', 'respiration', 'avgWakingRespirationValue']);
   document.getElementById('valRespiration').innerText = respToday !== null ? respToday + ' brm' : '-- brm';
 
-  const recToday = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recovery']);
+  const recToday = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recovery', 'recoveryTime']);
   document.getElementById('valRecoveryTime').innerText = recToday !== null ? recToday + ' ore' : '-- ore';
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
