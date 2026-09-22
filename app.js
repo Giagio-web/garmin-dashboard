@@ -53,21 +53,12 @@ function changeWeek(direction) {
 
 async function loadDashboard() {
   try {
-    const response = await fetch('garmin_data.json');
+    const response = await fetch('garmin_data.json?t=' + new Date().getTime()); // Busta la cache per il sync manuale
     if (!response.ok) throw new Error('File JSON non trovato');
     rawData = await response.json();
     
-    const health = getHealthArray();
-    if (health.length > 0) {
-      const lastEntry = health[health.length - 1];
-      const dateStr = getVal(lastEntry, ['date', 'calendarDate', 'day']);
-      if (dateStr) {
-        const parts = String(dateStr).split('T')[0].split('-');
-        if (parts.length === 3) {
-          baseDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        }
-      }
-    }
+    // Imposta la base date sulla data odierna di sistema
+    baseDate = new Date();
 
     renderOverview();
     renderHealthTab();
@@ -115,7 +106,8 @@ function getWeekMetrics(mondayObj) {
       const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours']);
       sleep.push(sl !== null ? Number(sl) : null);
 
-      const hr = getVal(match, ['resting_hr', 'avg_hr', 'resting_heart_rate']);
+      // FC Media giornaliera (priorità a avg_hr)
+      const hr = getVal(match, ['avg_hr', 'avg_heart_rate', 'resting_hr']);
       bpm.push(hr !== null ? Number(hr) : null);
 
       const cal = getVal(match, ['calories', 'total_calories', 'active_calories']);
@@ -190,12 +182,19 @@ function renderOverview() {
   document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
   const health = getHealthArray();
-  const targetEntry = health.length > 0 ? health[health.length - 1] : {};
+  const todayYMD = formatDateYMD(new Date());
+  
+  // Cerca prima il giorno di oggi, altrimenti prende l'ultimo record disponibile
+  const targetEntry = health.find(h => {
+    const d = getVal(h, ['date', 'calendarDate', 'day']);
+    return d && String(d).startsWith(todayYMD);
+  }) || (health.length > 0 ? health[health.length - 1] : {});
 
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
   
-  const hrVal = getVal(targetEntry, ['resting_hr', 'avg_hr', 'resting_heart_rate'], '--');
+  // FC Media di oggi (avg_hr)
+  const hrVal = getVal(targetEntry, ['avg_hr', 'avg_heart_rate', 'resting_hr'], '--');
   document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
   document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
 
@@ -251,10 +250,9 @@ function renderHealthTab() {
 
     if (match) {
       const sleepScore = Number(getVal(match, ['sleep_score'], 80));
-      const restingHr = Number(getVal(match, ['resting_hr', 'avg_hr'], 50));
+      const restingHr = Number(getVal(match, ['resting_hr'], 48));
       const sleepHours = Number(getVal(match, ['sleep_hours'], 7));
 
-      // Stime realistiche basate sui dati reali presenti
       const bb = getVal(match, ['body_battery', 'bodyBattery'], Math.min(100, Math.round(sleepScore * 0.9 + sleepHours * 2)));
       const str = getVal(match, ['stress_level', 'stress'], Math.max(10, Math.round(100 - sleepScore * 0.8)));
       const hrvVal = getVal(match, ['hrv', 'hrv_weekly_avg'], Math.round(110 - restingHr));
@@ -271,10 +269,14 @@ function renderHealthTab() {
     }
   });
 
-  const targetEntry = health[health.length - 1];
+  const todayYMD = formatDateYMD(new Date());
+  const targetEntry = health.find(h => {
+    const d = getVal(h, ['date', 'calendarDate', 'day']);
+    return d && String(d).startsWith(todayYMD);
+  }) || health[health.length - 1];
 
   const sleepScoreToday = Number(getVal(targetEntry, ['sleep_score'], 80));
-  const rhrToday = Number(getVal(targetEntry, ['resting_hr', 'avg_hr'], 48));
+  const rhrToday = Number(getVal(targetEntry, ['resting_hr'], 48));
   const sleepHoursToday = Number(getVal(targetEntry, ['sleep_hours'], 6.5));
 
   const bbToday = getVal(targetEntry, ['body_battery'], Math.min(100, Math.round(sleepScoreToday * 0.9 + sleepHoursToday * 2)));
@@ -299,7 +301,8 @@ function renderHealthTab() {
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  const vo2 = getVal(targetEntry, ['vo2_max', 'vo2max'], 54);
+  // VO2 Max impostato su 52
+  const vo2 = getVal(targetEntry, ['vo2_max', 'vo2max'], 52);
   document.getElementById('cardVo2Max').innerText = vo2 + ' ml/kg/min';
 
   const fitAge = getVal(targetEntry, ['fitness_age'], 20);
@@ -375,7 +378,7 @@ function initCharts(labels, steps, runs, bpm, sleep) {
       datasets: [
         {
           type: 'line',
-          label: 'FC Riposo (bpm)',
+          label: 'FC Media (bpm)',
           data: bpm,
           borderColor: '#00f0ff',
           backgroundColor: '#00f0ff',
@@ -408,7 +411,7 @@ function initCharts(labels, steps, runs, bpm, sleep) {
         yBpm: {
           type: 'linear',
           position: 'left',
-          title: { display: true, text: 'FC Riposo (bpm)', color: '#00f0ff' },
+          title: { display: true, text: 'FC Media (bpm)', color: '#00f0ff' },
           ticks: { color: '#00f0ff' },
           grid: { color: 'rgba(255,255,255,0.05)' }
         },
