@@ -24,10 +24,6 @@
       border-radius: 1.25rem;
       transition: all 0.3s ease;
     }
-    .glass-card:hover {
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
     
     .neon-orange-bright {
       border-left: 4px solid #ff6b00;
@@ -327,94 +323,11 @@
 
     </div>
 
-    <!-- TAB 3: RECORD & PB -->
-    <div id="tab-record" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-black text-white tracking-tight">Record Personali & Race Predictor</h2>
-          <p class="text-xs text-slate-400 mt-0.5">I tuoi migliori tempi e le proiezioni basate sui dati recenti</p>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="glass-card neon-orange-bright p-6">
-          <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Record 5K</span>
-          <div class="text-3xl font-black text-white mt-2">22:15</div>
-          <p class="text-xs text-slate-400 mt-1">Passo medio: 4:27 min/km</p>
-        </div>
-        <div class="glass-card neon-cyan-bright p-6">
-          <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Record 10K</span>
-          <div class="text-3xl font-black text-white mt-2">46:50</div>
-          <p class="text-xs text-slate-400 mt-1">Passo medio: 4:41 min/km</p>
-        </div>
-        <div class="glass-card neon-purple p-6">
-          <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Mezza Maratona</span>
-          <div class="text-3xl font-black text-white mt-2">1h 45m</div>
-          <p class="text-xs text-slate-400 mt-1">Passo medio: 4:58 min/km</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: COMPARAZIONE -->
-    <div id="tab-comparazione" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-black text-white tracking-tight">Comparazione Prestazioni</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Confronta i blocchi di allenamento e le sessioni chiave</p>
-        </div>
-      </div>
-      <div class="glass-card p-8 text-center text-slate-400">
-        <p class="text-sm font-semibold">Modulo di comparazione dati attivo per l'analisi dei progressi settimanali.</p>
-      </div>
-    </div>
-
-    <!-- TAB 5: ATTIVITÀ -->
-    <div id="tab-attivita" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-black text-white tracking-tight">Registro Attività Complete</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Elenco dettagliato delle sessioni di allenamento registrate</p>
-        </div>
-      </div>
-      <div class="glass-card p-6">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900/80 text-slate-400 uppercase font-bold">
-              <tr>
-                <th class="p-3">Data</th>
-                <th class="p-3">Tipo</th>
-                <th class="p-3">Distanza</th>
-                <th class="p-3">Tempo</th>
-                <th class="p-3">Passo Medio</th>
-                <th class="p-3">FC Media</th>
-              </tr>
-            </thead>
-            <tbody id="activityTableBody" class="divide-y divide-white/5">
-              <tr>
-                <td colspan="6" class="p-4 text-center text-slate-500">In attesa del caricamento attività...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 6: COACH -->
-    <div id="tab-coach" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-black text-white tracking-tight">AI Coach & Programmazione</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Suggerimenti di allenamento adattivi per il tuo obiettivo</p>
-        </div>
-      </div>
-      <div class="glass-card neon-orange-bright p-6">
-        <h3 class="text-lg font-bold text-white mb-2">Piano consigliato per la settimana</h3>
-        <p class="text-xs text-slate-300 leading-relaxed mb-4">
-          In base alla tua VFC e al recupero rilevato, oggi è consigliato uno scarico attivo o una corsa di recupero di 5 km a ritmo Z2. 
-          Mantieni la Frequenza Cardiaca sotto i 145 bpm per ottimizzare l'adattamento aerobico.
-        </p>
-        <span class="inline-block px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs font-bold border border-orange-500/30">Target: Sub-47' 10K</span>
-      </div>
-    </div>
+    <!-- ALTRE TAB -->
+    <div id="tab-record" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Personal Best & Predictor</div></div>
+    <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
+    <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
+    <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
 
   </main>
 
@@ -476,6 +389,7 @@
         if (!response.ok) throw new Error('File JSON non trovato');
         rawData = await response.json();
         
+        // Allineamento automatico alla data più recente presente nel JSON
         const health = rawData.daily_health || rawData.health_data || [];
         if (health.length > 0) {
           const lastEntry = health[health.length - 1];
@@ -489,7 +403,6 @@
 
         renderOverview();
         renderHealthTab();
-        renderActivityTable();
       } catch (err) {
         console.error("Errore nel caricamento del JSON:", err);
         const subHeader = document.getElementById('weekSubHeader');
@@ -600,7 +513,8 @@
       document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
       const health = rawData.daily_health || rawData.health_data || [];
-      const todayMatch = health.length > 0 ? health[health.length - 1] : {};
+      const todayYMD = formatDateYMD(new Date());
+      const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
 
       document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
       document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
@@ -675,8 +589,10 @@
         }
       });
 
-      const todayMatch = health.length > 0 ? health[health.length - 1] : {};
+      const todayYMD = formatDateYMD(new Date());
+      const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
 
+      // ALGORITMO STATO DI FORMA / PRONTEZZA
       const bbVal = Number(getVal(todayMatch, ['body_battery', 'body_battery_max', 'bodyBattery'], 70));
       const hrvVal = Number(getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value'], 50));
       const stressVal = Number(getVal(todayMatch, ['stress_level', 'avg_stress', 'stress'], 25));
@@ -700,6 +616,7 @@
       document.getElementById('cardFormStatus').innerText = statusText;
       document.getElementById('cardFormAdvice').innerText = adviceText;
 
+      // Altri Dati Biometrici
       const vo2 = getVal(userProfile, ['vo2_max', 'vo2max', 'vo2'], getVal(todayMatch, ['vo2_max', 'vo2max'], null));
       document.getElementById('cardVo2Max').innerText = vo2 !== null ? vo2 + ' ml/kg/min' : '--';
 
@@ -735,34 +652,6 @@
       });
 
       initHealthCharts(weekDays, bodyBattery, stress, hrv, rhr);
-    }
-
-    function renderActivityTable() {
-      if(!rawData || !rawData.activities) return;
-      const tbody = document.getElementById('activityTableBody');
-      if(!tbody) return;
-
-      tbody.innerHTML = '';
-      rawData.activities.slice(0, 10).forEach(act => {
-        const dateStr = getVal(act, ['date', 'start_time'], '--');
-        const typeStr = getVal(act, ['type', 'activity_type'], 'Corsa');
-        const distStr = getVal(act, ['distance_km', 'distance'], '0') + ' km';
-        const durationStr = getVal(act, ['duration', 'elapsed_time'], '--');
-        const paceStr = getVal(act, ['avg_pace', 'pace'], '--');
-        const hrStr = getVal(act, ['avg_hr', 'avg_heart_rate'], '--') + ' bpm';
-
-        const row = `
-          <tr class="hover:bg-white/5 transition">
-            <td class="p-3 font-semibold text-white">${dateStr}</td>
-            <td class="p-3 text-cyan-400 font-medium">${typeStr}</td>
-            <td class="p-3">${distStr}</td>
-            <td class="p-3">${durationStr}</td>
-            <td class="p-3">${paceStr}</td>
-            <td class="p-3">${hrStr}</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
     }
 
     function initCharts(labels, steps, runs, bpm, sleep) {
