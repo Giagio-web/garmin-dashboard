@@ -37,8 +37,8 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute, Recovery, VO2 Max e HRV (ultimi 14 giorni)
-    print("Estrazione dati salute, recovery, VO2 Max e HRV...")
+    # 2. Estrazione Dati Salute, Recovery, Body Battery, Stress, VO2 Max e HRV (ultimi 14 giorni)
+    print("Estrazione dati salute, Body Battery, Stress, Recovery, VO2 Max e HRV...")
     daily_health = []
     
     for i in range(14):
@@ -97,7 +97,50 @@ def fetch_garmin():
 
             calories = stats.get("totalKilocalories", 0) if isinstance(stats, dict) else 0
 
-            # --- NUOVO: RECUPERO VO2 MAX REALE ---
+            # --- RECUPERO BODY BATTERY REALE ---
+            body_battery_val = None
+            if isinstance(stats, dict):
+                body_battery_val = (
+                    stats.get("bodyBatteryMostRecentValue") or 
+                    stats.get("bodyBatteryChargedValue") or
+                    stats.get("bodyBatteryHighestValue")
+                )
+            try:
+                if not body_battery_val:
+                    bb_data = client.get_body_battery(day_str)
+                    if bb_data and isinstance(bb_data, list) and len(bb_data) > 0:
+                        last_bb = bb_data[-1]
+                        if isinstance(last_bb, dict):
+                            body_battery_val = last_bb.get("charged") or last_bb.get("bodyBatteryVersion") or last_bb.get("value")
+            except Exception:
+                pass
+
+            # --- RECUPERO STRESS REALE ---
+            stress_val = None
+            if isinstance(stats, dict):
+                stress_val = stats.get("averageStressLevel") or stats.get("stressLevel")
+            try:
+                if not stress_val:
+                    stress_data = client.get_stress_data(day_str)
+                    if stress_data and isinstance(stress_data, dict):
+                        stress_val = stress_data.get("avgStressLevel") or stress_data.get("averageStressLevel")
+            except Exception:
+                pass
+
+            # --- RECUPERO TEMPO DI RECUPERO (RECOVERY TIME IN ORE) ---
+            recovery_time_val = None
+            if isinstance(stats, dict):
+                recovery_time_val = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
+            try:
+                if recovery_time_val is None:
+                    # Garmin a volte restituisce i minuti di recupero
+                    rec_min = stats.get("timeToRecovery")
+                    if rec_min is not None:
+                        recovery_time_val = round(rec_min / 60)
+            except Exception:
+                pass
+
+            # --- RECUPERO VO2 MAX REALE MULTI-FONTE ---
             vo2_max_val = None
             try:
                 max_metrics = client.get_max_metrics(day_str)
@@ -110,14 +153,13 @@ def fetch_garmin():
                     )
                     if vo2_raw:
                         vo2_max_val = round(vo2_raw, 1)
-            except Exception as e:
-                print(f"Non è stato possibile recuperare il VO2 Max per {day_str}: {e}")
+            except Exception:
+                pass
 
-            # Fallback VO2 Max da user summary se max_metrics non lo trova
             if not vo2_max_val and isinstance(stats, dict):
-                vo2_max_val = stats.get("vo2MaxValue") or stats.get("vo2Max")
+                vo2_max_val = stats.get("vo2MaxValue") or stats.get("vo2Max") or stats.get("vO2MaxValue")
 
-            # --- NUOVO: RECUPERO HRV (Variabilità Frequenza Cardiaca) ---
+            # --- RECUPERO HRV (Variabilità Frequenza Cardiaca) ---
             hrv_val = None
             try:
                 hrv_data = client.get_hrv_data(day_str)
@@ -135,7 +177,10 @@ def fetch_garmin():
                 "sleep_score": sleep_score,
                 "calories": calories,
                 "vo2_max": vo2_max_val,
-                "hrv": hrv_val
+                "hrv": hrv_val,
+                "body_battery": body_battery_val,
+                "stress_level": stress_val,
+                "recovery_time_hours": recovery_time_val
             })
         except Exception as e:
             print(f"Errore recupero dati per {day_str}: {e}")
@@ -149,7 +194,7 @@ def fetch_garmin():
     with open("garmin_data.json", "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print("Dati Garmin, VO2 Max e Recovery aggiornati con successo!")
+    print("Dati Garmin (Body Battery, Stress, Recovery, VO2 Max) aggiornati con successo!")
 
 if __name__ == "__main__":
     fetch_garmin()
