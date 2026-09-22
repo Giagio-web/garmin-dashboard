@@ -904,12 +904,20 @@
     ],
     "daily_health": [
         {
+            "date": "2026-09-22",
+            "steps": 0,
+            "sleep_hours": 0.0,
+            "sleep_score": null,
+            "resting_hr": null,
+            "stress_level": 2
+        },
+        {
             "date": "2026-09-21",
-            "steps": 7664,
+            "steps": 9519,
             "sleep_hours": 6.52,
             "sleep_score": 82,
             "resting_hr": null,
-            "stress_level": 16
+            "stress_level": 17
         },
         {
             "date": "2026-09-20",
@@ -1001,14 +1009,6 @@
         },
         {
             "date": "2026-09-09",
-            "steps": 0,
-            "sleep_hours": 0.0,
-            "sleep_score": null,
-            "resting_hr": null,
-            "stress_level": null
-        },
-        {
-            "date": "2026-09-08",
             "steps": 0,
             "sleep_hours": 0.0,
             "sleep_score": null,
