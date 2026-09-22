@@ -191,7 +191,7 @@ function renderOverview() {
   const targetEntry = health.find(h => {
     const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
     return d === todayYMD;
-  }) || (health.length > 0 ? health[health.length - 1] : {});
+  }) || (health.length > 0 ? health[0] : {});
 
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
@@ -252,17 +252,15 @@ function renderHealthTab() {
     });
 
     if (match) {
-      const sleepScore = Number(getVal(match, ['sleep_score'], 80));
-      const restingHr = Number(getVal(match, ['resting_hr'], 48));
-      const sleepHours = Number(getVal(match, ['sleep_hours'], 7));
+      const restingHr = Number(getVal(match, ['resting_hr', 'restingHeartRate'], 48));
 
-      const bb = getVal(match, ['body_battery', 'bodyBattery'], Math.min(100, Math.round(sleepScore * 0.9 + sleepHours * 2)));
-      const str = getVal(match, ['stress_level', 'stress'], Math.max(10, Math.round(100 - sleepScore * 0.8)));
-      const hrvVal = getVal(match, ['hrv'], Math.round(110 - restingHr));
+      const bb = getVal(match, ['body_battery', 'bodyBattery', 'bodyBatteryMostRecentValue']);
+      const str = getVal(match, ['stress_level', 'stress', 'averageStressLevel']);
+      const hrvVal = getVal(match, ['hrv', 'hrvStatus'], Math.round(110 - restingHr));
 
-      bodyBattery.push(bb);
-      stress.push(str);
-      hrv.push(hrvVal);
+      bodyBattery.push(bb !== null ? Number(bb) : null);
+      stress.push(str !== null ? Number(str) : null);
+      hrv.push(hrvVal !== null ? Number(hrvVal) : null);
       rhr.push(restingHr);
     } else {
       bodyBattery.push(null);
@@ -278,82 +276,78 @@ function renderHealthTab() {
     return d === todayYMD;
   }) || health[0];
 
-  const sleepScoreToday = Number(getVal(targetEntry, ['sleep_score'], 80));
-  const rhrToday = Number(getVal(targetEntry, ['resting_hr'], 48));
-  const sleepHoursToday = Number(getVal(targetEntry, ['sleep_hours'], 6.5));
+  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore'], '--');
+  const rhrToday = getVal(targetEntry, ['resting_hr', 'restingHeartRate'], '--');
 
-  const bbToday = getVal(targetEntry, ['body_battery'], Math.min(100, Math.round(sleepScoreToday * 0.9 + sleepHoursToday * 2)));
-  const stressToday = getVal(targetEntry, ['stress_level'], Math.max(10, Math.round(100 - sleepScoreToday * 0.8)));
-  const hrvToday = Number(getVal(targetEntry, ['hrv'], Math.round(110 - rhrToday)));
+  // LEGGHI I DATI REALI INVIATI DA GARMIN CONNECT
+  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery'], '--');
+  const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
+  const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
 
-  // --- CALCOLO DINAMICO CARICO E RECUPERO DALLE ATTIVITÀ ---
-  let recentFatiguePenalty = 0;
-  let estimatedRecoveryHours = 0;
-
-  if (activities.length > 0) {
-    const sortedActivities = [...activities].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const lastAct = sortedActivities[0];
-    const lastActDate = new Date(lastAct.date);
-    const now = new Date();
-    const hoursSinceLastAct = Math.max(0, (now - lastActDate) / (1000 * 60 * 60));
-
-    const dist = Number(lastAct.distance_km || 0);
-    const avgHr = Number(lastAct.avg_hr || 140);
-
-    let baseRecoveryNeeded = Math.round((dist * 2.2) * (avgHr / 140));
-    if (baseRecoveryNeeded < 6 && dist > 0) baseRecoveryNeeded = 6;
-
-    estimatedRecoveryHours = Math.max(0, Math.round(baseRecoveryNeeded - hoursSinceLastAct));
-
-    if (hoursSinceLastAct < 48) {
-      recentFatiguePenalty = Math.round((48 - hoursSinceLastAct) * (dist / 5) * (avgHr / 150));
-    }
+  // TEMPO DI RECUPERO DA GARMIN
+  let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
+  if (recoveryHours === null || recoveryHours === undefined) {
+    recoveryHours = '--';
   }
 
-  let formScore = Math.round((bbToday * 0.35) + (Math.min(hrvToday, 100) * 0.35) + ((100 - stressToday) * 0.15) - recentFatiguePenalty);
-  formScore = Math.min(100, Math.max(15, formScore));
+  // CALCOLO PUNTI FORMA DINAMICO
+  let formScore = '--';
+  if (bbToday !== '--' && stressToday !== '--') {
+    const bbNum = Number(bbToday);
+    const stressNum = Number(stressToday);
+    const hrvNum = hrvToday !== '--' ? Number(hrvToday) : 50;
+    
+    formScore = Math.round((bbNum * 0.40) + (Math.min(hrvNum, 100) * 0.35) + ((100 - stressNum) * 0.25));
+    formScore = Math.min(100, Math.max(15, formScore));
+  }
 
-  document.getElementById('cardFormScore').innerText = formScore + ' %';
+  document.getElementById('cardFormScore').innerText = formScore !== '--' ? formScore + ' %' : '--';
 
   let statusText = "Forma Ottimale";
   let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-  if (formScore < 50) {
-    statusText = "Affaticamento Elevato";
-    adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
-  } else if (formScore < 75) {
-    statusText = "Forma Moderata";
-    adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+  if (formScore !== '--') {
+    if (formScore < 50) {
+      statusText = "Affaticamento Elevato";
+      adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
+    } else if (formScore < 75) {
+      statusText = "Forma Moderata";
+      adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+    }
+  } else {
+    statusText = "Dati in aggiornamento";
+    adviceText = "I dati Garmin vengono sincronizzati in tempo reale.";
   }
 
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  // --- REPERIMENTO VO2 MAX ---
+  // ESTRAZIONE VO2 MAX REALE DALLA CRONOLOGIA HEALTH
   let vo2 = null;
   for (let h of health) {
-    if (h.vo2_max !== null && h.vo2_max !== undefined) {
-      vo2 = h.vo2_max;
+    const candidate = getVal(h, ['vo2_max', 'vo2Max', 'vo2max']);
+    if (candidate !== null && candidate !== undefined) {
+      vo2 = candidate;
       break;
     }
   }
-  if (!vo2) vo2 = 54; 
+  if (!vo2) vo2 = "--";
 
-  document.getElementById('cardVo2Max').innerText = vo2 + ' ml/kg/min';
+  document.getElementById('cardVo2Max').innerText = vo2 + (vo2 !== '--' ? ' ml/kg/min' : '');
 
-  const fitAge = getVal(targetEntry, ['fitness_age'], 20);
+  const fitAge = getVal(targetEntry, ['fitness_age', 'fitnessAge'], 20);
   document.getElementById('cardFitnessAge').innerText = `Età Fitness: ${fitAge} anni`;
 
-  document.getElementById('cardHrvToday').innerText = hrvToday + ' ms';
-  document.getElementById('cardBodyBattery').innerText = bbToday + ' / 100';
-  document.getElementById('cardStressToday').innerText = stressToday + ' / 100';
-  document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday + ' / 100';
+  document.getElementById('cardHrvToday').innerText = hrvToday + (hrvToday !== '--' ? ' ms' : '');
+  document.getElementById('cardBodyBattery').innerText = bbToday + (bbToday !== '--' ? ' / 100' : '');
+  document.getElementById('cardStressToday').innerText = stressToday + (stressToday !== '--' ? ' / 100' : '');
+  document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday + (sleepScoreToday !== '--' ? ' / 100' : '');
 
-  document.getElementById('valRhr').innerText = rhrToday + ' bpm';
+  document.getElementById('valRhr').innerText = rhrToday + (rhrToday !== '--' ? ' bpm' : '');
   
-  const respToday = getVal(targetEntry, ['respiration_rate'], 14);
+  const respToday = getVal(targetEntry, ['respiration_rate', 'respirationRate'], 14);
   document.getElementById('valRespiration').innerText = respToday + ' brm';
 
-  document.getElementById('valRecoveryTime').innerText = estimatedRecoveryHours + ' ore';
+  document.getElementById('valRecoveryTime').innerText = recoveryHours + (recoveryHours !== '--' ? ' ore' : '');
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
