@@ -109,7 +109,7 @@
             <span class="text-xl">🏃</span>
           </div>
           <div id="cardDist" class="text-2xl font-black text-white">0.0 km</div>
-          <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 allenamenti svolti</p>
+          <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 corse svolte</p>
         </div>
 
         <!-- Card 2: FC Media Giornaliera -->
@@ -129,7 +129,7 @@
             <span class="text-xl">👟</span>
           </div>
           <div id="cardStepsToday" class="text-2xl font-black text-white">0</div>
-          <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi</p>
+          <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi/gg</p>
         </div>
 
         <!-- Card 4: Sonno -->
@@ -139,7 +139,7 @@
             <span class="text-xl">🌙</span>
           </div>
           <div id="cardSleepToday" class="text-2xl font-black text-white">0h 0m</div>
-          <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h 0m</p>
+          <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h/gg</p>
         </div>
 
         <!-- Card 5: Calorie -->
@@ -149,7 +149,7 @@
             <span class="text-xl">🔥</span>
           </div>
           <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
-          <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal</p>
+          <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal/gg</p>
         </div>
 
       </div>
@@ -157,7 +157,7 @@
       <!-- Grafici Affiancati -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Grafico 1: Corsa & Passi con confronto in alto a destra -->
+        <!-- Grafico 1: Corsa & Passi -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Distanza Corsa & Passi</span>
@@ -168,7 +168,7 @@
           </div>
         </div>
 
-        <!-- Grafico 2: Frequenza Cardiaca (SOPRA/IN PRIMO PIANO) + Sonno (SFONDO) con confronto -->
+        <!-- Grafico 2: FC Media & Sonno -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>FC Media Giornaliera & Ore di Sonno</span>
@@ -242,7 +242,7 @@
     }
 
     function getWeekMetrics(mondayObj) {
-      if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0 };
+      if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
       
       const health = rawData.daily_health || [];
       const activities = rawData.activities || [];
@@ -257,20 +257,25 @@
       const steps = [];
       const sleep = [];
       const bpm = [];
+      const calories = [];
       const runs = [0, 0, 0, 0, 0, 0, 0];
       let totalDist = 0;
 
-      weekDatesYMD.forEach((dateStr, idx) => {
+      weekDatesYMD.forEach((dateStr) => {
         const match = health.find(h => h.date === dateStr);
         if(match) {
-          if(match.steps !== undefined) steps.push(match.steps); else steps.push(null);
-          if(match.sleep_hours !== undefined) sleep.push(match.sleep_hours); else sleep.push(null);
+          if(match.steps !== undefined && match.steps !== null) steps.push(match.steps); else steps.push(null);
+          if(match.sleep_hours !== undefined && match.sleep_hours !== null) sleep.push(match.sleep_hours); else sleep.push(null);
+          
+          // FC Media stimata o registrata
           const hrVal = match.avg_hr || match.resting_hr;
-          if(hrVal !== undefined) bpm.push(hrVal); else bpm.push(null);
+          if(hrVal !== undefined && hrVal !== null) bpm.push(hrVal); else bpm.push(null);
+          if(match.calories !== undefined && match.calories !== null) calories.push(match.calories); else calories.push(null);
         } else {
           steps.push(null);
           sleep.push(null);
           bpm.push(null);
+          calories.push(null);
         }
       });
 
@@ -285,15 +290,18 @@
         }
       });
 
-      const validSteps = steps.filter(v => v !== null);
-      const validBpm = bpm.filter(v => v !== null);
-      const validSleep = sleep.filter(v => v !== null);
+      // FILTRAGGIO GIORNI EFFETTIVI (Esclude giorni futuri senza dati per calcolare medie reali)
+      const validSteps = steps.filter(v => v !== null && v > 0);
+      const validBpm = bpm.filter(v => v !== null && v > 0);
+      const validSleep = sleep.filter(v => v !== null && v > 0);
+      const validCal = calories.filter(v => v !== null && v > 0);
 
       const avgSteps = validSteps.length ? Math.round(validSteps.reduce((a,b)=>a+b,0)/validSteps.length) : 0;
       const avgBpm = validBpm.length ? Math.round(validBpm.reduce((a,b)=>a+b,0)/validBpm.length) : 0;
       const avgSleep = validSleep.length ? (validSleep.reduce((a,b)=>a+b,0)/validSleep.length).toFixed(1) : 0;
+      const avgCal = validCal.length ? Math.round(validCal.reduce((a,b)=>a+b,0)/validCal.length) : 0;
 
-      return { steps, runs, bpm, sleep, totalDist, avgSteps, avgBpm, avgSleep };
+      return { steps, runs, bpm, sleep, calories, totalDist, avgSteps, avgBpm, avgSleep, avgCal };
     }
 
     function renderOverview() {
@@ -338,9 +346,18 @@
 
       document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
       document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
-      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
-      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
+      
       document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
+      document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
+
+      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
+      document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
+
+      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
+      document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
+
+      document.getElementById('cardCalToday').innerText = (todayMatch.calories || 0).toLocaleString('it-IT') + ' kcal';
+      document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
 
       const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       const weekDays = dayLabels.map((lbl, idx) => {
@@ -391,7 +408,7 @@
         }
       });
 
-      // Chart 2: COMBINATO - Ore di Sonno (Barre in secondo piano) + BPM (Linea in PRIMO PIANO)
+      // Chart 2: COMBINATO - Ore di Sonno (Sfondo) + FC Media (Primo piano)
       const ctxBpmSleep = document.getElementById('chartBpmSleepCombined').getContext('2d');
       if(chartBpmSleepInstance) chartBpmSleepInstance.destroy();
 
@@ -409,7 +426,7 @@
               pointRadius: 5,
               pointHoverRadius: 7,
               tension: 0.3,
-              order: 1, // <--- IN PRIMO PIANO
+              order: 1,
               yAxisID: 'yBpm'
             },
             {
@@ -420,7 +437,7 @@
               borderColor: '#ff6b00',
               borderWidth: 1,
               borderRadius: 6,
-              order: 2, // <--- IN SECONDO PIANO
+              order: 2,
               yAxisID: 'ySleep'
             }
           ]
