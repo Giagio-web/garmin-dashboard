@@ -154,46 +154,35 @@
 
       </div>
 
-      <!-- Grafici -->
+      <!-- Grafici Affiancati -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Grafico 1: Corsa & Passi -->
+        <!-- Grafico 1: Corsa & Passi con confronto in alto a destra -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Distanza Corsa & Passi</span>
-            <span class="text-xs text-orange-400 font-semibold">Istogramma</span>
+            <span id="diffRunsStepsLabel" class="text-xs text-orange-400 font-semibold">vs sett. precedente: --</span>
           </h3>
-          <div class="h-64">
+          <div class="h-72">
             <canvas id="chartStepsRuns"></canvas>
           </div>
         </div>
 
-        <!-- Grafico 2: Frequenza Cardiaca Media Giornaliera -->
+        <!-- Grafico 2: Frequenza Cardiaca (SOPRA/IN PRIMO PIANO) + Sonno (SFONDO) con confronto -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Frequenza Cardiaca Media Giornaliera</span>
-            <span class="text-xs text-cyan-400 font-semibold">FC Media (bpm)</span>
+            <span>FC Media Giornaliera & Ore di Sonno</span>
+            <span id="diffBpmSleepLabel" class="text-xs text-cyan-400 font-semibold">vs sett. precedente: --</span>
           </h3>
-          <div class="h-64">
-            <canvas id="chartBpmAvg"></canvas>
-          </div>
-        </div>
-
-        <!-- Grafico 3: Sonno Giornaliero -->
-        <div class="glass-card p-6 lg:col-span-2">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Ore di Sonno Giornaliere</span>
-            <span class="text-xs text-sky-400 font-semibold">Riposo (Ore)</span>
-          </h3>
-          <div class="h-56">
-            <canvas id="chartSleep"></canvas>
+          <div class="h-72">
+            <canvas id="chartBpmSleepCombined"></canvas>
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- ALTRE TAB DUMMY -->
+    <!-- ALTRE TAB -->
     <div id="tab-salute" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Salute & Readiness Custom</div></div>
     <div id="tab-record" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Personal Best & Predictor</div></div>
     <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
@@ -205,10 +194,8 @@
   <script>
     let rawData = null;
     let chartStepsInstance = null;
-    let chartBpmInstance = null;
-    let chartSleepInstance = null;
+    let chartBpmSleepInstance = null;
 
-    // Gestione Offset Settimanale (0 = corrente, -1 = precedente, +1 = successiva)
     let weekOffset = 0;
 
     function switchTab(tabId) {
@@ -254,85 +241,115 @@
       }
     }
 
-    function renderOverview() {
-      if(!rawData) return;
+    function getWeekMetrics(mondayObj) {
+      if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0 };
+      
       const health = rawData.daily_health || [];
       const activities = rawData.activities || [];
 
-      // Calcola il Lunedì della settimana selezionata
-      const today = new Date();
-      const currentMonday = getMonday(today);
-      currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
-      currentMonday.setHours(0, 0, 0, 0);
-
-      // Calcola la Domenica corrispondente
-      const currentSunday = new Date(currentMonday);
-      currentSunday.setDate(currentSunday.getDate() + 6);
-      currentSunday.setHours(23, 59, 59, 999);
-
-      // Aggiorna Label Date
-      const rangeText = `${formatDateShort(currentMonday)} – ${formatDateShort(currentSunday)}`;
-      document.getElementById('currentWeekRange').innerText = rangeText;
-      document.getElementById('weekSubHeader').innerText = `Settimana Solare: ${rangeText}`;
-
-      // Genera i 7 giorni (Lun -> Dom)
-      const weekDays = [];
-      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       const weekDatesYMD = [];
-
       for(let i=0; i<7; i++) {
-        const d = new Date(currentMonday);
+        const d = new Date(mondayObj);
         d.setDate(d.getDate() + i);
-        weekDays.push(`${dayLabels[i]} ${d.getDate()}`);
         weekDatesYMD.push(formatDateYMD(d));
       }
 
-      // Mappa Dati Salute per ciascuno dei 7 giorni
-      const stepsData = [];
-      const sleepData = [];
-      const bpmData = [];
+      const steps = [];
+      const sleep = [];
+      const bpm = [];
+      const runs = [0, 0, 0, 0, 0, 0, 0];
+      let totalDist = 0;
 
-      weekDatesYMD.forEach(dateStr => {
+      weekDatesYMD.forEach((dateStr, idx) => {
         const match = health.find(h => h.date === dateStr);
         if(match) {
-          stepsData.push(match.steps || 0);
-          sleepData.push(match.sleep_hours || 0);
-          bpmData.push(match.resting_hr || null); // o FC media se presente
+          if(match.steps !== undefined) steps.push(match.steps); else steps.push(null);
+          if(match.sleep_hours !== undefined) sleep.push(match.sleep_hours); else sleep.push(null);
+          const hrVal = match.avg_hr || match.resting_hr;
+          if(hrVal !== undefined) bpm.push(hrVal); else bpm.push(null);
         } else {
-          stepsData.push(null);
-          sleepData.push(null);
-          bpmData.push(null);
+          steps.push(null);
+          sleep.push(null);
+          bpm.push(null);
         }
       });
-
-      // Mappa Corsa per ciascuno dei 7 giorni
-      const runData = [0, 0, 0, 0, 0, 0, 0];
-      let totalDistWeek = 0;
-      let runCountWeek = 0;
 
       activities.forEach(act => {
         if (act.type === 'running' && act.date) {
           const actDateStr = act.date.split('T')[0].split(' ')[0];
           const dayIndex = weekDatesYMD.indexOf(actDateStr);
           if(dayIndex !== -1) {
-            runData[dayIndex] += (act.distance_km || 0);
-            totalDistWeek += (act.distance_km || 0);
-            runCountWeek++;
+            runs[dayIndex] += (act.distance_km || 0);
+            totalDist += (act.distance_km || 0);
           }
         }
       });
 
+      const validSteps = steps.filter(v => v !== null);
+      const validBpm = bpm.filter(v => v !== null);
+      const validSleep = sleep.filter(v => v !== null);
+
+      const avgSteps = validSteps.length ? Math.round(validSteps.reduce((a,b)=>a+b,0)/validSteps.length) : 0;
+      const avgBpm = validBpm.length ? Math.round(validBpm.reduce((a,b)=>a+b,0)/validBpm.length) : 0;
+      const avgSleep = validSleep.length ? (validSleep.reduce((a,b)=>a+b,0)/validSleep.length).toFixed(1) : 0;
+
+      return { steps, runs, bpm, sleep, totalDist, avgSteps, avgBpm, avgSleep };
+    }
+
+    function renderOverview() {
+      if(!rawData) return;
+
+      const today = new Date();
+      const currentMonday = getMonday(today);
+      currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
+      currentMonday.setHours(0, 0, 0, 0);
+
+      const currentSunday = new Date(currentMonday);
+      currentSunday.setDate(currentSunday.getDate() + 6);
+
+      const prevMonday = new Date(currentMonday);
+      prevMonday.setDate(prevMonday.getDate() - 7);
+
+      const rangeText = `${formatDateShort(currentMonday)} – ${formatDateShort(currentSunday)}`;
+      document.getElementById('currentWeekRange').innerText = rangeText;
+      document.getElementById('weekSubHeader').innerText = `Settimana Solare: ${rangeText}`;
+
+      const currData = getWeekMetrics(currentMonday);
+      const prevData = getWeekMetrics(prevMonday);
+
+      // Calcolo Differenze per Etichette in alto a destra
+      const diffSteps = currData.avgSteps - prevData.avgSteps;
+      const diffRuns = currData.totalDist - prevData.totalDist;
+      const diffBpm = currData.avgBpm - prevData.avgBpm;
+      const diffSleep = (currData.avgSleep - prevData.avgSleep).toFixed(1);
+
+      const stepsDiffStr = diffSteps >= 0 ? `+${diffSteps.toLocaleString('it-IT')}` : `${diffSteps.toLocaleString('it-IT')}`;
+      const runsDiffStr = diffRuns >= 0 ? `+${diffRuns.toFixed(1)}` : `${diffRuns.toFixed(1)}`;
+      const bpmDiffStr = diffBpm >= 0 ? `+${diffBpm}` : `${diffBpm}`;
+      const sleepDiffStr = diffSleep >= 0 ? `+${diffSleep}` : `${diffSleep}`;
+
+      document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
+      document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
+
       // Aggiorna Top Cards
+      const health = rawData.daily_health || [];
       const todayYMD = formatDateYMD(today);
       const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
 
-      document.getElementById('cardDist').innerText = totalDistWeek.toFixed(1) + ' km';
-      document.getElementById('cardWorkouts').innerText = runCountWeek + ' corse in questa settimana';
+      document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
+      document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
       document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
       document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
-      document.getElementById('cardBpmToday').innerText = (todayMatch.resting_hr || '--') + ' bpm';
+      document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
 
-      initCharts(weekDays, stepsData, runData, bpmData, sleepData);
+      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+      const weekDays = dayLabels.map((lbl, idx) => {
+        const d = new Date(currentMonday);
+        d.setDate(d.getDate() + idx);
+        return `${lbl} ${d.getDate()}`;
+      });
+
+      initCharts(weekDays, currData.steps, currData.runs, currData.bpm, currData.sleep);
     }
 
     function initCharts(labels, steps, runs, bpm, sleep) {
@@ -374,54 +391,37 @@
         }
       });
 
-      // Chart 2: FC Media
-      const ctxBpm = document.getElementById('chartBpmAvg').getContext('2d');
-      if(chartBpmInstance) chartBpmInstance.destroy();
+      // Chart 2: COMBINATO - Ore di Sonno (Barre in secondo piano) + BPM (Linea in PRIMO PIANO)
+      const ctxBpmSleep = document.getElementById('chartBpmSleepCombined').getContext('2d');
+      if(chartBpmSleepInstance) chartBpmSleepInstance.destroy();
 
-      chartBpmInstance = new Chart(ctxBpm, {
-        type: 'line',
+      chartBpmSleepInstance = new Chart(ctxBpmSleep, {
         data: {
           labels: labels,
           datasets: [
             {
+              type: 'line',
               label: 'FC Media (bpm)',
               data: bpm,
               borderColor: '#00f0ff',
-              backgroundColor: 'rgba(0, 240, 255, 0.15)',
-              fill: true,
-              borderWidth: 3,
+              backgroundColor: '#00f0ff',
+              borderWidth: 3.5,
               pointRadius: 5,
-              tension: 0.3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-          }
-        }
-      });
-
-      // Chart 3: Sonno
-      const ctxSleep = document.getElementById('chartSleep').getContext('2d');
-      if(chartSleepInstance) chartSleepInstance.destroy();
-
-      chartSleepInstance = new Chart(ctxSleep, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
+              pointHoverRadius: 7,
+              tension: 0.3,
+              order: 1, // <--- IN PRIMO PIANO
+              yAxisID: 'yBpm'
+            },
             {
+              type: 'bar',
               label: 'Ore di Sonno (h)',
               data: sleep,
-              backgroundColor: 'rgba(0, 166, 255, 0.75)',
-              borderColor: '#00a6ff',
+              backgroundColor: 'rgba(255, 107, 0, 0.35)',
+              borderColor: '#ff6b00',
               borderWidth: 1,
-              borderRadius: 6
+              borderRadius: 6,
+              order: 2, // <--- IN SECONDO PIANO
+              yAxisID: 'ySleep'
             }
           ]
         },
@@ -431,7 +431,20 @@
           plugins: { legend: { labels: { color: '#94a3b8' } } },
           scales: {
             x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#00a6ff' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            yBpm: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'BPM Media', color: '#00f0ff' },
+              ticks: { color: '#00f0ff' },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            ySleep: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'Ore Sonno (h)', color: '#ff6b00' },
+              ticks: { color: '#ff6b00' },
+              grid: { display: false }
+            }
           }
         }
       });
