@@ -188,7 +188,7 @@
         </div>
       </div>
 
-      <!-- RIGA 1: 2 Card XL (Stato Forma Algoritmo & VO2 Max) -->
+      <!-- RIGA 1: 2 Card XL -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         
         <!-- Card XL 1: Algoritmo Stato Forma -->
@@ -206,7 +206,7 @@
           </div>
         </div>
 
-        <!-- Card XL 2: VO2 Max (Ex Stato VFC) -->
+        <!-- Card XL 2: VO2 Max -->
         <div class="glass-card neon-azure p-6 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-start mb-2">
@@ -223,7 +223,7 @@
 
       </div>
 
-      <!-- RIGA 2: 4 Card Standard (Stato VFC, Body Battery, Stress, Sonno) -->
+      <!-- RIGA 2: 4 Card Standard -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         
         <!-- Stato VFC (HRV) -->
@@ -333,12 +333,13 @@
 
   <script>
     let rawData = null;
+    let baseDate = new Date();
+    let weekOffset = 0;
+
     let chartStepsInstance = null;
     let chartBpmSleepInstance = null;
     let chartBodyBatteryStressInstance = null;
     let chartHrvRhrInstance = null;
-
-    let weekOffset = 0;
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -350,10 +351,10 @@
     }
 
     function getMonday(d) {
-      d = new Date(d);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
     }
 
     function formatDateShort(dateObj) {
@@ -368,6 +369,14 @@
       return `${y}-${m}-${d}`;
     }
 
+    function getVal(obj, keys, defaultVal = null) {
+      if (!obj) return defaultVal;
+      for (let k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+      }
+      return defaultVal;
+    }
+
     function changeWeek(direction) {
       weekOffset += direction;
       renderOverview();
@@ -377,18 +386,34 @@
     async function loadDashboard() {
       try {
         const response = await fetch('garmin_data.json');
+        if (!response.ok) throw new Error('File JSON non trovato');
         rawData = await response.json();
+        
+        // Allineamento automatico alla data più recente presente nel JSON
+        const health = rawData.daily_health || rawData.health_data || [];
+        if (health.length > 0) {
+          const lastEntry = health[health.length - 1];
+          if (lastEntry && lastEntry.date) {
+            const parts = lastEntry.date.split('-');
+            if (parts.length === 3) {
+              baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+          }
+        }
+
         renderOverview();
         renderHealthTab();
       } catch (err) {
         console.error("Errore nel caricamento del JSON:", err);
+        const subHeader = document.getElementById('weekSubHeader');
+        if (subHeader) subHeader.innerText = "Impossibile caricare garmin_data.json";
       }
     }
 
     function getWeekMetrics(mondayObj) {
       if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
       
-      const health = rawData.daily_health || [];
+      const health = rawData.daily_health || rawData.health_data || [];
       const activities = rawData.activities || [];
 
       const weekDatesYMD = [];
@@ -408,12 +433,17 @@
       weekDatesYMD.forEach((dateStr) => {
         const match = health.find(h => h.date === dateStr);
         if(match) {
-          if(match.steps !== undefined && match.steps !== null) steps.push(match.steps); else steps.push(null);
-          if(match.sleep_hours !== undefined && match.sleep_hours !== null) sleep.push(match.sleep_hours); else sleep.push(null);
-          
-          const hrVal = match.avg_hr || match.resting_hr;
-          if(hrVal !== undefined && hrVal !== null) bpm.push(hrVal); else bpm.push(null);
-          if(match.calories !== undefined && match.calories !== null) calories.push(match.calories); else calories.push(null);
+          const st = getVal(match, ['steps', 'total_steps', 'step_count']);
+          steps.push(st !== null ? Number(st) : null);
+
+          const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours', 'sleepHours']);
+          sleep.push(sl !== null ? Number(sl) : null);
+
+          const hr = getVal(match, ['avg_hr', 'resting_hr', 'resting_heart_rate', 'avg_heart_rate']);
+          bpm.push(hr !== null ? Number(hr) : null);
+
+          const cal = getVal(match, ['calories', 'total_calories', 'active_calories']);
+          calories.push(cal !== null ? Number(cal) : null);
         } else {
           steps.push(null);
           sleep.push(null);
@@ -423,12 +453,15 @@
       });
 
       activities.forEach(act => {
-        if (act.type === 'running' && act.date) {
-          const actDateStr = act.date.split('T')[0].split(' ')[0];
+        const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
+        if (actDateRaw) {
+          const actDateStr = String(actDateRaw).split('T')[0].split(' ')[0];
           const dayIndex = weekDatesYMD.indexOf(actDateStr);
-          if(dayIndex !== -1) {
-            runs[dayIndex] += (act.distance_km || 0);
-            totalDist += (act.distance_km || 0);
+          const actType = String(getVal(act, ['type', 'activity_type', 'activityType'], '')).toLowerCase();
+          if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running')) {
+            const dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
+            runs[dayIndex] += dist;
+            totalDist += dist;
           }
         }
       });
@@ -449,8 +482,7 @@
     function renderOverview() {
       if(!rawData) return;
 
-      const today = new Date();
-      const currentMonday = getMonday(today);
+      const currentMonday = getMonday(baseDate);
       currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
       currentMonday.setHours(0, 0, 0, 0);
 
@@ -480,23 +512,27 @@
       document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
       document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
-      const health = rawData.daily_health || [];
-      const todayYMD = formatDateYMD(today);
-      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
+      const health = rawData.daily_health || rawData.health_data || [];
+      const todayYMD = formatDateYMD(new Date());
+      const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
 
       document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
       document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
       
-      document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
+      const hrVal = getVal(todayMatch, ['avg_hr', 'resting_hr', 'resting_heart_rate'], '--');
+      document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
       document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
 
-      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
+      const stepsVal = getVal(todayMatch, ['steps', 'total_steps', 'step_count'], 0);
+      document.getElementById('cardStepsToday').innerText = Number(stepsVal).toLocaleString('it-IT');
       document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
 
-      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
+      const sleepVal = getVal(todayMatch, ['sleep_hours', 'sleep_time', 'total_sleep_hours'], 0);
+      document.getElementById('cardSleepToday').innerText = sleepVal + 'h';
       document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
 
-      document.getElementById('cardCalToday').innerText = (todayMatch.calories || 0).toLocaleString('it-IT') + ' kcal';
+      const calVal = getVal(todayMatch, ['calories', 'total_calories', 'active_calories'], 0);
+      document.getElementById('cardCalToday').innerText = Number(calVal).toLocaleString('it-IT') + ' kcal';
       document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
 
       const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -512,17 +548,16 @@
     function renderHealthTab() {
       if(!rawData) return;
 
-      const today = new Date();
-      const currentMonday = getMonday(today);
+      const currentMonday = getMonday(baseDate);
       currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
       currentMonday.setHours(0, 0, 0, 0);
 
-      const health = rawData.daily_health || [];
-      const userProfile = rawData.user_profile || {};
+      const health = rawData.daily_health || rawData.health_data || [];
+      const userProfile = rawData.user_profile || rawData.profile || {};
 
       const weekDatesYMD = [];
       for(let i=0; i<7; i++) {
-        const d = new Date(mondayObj = currentMonday);
+        const d = new Date(currentMonday);
         d.setDate(d.getDate() + i);
         weekDatesYMD.push(formatDateYMD(d));
       }
@@ -535,10 +570,17 @@
       weekDatesYMD.forEach((dateStr) => {
         const match = health.find(h => h.date === dateStr);
         if(match) {
-          bodyBattery.push(match.body_battery || match.body_battery_max || null);
-          stress.push(match.stress_level || match.avg_stress || null);
-          hrv.push(match.hrv || match.hrv_weekly_avg || null);
-          rhr.push(match.resting_hr || null);
+          const bb = getVal(match, ['body_battery', 'body_battery_max', 'bodyBattery']);
+          bodyBattery.push(bb !== null ? Number(bb) : null);
+
+          const st = getVal(match, ['stress_level', 'avg_stress', 'stress']);
+          stress.push(st !== null ? Number(st) : null);
+
+          const hv = getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
+          hrv.push(hv !== null ? Number(hv) : null);
+
+          const rh = getVal(match, ['resting_hr', 'resting_heart_rate', 'rhr']);
+          rhr.push(rh !== null ? Number(rh) : null);
         } else {
           bodyBattery.push(null);
           stress.push(null);
@@ -547,13 +589,13 @@
         }
       });
 
-      const todayYMD = formatDateYMD(today);
-      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
+      const todayYMD = formatDateYMD(new Date());
+      const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
 
       // ALGORITMO STATO DI FORMA / PRONTEZZA
-      const bbVal = todayMatch.body_battery || todayMatch.body_battery_max || 70;
-      const hrvVal = todayMatch.hrv || todayMatch.hrv_weekly_avg || 50;
-      const stressVal = todayMatch.stress_level || todayMatch.avg_stress || 25;
+      const bbVal = Number(getVal(todayMatch, ['body_battery', 'body_battery_max', 'bodyBattery'], 70));
+      const hrvVal = Number(getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value'], 50));
+      const stressVal = Number(getVal(todayMatch, ['stress_level', 'avg_stress', 'stress'], 25));
       
       let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
       formScore = Math.min(100, Math.max(0, formScore));
@@ -574,18 +616,33 @@
       document.getElementById('cardFormStatus').innerText = statusText;
       document.getElementById('cardFormAdvice').innerText = adviceText;
 
-      // Altri Dati
-      document.getElementById('cardVo2Max').innerText = userProfile.vo2_max ? userProfile.vo2_max + ' ml/kg/min' : '--';
-      document.getElementById('cardFitnessAge').innerText = userProfile.fitness_age ? `Età Fitness: ${userProfile.fitness_age} anni` : 'Età Fitness: --';
+      // Altri Dati Biometrici
+      const vo2 = getVal(userProfile, ['vo2_max', 'vo2max', 'vo2'], getVal(todayMatch, ['vo2_max', 'vo2max'], null));
+      document.getElementById('cardVo2Max').innerText = vo2 !== null ? vo2 + ' ml/kg/min' : '--';
 
-      document.getElementById('cardHrvToday').innerText = (todayMatch.hrv || todayMatch.hrv_weekly_avg || '--') + ' ms';
-      document.getElementById('cardBodyBattery').innerText = (todayMatch.body_battery || todayMatch.body_battery_max || '--') + ' / 100';
-      document.getElementById('cardStressToday').innerText = (todayMatch.stress_level || todayMatch.avg_stress || '--') + ' / 100';
-      document.getElementById('cardSleepScoreToday').innerText = (todayMatch.sleep_score || '--') + ' / 100';
+      const fitAge = getVal(userProfile, ['fitness_age', 'fitnessAge'], getVal(todayMatch, ['fitness_age', 'fitnessAge'], null));
+      document.getElementById('cardFitnessAge').innerText = fitAge !== null ? `Età Fitness: ${fitAge} anni` : 'Età Fitness: --';
 
-      document.getElementById('valRhr').innerText = (todayMatch.resting_hr || '--') + ' bpm';
-      document.getElementById('valRespiration').innerText = (todayMatch.respiration_rate || '--') + ' brm';
-      document.getElementById('valRecoveryTime').innerText = (todayMatch.recovery_time_hours || '--') + ' ore';
+      const hrvToday = getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
+      document.getElementById('cardHrvToday').innerText = hrvToday !== null ? hrvToday + ' ms' : '-- ms';
+
+      const bbToday = getVal(todayMatch, ['body_battery', 'body_battery_max', 'bodyBattery']);
+      document.getElementById('cardBodyBattery').innerText = bbToday !== null ? bbToday + ' / 100' : '--';
+
+      const stressToday = getVal(todayMatch, ['stress_level', 'avg_stress', 'stress']);
+      document.getElementById('cardStressToday').innerText = stressToday !== null ? stressToday + ' / 100' : '--';
+
+      const sleepScoreToday = getVal(todayMatch, ['sleep_score', 'sleepScore']);
+      document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday !== null ? sleepScoreToday + ' / 100' : '-- / 100';
+
+      const rhrToday = getVal(todayMatch, ['resting_hr', 'resting_heart_rate', 'rhr']);
+      document.getElementById('valRhr').innerText = rhrToday !== null ? rhrToday + ' bpm' : '-- bpm';
+
+      const respToday = getVal(todayMatch, ['respiration_rate', 'avg_respiration', 'respiration']);
+      document.getElementById('valRespiration').innerText = respToday !== null ? respToday + ' brm' : '-- brm';
+
+      const recToday = getVal(todayMatch, ['recovery_time_hours', 'recovery_time', 'recovery']);
+      document.getElementById('valRecoveryTime').innerText = recToday !== null ? recToday + ' ore' : '-- ore';
 
       const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
       const weekDays = dayLabels.map((lbl, idx) => {
