@@ -37,8 +37,8 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute + Campionamento H24 Frequenza Cardiaca
-    print("Estrazione dati salute con campionamento H24...")
+    # 2. Estrazione Dati Salute + Campionamento H24 Frequenza Cardiaca e Passi Live
+    print("Estrazione dati salute...")
     daily_health = []
     
     for i in range(14):
@@ -54,22 +54,31 @@ def fetch_garmin():
                 sleep_sec = sleep['dailySleepDTO'].get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
             
+            # Recupero Passi con controllo Live
             steps = stats.get("totalSteps", 0)
+            try:
+                steps_data = client.get_steps_data(day_str)
+                if steps_data:
+                    live_steps = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
+                    if live_steps > steps:
+                        steps = live_steps
+            except Exception as steps_err:
+                print(f"Impossibile verificare i passi live per {day_str}: {steps_err}")
+
             resting_hr = stats.get("restingHeartRate", None)
 
-            # Campionamento puntuale del tracciato FC H24
+            # Campionamento puntuale del tracciato FC H24 per media esatta
             real_avg_hr = None
             try:
                 hr_data = client.get_heart_rates(day_str)
                 if hr_data and 'heartRateValues' in hr_data and hr_data['heartRateValues']:
-                    # Filtra solo i campioni con battito valido (>0)
                     valid_samples = [item[1] for item in hr_data['heartRateValues'] if item and len(item) > 1 and item[1] is not None and item[1] > 0]
                     if valid_samples:
                         real_avg_hr = round(sum(valid_samples) / len(valid_samples))
             except Exception as hr_err:
                 print(f"Impossibile campionare HR di dettaglio per {day_str}: {hr_err}")
 
-            # Fallback se il campionamento non restituisce dati
+            # Fallback se il tracciato non ha campioni
             if not real_avg_hr:
                 real_avg_hr = stats.get("averageHeartRate", resting_hr)
 
