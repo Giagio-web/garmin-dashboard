@@ -226,6 +226,7 @@ function renderHealthTab() {
   if (!rawData) return;
 
   const health = getHealthArray();
+  const activities = rawData.activities || [];
   if (health.length === 0) return;
 
   const currentMonday = getMonday(baseDate);
@@ -257,7 +258,7 @@ function renderHealthTab() {
 
       const bb = getVal(match, ['body_battery', 'bodyBattery'], Math.min(100, Math.round(sleepScore * 0.9 + sleepHours * 2)));
       const str = getVal(match, ['stress_level', 'stress'], Math.max(10, Math.round(100 - sleepScore * 0.8)));
-      const hrvVal = getVal(match, ['hrv', 'hrv_weekly_avg'], Math.round(110 - restingHr));
+      const hrvVal = getVal(match, ['hrv'], Math.round(110 - restingHr));
 
       bodyBattery.push(bb);
       stress.push(str);
@@ -275,7 +276,7 @@ function renderHealthTab() {
   const targetEntry = health.find(h => {
     const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
     return d === todayYMD;
-  }) || health[health.length - 1];
+  }) || health[0];
 
   const sleepScoreToday = Number(getVal(targetEntry, ['sleep_score'], 80));
   const rhrToday = Number(getVal(targetEntry, ['resting_hr'], 48));
@@ -283,10 +284,34 @@ function renderHealthTab() {
 
   const bbToday = getVal(targetEntry, ['body_battery'], Math.min(100, Math.round(sleepScoreToday * 0.9 + sleepHoursToday * 2)));
   const stressToday = getVal(targetEntry, ['stress_level'], Math.max(10, Math.round(100 - sleepScoreToday * 0.8)));
-  const hrvToday = getVal(targetEntry, ['hrv'], Math.round(110 - rhrToday));
+  const hrvToday = Number(getVal(targetEntry, ['hrv'], Math.round(110 - rhrToday)));
 
-  let formScore = Math.round((bbToday * 0.4) + (Math.min(hrvToday, 100) * 0.4) + ((100 - stressToday) * 0.2));
-  formScore = Math.min(100, Math.max(0, formScore));
+  // --- CALCOLO DINAMICO CARICO E RECUPERO DALLE ATTIVITÀ ---
+  let recentFatiguePenalty = 0;
+  let estimatedRecoveryHours = 0;
+
+  if (activities.length > 0) {
+    const sortedActivities = [...activities].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastAct = sortedActivities[0];
+    const lastActDate = new Date(lastAct.date);
+    const now = new Date();
+    const hoursSinceLastAct = Math.max(0, (now - lastActDate) / (1000 * 60 * 60));
+
+    const dist = Number(lastAct.distance_km || 0);
+    const avgHr = Number(lastAct.avg_hr || 140);
+
+    let baseRecoveryNeeded = Math.round((dist * 2.2) * (avgHr / 140));
+    if (baseRecoveryNeeded < 6 && dist > 0) baseRecoveryNeeded = 6;
+
+    estimatedRecoveryHours = Math.max(0, Math.round(baseRecoveryNeeded - hoursSinceLastAct));
+
+    if (hoursSinceLastAct < 48) {
+      recentFatiguePenalty = Math.round((48 - hoursSinceLastAct) * (dist / 5) * (avgHr / 150));
+    }
+  }
+
+  let formScore = Math.round((bbToday * 0.35) + (Math.min(hrvToday, 100) * 0.35) + ((100 - stressToday) * 0.15) - recentFatiguePenalty);
+  formScore = Math.min(100, Math.max(15, formScore));
 
   document.getElementById('cardFormScore').innerText = formScore + ' %';
 
@@ -294,7 +319,7 @@ function renderHealthTab() {
   let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
   if (formScore < 50) {
     statusText = "Affaticamento Elevato";
-    adviceText = "Si consiglia riposo attivo, stretching o corsa leggera di recupero.";
+    adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
   } else if (formScore < 75) {
     statusText = "Forma Moderata";
     adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
@@ -303,7 +328,16 @@ function renderHealthTab() {
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  const vo2 = getVal(targetEntry, ['vo2_max', 'vo2max'], 52);
+  // --- REPERIMENTO VO2 MAX ---
+  let vo2 = null;
+  for (let h of health) {
+    if (h.vo2_max !== null && h.vo2_max !== undefined) {
+      vo2 = h.vo2_max;
+      break;
+    }
+  }
+  if (!vo2) vo2 = 54; 
+
   document.getElementById('cardVo2Max').innerText = vo2 + ' ml/kg/min';
 
   const fitAge = getVal(targetEntry, ['fitness_age'], 20);
@@ -319,8 +353,7 @@ function renderHealthTab() {
   const respToday = getVal(targetEntry, ['respiration_rate'], 14);
   document.getElementById('valRespiration').innerText = respToday + ' brm';
 
-  const recToday = getVal(targetEntry, ['recovery_time_hours'], 18);
-  document.getElementById('valRecoveryTime').innerText = recToday + ' ore';
+  document.getElementById('valRecoveryTime').innerText = estimatedRecoveryHours + ' ore';
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
