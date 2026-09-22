@@ -7,60 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #050811;
-      color: #e2e8f0;
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(255, 107, 0, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(0, 212, 255, 0.12) 0%, transparent 40%);
-      background-attachment: fixed;
-    }
-    .glass-card {
-      background: rgba(10, 16, 28, 0.85);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 1.25rem;
-      transition: all 0.3s ease;
-    }
-    
-    .neon-orange-bright {
-      border-left: 4px solid #ff6b00;
-      box-shadow: -5px 0 25px -3px rgba(255, 107, 0, 0.6), inset 0 0 15px rgba(255, 107, 0, 0.08);
-    }
-    .neon-cyan-bright {
-      border-left: 4px solid #00f0ff;
-      box-shadow: -5px 0 25px -3px rgba(0, 240, 255, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.08);
-    }
-    .neon-amber {
-      border-left: 4px solid #ff9d00;
-      box-shadow: -5px 0 25px -3px rgba(255, 157, 0, 0.5), inset 0 0 15px rgba(255, 157, 0, 0.08);
-    }
-    .neon-azure {
-      border-left: 4px solid #00a6ff;
-      box-shadow: -5px 0 25px -3px rgba(0, 166, 255, 0.5), inset 0 0 15px rgba(0, 166, 255, 0.08);
-    }
-    .neon-coral {
-      border-left: 4px solid #ff4500;
-      box-shadow: -5px 0 25px -3px rgba(255, 69, 0, 0.6), inset 0 0 15px rgba(255, 69, 0, 0.08);
-    }
-    .neon-emerald {
-      border-left: 4px solid #10b981;
-      box-shadow: -5px 0 25px -3px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.08);
-    }
-    .neon-purple {
-      border-left: 4px solid #a855f7;
-      box-shadow: -5px 0 25px -3px rgba(168, 85, 247, 0.6), inset 0 0 15px rgba(168, 85, 247, 0.08);
-    }
-
-    .nav-btn.active {
-      background: linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%);
-      color: #050811;
-      font-weight: 800;
-      box-shadow: 0 0 20px rgba(255, 107, 0, 0.7);
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen pb-12">
 
@@ -99,7 +46,6 @@
           <h2 class="text-2xl font-black text-white tracking-tight">Panoramica Settimanale</h2>
           <p id="weekSubHeader" class="text-xs text-slate-400 mt-0.5">Caricamento data...</p>
         </div>
-        <!-- Controlli Settimana Dinamica -->
         <div class="flex items-center space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-white/10">
           <button onclick="changeWeek(-1)" class="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white text-xs font-bold transition">← Settimana Prec.</button>
           <span id="currentWeekRange" class="text-xs font-extrabold px-3 text-orange-400 drop-shadow-[0_0_8px_rgba(255,107,0,0.8)]">--</span>
@@ -188,10 +134,7 @@
         </div>
       </div>
 
-      <!-- RIGA 1: 2 Card XL (Stato Forma Algoritmo & VFC) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        
-        <!-- Card XL 1: Algoritmo Stato Forma -->
         <div class="glass-card neon-orange-bright p-6 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-start mb-2">
@@ -206,27 +149,31 @@
           </div>
         </div>
 
-        <!-- Card XL 2: Stato VFC / HRV -->
-        <div class="glass-card neon-cyan-bright p-6 flex flex-col justify-between">
+        <div class="glass-card neon-azure p-6 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
-              <span class="text-2xl">⚡</span>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">VO2 Max & Idoneità</span>
+              <span class="text-2xl">🫁</span>
             </div>
-            <div id="cardHrvToday" class="text-4xl font-black text-white">-- ms</div>
+            <div id="cardVo2Max" class="text-4xl font-black text-white">--</div>
           </div>
           <div class="mt-4">
-            <p id="cardHrvStatus" class="text-sm font-bold text-cyan-300">Bilanciato</p>
-            <p class="text-xs text-slate-400 mt-1">Variabilità della frequenza cardiaca misurata a riposo</p>
+            <p id="cardFitnessAge" class="text-sm font-bold text-sky-300">Età Fitness: -- anni</p>
+            <p class="text-xs text-slate-400 mt-1">Capacità aerobica massima calcolata tramite dati di corsa</p>
           </div>
         </div>
-
       </div>
 
-      <!-- RIGA 2: 4 Card Standard (Body Battery, Stress, Sonno, VO2 Max) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        
-        <!-- Body Battery -->
+        <div class="glass-card neon-cyan-bright p-5">
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
+            <span class="text-xl">⚡</span>
+          </div>
+          <div id="cardHrvToday" class="text-2xl font-black text-white">-- ms</div>
+          <p id="cardHrvStatus" class="text-xs text-cyan-300/80 mt-1">Bilanciato</p>
+        </div>
+
         <div class="glass-card neon-emerald p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Body Battery</span>
@@ -236,7 +183,6 @@
           <p id="cardBodyBatteryStatus" class="text-xs text-emerald-300/80 mt-1">Carica Ottimale</p>
         </div>
 
-        <!-- Livello Stress -->
         <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Livello Stress</span>
@@ -246,7 +192,6 @@
           <p id="cardStressStatus" class="text-xs text-amber-300/80 mt-1">Stress Basso</p>
         </div>
 
-        <!-- Punteggio Sonno -->
         <div class="glass-card neon-purple p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Punteggio Sonno</span>
@@ -255,20 +200,8 @@
           <div id="cardSleepScoreToday" class="text-2xl font-black text-white">-- / 100</div>
           <p id="cardSleepScoreStatus" class="text-xs text-purple-300/80 mt-1">Buon Riposo</p>
         </div>
-
-        <!-- VO2 Max -->
-        <div class="glass-card neon-azure p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">VO2 Max</span>
-            <span class="text-xl">🫁</span>
-          </div>
-          <div id="cardVo2Max" class="text-2xl font-black text-white">--</div>
-          <p id="cardFitnessAge" class="text-xs text-sky-300/80 mt-1">Età Fitness: -- anni</p>
-        </div>
-
       </div>
 
-      <!-- Grafici Salute -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
@@ -291,7 +224,6 @@
         </div>
       </div>
 
-      <!-- Sezione Dettagli Fisiologici Integrati -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="glass-card p-5">
           <div class="flex justify-between items-center mb-3">
@@ -320,7 +252,6 @@
           <p class="text-xs text-slate-400 mt-1">Tempo stimato per il ripristino completo</p>
         </div>
       </div>
-
     </div>
 
     <!-- ALTRE TAB -->
@@ -331,465 +262,6 @@
 
   </main>
 
-  <script>
-    let rawData = null;
-    let chartStepsInstance = null;
-    let chartBpmSleepInstance = null;
-    let chartBodyBatteryStressInstance = null;
-    let chartHrvRhrInstance = null;
-
-    let weekOffset = 0;
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.remove('hidden');
-      const activeBtn = document.getElementById('btn-' + tabId.replace('tab-', ''));
-      if(activeBtn) activeBtn.classList.add('active');
-    }
-
-    function getMonday(d) {
-      d = new Date(d);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
-    }
-
-    function formatDateShort(dateObj) {
-      const monthNames = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giug", "Lug", "Ago", "Sett", "Ott", "Nov", "Dic"];
-      return dateObj.getDate() + " " + monthNames[dateObj.getMonth()];
-    }
-
-    function formatDateYMD(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function changeWeek(direction) {
-      weekOffset += direction;
-      renderOverview();
-      renderHealthTab();
-    }
-
-    async function loadDashboard() {
-      try {
-        const response = await fetch('garmin_data.json');
-        rawData = await response.json();
-        renderOverview();
-        renderHealthTab();
-      } catch (err) {
-        console.error("Errore nel caricamento del JSON:", err);
-      }
-    }
-
-    function getWeekMetrics(mondayObj) {
-      if(!rawData) return { steps: [], runs: [], bpm: [], sleep: [], totalDist: 0, avgSteps: 0, avgBpm: 0, avgSleep: 0, calories: [] };
-      
-      const health = rawData.daily_health || [];
-      const activities = rawData.activities || [];
-
-      const weekDatesYMD = [];
-      for(let i=0; i<7; i++) {
-        const d = new Date(mondayObj);
-        d.setDate(d.getDate() + i);
-        weekDatesYMD.push(formatDateYMD(d));
-      }
-
-      const steps = [];
-      const sleep = [];
-      const bpm = [];
-      const calories = [];
-      const runs = [0, 0, 0, 0, 0, 0, 0];
-      let totalDist = 0;
-
-      weekDatesYMD.forEach((dateStr) => {
-        const match = health.find(h => h.date === dateStr);
-        if(match) {
-          if(match.steps !== undefined && match.steps !== null) steps.push(match.steps); else steps.push(null);
-          if(match.sleep_hours !== undefined && match.sleep_hours !== null) sleep.push(match.sleep_hours); else sleep.push(null);
-          
-          const hrVal = match.avg_hr || match.resting_hr;
-          if(hrVal !== undefined && hrVal !== null) bpm.push(hrVal); else bpm.push(null);
-          if(match.calories !== undefined && match.calories !== null) calories.push(match.calories); else calories.push(null);
-        } else {
-          steps.push(null);
-          sleep.push(null);
-          bpm.push(null);
-          calories.push(null);
-        }
-      });
-
-      activities.forEach(act => {
-        if (act.type === 'running' && act.date) {
-          const actDateStr = act.date.split('T')[0].split(' ')[0];
-          const dayIndex = weekDatesYMD.indexOf(actDateStr);
-          if(dayIndex !== -1) {
-            runs[dayIndex] += (act.distance_km || 0);
-            totalDist += (act.distance_km || 0);
-          }
-        }
-      });
-
-      const validSteps = steps.filter(v => v !== null && v > 0);
-      const validBpm = bpm.filter(v => v !== null && v > 0);
-      const validSleep = sleep.filter(v => v !== null && v > 0);
-      const validCal = calories.filter(v => v !== null && v > 0);
-
-      const avgSteps = validSteps.length ? Math.round(validSteps.reduce((a,b)=>a+b,0)/validSteps.length) : 0;
-      const avgBpm = validBpm.length ? Math.round(validBpm.reduce((a,b)=>a+b,0)/validBpm.length) : 0;
-      const avgSleep = validSleep.length ? (validSleep.reduce((a,b)=>a+b,0)/validSleep.length).toFixed(1) : 0;
-      const avgCal = validCal.length ? Math.round(validCal.reduce((a,b)=>a+b,0)/validCal.length) : 0;
-
-      return { steps, runs, bpm, sleep, calories, totalDist, avgSteps, avgBpm, avgSleep, avgCal };
-    }
-
-    function renderOverview() {
-      if(!rawData) return;
-
-      const today = new Date();
-      const currentMonday = getMonday(today);
-      currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
-      currentMonday.setHours(0, 0, 0, 0);
-
-      const currentSunday = new Date(currentMonday);
-      currentSunday.setDate(currentSunday.getDate() + 6);
-
-      const prevMonday = new Date(currentMonday);
-      prevMonday.setDate(prevMonday.getDate() - 7);
-
-      const rangeText = `${formatDateShort(currentMonday)} – ${formatDateShort(currentSunday)}`;
-      document.getElementById('currentWeekRange').innerText = rangeText;
-      document.getElementById('weekSubHeader').innerText = `Settimana Solare: ${rangeText}`;
-
-      const currData = getWeekMetrics(currentMonday);
-      const prevData = getWeekMetrics(prevMonday);
-
-      const diffSteps = currData.avgSteps - prevData.avgSteps;
-      const diffRuns = currData.totalDist - prevData.totalDist;
-      const diffBpm = currData.avgBpm - prevData.avgBpm;
-      const diffSleep = (currData.avgSleep - prevData.avgSleep).toFixed(1);
-
-      const stepsDiffStr = diffSteps >= 0 ? `+${diffSteps.toLocaleString('it-IT')}` : `${diffSteps.toLocaleString('it-IT')}`;
-      const runsDiffStr = diffRuns >= 0 ? `+${diffRuns.toFixed(1)}` : `${diffRuns.toFixed(1)}`;
-      const bpmDiffStr = diffBpm >= 0 ? `+${diffBpm}` : `${diffBpm}`;
-      const sleepDiffStr = diffSleep >= 0 ? `+${diffSleep}` : `${diffSleep}`;
-
-      document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
-      document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
-
-      const health = rawData.daily_health || [];
-      const todayYMD = formatDateYMD(today);
-      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
-
-      document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
-      document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
-      
-      document.getElementById('cardBpmToday').innerText = (todayMatch.avg_hr || todayMatch.resting_hr || '--') + ' bpm';
-      document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
-
-      document.getElementById('cardStepsToday').innerText = (todayMatch.steps || 0).toLocaleString('it-IT');
-      document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
-
-      document.getElementById('cardSleepToday').innerText = (todayMatch.sleep_hours || 0) + 'h';
-      document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
-
-      document.getElementById('cardCalToday').innerText = (todayMatch.calories || 0).toLocaleString('it-IT') + ' kcal';
-      document.getElementById('cardCalAvg').innerText = `Media sett.: ${currData.avgCal.toLocaleString('it-IT')} kcal/gg`;
-
-      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-      const weekDays = dayLabels.map((lbl, idx) => {
-        const d = new Date(currentMonday);
-        d.setDate(d.getDate() + idx);
-        return `${lbl} ${d.getDate()}`;
-      });
-
-      initCharts(weekDays, currData.steps, currData.runs, currData.bpm, currData.sleep);
-    }
-
-    function renderHealthTab() {
-      if(!rawData) return;
-
-      const today = new Date();
-      const currentMonday = getMonday(today);
-      currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
-      currentMonday.setHours(0, 0, 0, 0);
-
-      const health = rawData.daily_health || [];
-      const userProfile = rawData.user_profile || {};
-
-      const weekDatesYMD = [];
-      for(let i=0; i<7; i++) {
-        const d = new Date(mondayObj = currentMonday);
-        d.setDate(d.getDate() + i);
-        weekDatesYMD.push(formatDateYMD(d));
-      }
-
-      const bodyBattery = [];
-      const stress = [];
-      const hrv = [];
-      const rhr = [];
-
-      weekDatesYMD.forEach((dateStr) => {
-        const match = health.find(h => h.date === dateStr);
-        if(match) {
-          bodyBattery.push(match.body_battery || match.body_battery_max || null);
-          stress.push(match.stress_level || match.avg_stress || null);
-          hrv.push(match.hrv || match.hrv_weekly_avg || null);
-          rhr.push(match.resting_hr || null);
-        } else {
-          bodyBattery.push(null);
-          stress.push(null);
-          hrv.push(null);
-          rhr.push(null);
-        }
-      });
-
-      const todayYMD = formatDateYMD(today);
-      const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
-
-      // ALGORITMO STATO DI FORMA / PRONTEZZA
-      const bbVal = todayMatch.body_battery || todayMatch.body_battery_max || 70;
-      const hrvVal = todayMatch.hrv || todayMatch.hrv_weekly_avg || 50;
-      const stressVal = todayMatch.stress_level || todayMatch.avg_stress || 25;
-      
-      // Calcolo ponderato
-      let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
-      formScore = Math.min(100, Math.max(0, formScore));
-
-      document.getElementById('cardFormScore').innerText = formScore + ' %';
-      
-      let statusText = "Forma Ottimale";
-      let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-      
-      if(formScore < 50) {
-        statusText = "Affaticamento Elevato";
-        adviceText = "Si consiglia riposo attivo, stretching o corsa leggera di recupero.";
-      } else if(formScore < 75) {
-        statusText = "Forma Moderata";
-        adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
-      }
-
-      document.getElementById('cardFormStatus').innerText = statusText;
-      document.getElementById('cardFormAdvice').innerText = adviceText;
-
-      // Altri Dati
-      document.getElementById('cardHrvToday').innerText = (todayMatch.hrv || todayMatch.hrv_weekly_avg || '--') + ' ms';
-      document.getElementById('cardBodyBattery').innerText = (todayMatch.body_battery || todayMatch.body_battery_max || '--') + ' / 100';
-      document.getElementById('cardStressToday').innerText = (todayMatch.stress_level || todayMatch.avg_stress || '--') + ' / 100';
-      document.getElementById('cardSleepScoreToday').innerText = (todayMatch.sleep_score || '--') + ' / 100';
-      
-      document.getElementById('cardVo2Max').innerText = userProfile.vo2_max ? userProfile.vo2_max + ' ml/kg/min' : '--';
-      document.getElementById('cardFitnessAge').innerText = userProfile.fitness_age ? `Età Fitness: ${userProfile.fitness_age} anni` : 'Età Fitness: --';
-
-      document.getElementById('valRhr').innerText = (todayMatch.resting_hr || '--') + ' bpm';
-      document.getElementById('valRespiration').innerText = (todayMatch.respiration_rate || '--') + ' brm';
-      document.getElementById('valRecoveryTime').innerText = (todayMatch.recovery_time_hours || '--') + ' ore';
-
-      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-      const weekDays = dayLabels.map((lbl, idx) => {
-        const d = new Date(currentMonday);
-        d.setDate(d.getDate() + idx);
-        return `${lbl} ${d.getDate()}`;
-      });
-
-      initHealthCharts(weekDays, bodyBattery, stress, hrv, rhr);
-    }
-
-    function initCharts(labels, steps, runs, bpm, sleep) {
-      const ctxSteps = document.getElementById('chartStepsRuns').getContext('2d');
-      if(chartStepsInstance) chartStepsInstance.destroy();
-
-      chartStepsInstance = new Chart(ctxSteps, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Passi',
-              data: steps,
-              backgroundColor: 'rgba(0, 240, 255, 0.75)',
-              borderColor: '#00f0ff',
-              borderWidth: 1,
-              borderRadius: 6
-            },
-            {
-              label: 'Corsa (km)',
-              data: runs,
-              backgroundColor: 'rgba(255, 107, 0, 0.85)',
-              borderColor: '#ff6b00',
-              borderWidth: 1,
-              borderRadius: 6
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-          }
-        }
-      });
-
-      const ctxBpmSleep = document.getElementById('chartBpmSleepCombined').getContext('2d');
-      if(chartBpmSleepInstance) chartBpmSleepInstance.destroy();
-
-      chartBpmSleepInstance = new Chart(ctxBpmSleep, {
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'line',
-              label: 'FC Media (bpm)',
-              data: bpm,
-              borderColor: '#00f0ff',
-              backgroundColor: '#00f0ff',
-              borderWidth: 3.5,
-              pointRadius: 5,
-              pointHoverRadius: 7,
-              tension: 0.3,
-              order: 1,
-              yAxisID: 'yBpm'
-            },
-            {
-              type: 'bar',
-              label: 'Ore di Sonno (h)',
-              data: sleep,
-              backgroundColor: 'rgba(255, 107, 0, 0.35)',
-              borderColor: '#ff6b00',
-              borderWidth: 1,
-              borderRadius: 6,
-              order: 2,
-              yAxisID: 'ySleep'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            yBpm: {
-              type: 'linear',
-              position: 'left',
-              title: { display: true, text: 'BPM Media', color: '#00f0ff' },
-              ticks: { color: '#00f0ff' },
-              grid: { color: 'rgba(255,255,255,0.05)' }
-            },
-            ySleep: {
-              type: 'linear',
-              position: 'right',
-              title: { display: true, text: 'Ore Sonno (h)', color: '#ff6b00' },
-              ticks: { color: '#ff6b00' },
-              grid: { display: false }
-            }
-          }
-        }
-      });
-    }
-
-    function initHealthCharts(labels, bodyBattery, stress, hrv, rhr) {
-      const ctxBbStress = document.getElementById('chartBodyBatteryStress').getContext('2d');
-      if(chartBodyBatteryStressInstance) chartBodyBatteryStressInstance.destroy();
-
-      chartBodyBatteryStressInstance = new Chart(ctxBbStress, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Body Battery',
-              data: bodyBattery,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.15)',
-              fill: true,
-              borderWidth: 3,
-              tension: 0.3
-            },
-            {
-              label: 'Stress Level',
-              data: stress,
-              borderColor: '#ff9d00',
-              backgroundColor: 'transparent',
-              borderWidth: 2,
-              borderDash: [5, 5],
-              tension: 0.3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-          }
-        }
-      });
-
-      const ctxHrvRhr = document.getElementById('chartHrvRhr').getContext('2d');
-      if(chartHrvRhrInstance) chartHrvRhrInstance.destroy();
-
-      chartHrvRhrInstance = new Chart(ctxHrvRhr, {
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'bar',
-              label: 'VFC / HRV (ms)',
-              data: hrv,
-              backgroundColor: 'rgba(0, 240, 255, 0.5)',
-              borderColor: '#00f0ff',
-              borderWidth: 1,
-              borderRadius: 6,
-              yAxisID: 'yHrv'
-            },
-            {
-              type: 'line',
-              label: 'FC Riposo (bpm)',
-              data: rhr,
-              borderColor: '#ff4500',
-              backgroundColor: '#ff4500',
-              borderWidth: 3,
-              pointRadius: 4,
-              tension: 0.3,
-              yAxisID: 'yRhr'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
-          scales: {
-            x: { ticks: { color: '#64748b' }, grid: { display: false } },
-            yHrv: {
-              type: 'linear',
-              position: 'left',
-              title: { display: true, text: 'VFC (ms)', color: '#00f0ff' },
-              ticks: { color: '#00f0ff' },
-              grid: { color: 'rgba(255,255,255,0.05)' }
-            },
-            yRhr: {
-              type: 'linear',
-              position: 'right',
-              title: { display: true, text: 'RHR (bpm)', color: '#ff4500' },
-              ticks: { color: '#ff4500' },
-              grid: { display: false }
-            }
-          }
-        }
-      });
-    }
-
-    window.onload = loadDashboard;
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
