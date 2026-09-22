@@ -109,8 +109,6 @@
 
       <!-- Top Cards Neon -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        
-        <!-- Card 1: Corsa -->
         <div class="glass-card neon-orange-bright p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Corsa Settimana</span>
@@ -120,7 +118,6 @@
           <p id="cardWorkouts" class="text-xs text-orange-300/80 mt-1">0 corse svolte</p>
         </div>
 
-        <!-- Card 2: FC Media Giornaliera -->
         <div class="glass-card neon-cyan-bright p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC Media Oggi</span>
@@ -130,7 +127,6 @@
           <p id="cardBpmAvg" class="text-xs text-cyan-300/80 mt-1">Media sett.: -- bpm</p>
         </div>
 
-        <!-- Card 3: Passi -->
         <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Passi Oggi</span>
@@ -140,7 +136,6 @@
           <p id="cardStepsAvg" class="text-xs text-amber-300/80 mt-1">Media sett.: 0 passi/gg</p>
         </div>
 
-        <!-- Card 4: Sonno -->
         <div class="glass-card neon-azure p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">Sonno</span>
@@ -150,7 +145,6 @@
           <p id="cardSleepAvg" class="text-xs text-sky-300/80 mt-1">Media sett.: 0h/gg</p>
         </div>
 
-        <!-- Card 5: Calorie -->
         <div class="glass-card neon-coral p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-orange-500">Calorie</span>
@@ -159,13 +153,10 @@
           <div id="cardCalToday" class="text-2xl font-black text-white">0 kcal</div>
           <p id="cardCalAvg" class="text-xs text-orange-300/80 mt-1">Media sett.: 0 kcal/gg</p>
         </div>
-
       </div>
 
       <!-- Grafici Affiancati -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Grafico 1: Corsa & Passi -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Distanza Corsa & Passi</span>
@@ -176,7 +167,6 @@
           </div>
         </div>
 
-        <!-- Grafico 2: FC Media & Sonno -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>FC Media Giornaliera & Ore di Sonno</span>
@@ -186,7 +176,6 @@
             <canvas id="chartBpmSleepCombined"></canvas>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -199,10 +188,45 @@
         </div>
       </div>
 
-      <!-- Top Cards Salute Neon -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <!-- RIGA 1: 2 Card XL (Stato Forma Algoritmo & VFC) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         
-        <!-- Card 1: Body Battery -->
+        <!-- Card XL 1: Algoritmo Stato Forma -->
+        <div class="glass-card neon-orange-bright p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">Stato Forma & Prontezza</span>
+              <span class="text-2xl">🔥</span>
+            </div>
+            <div id="cardFormScore" class="text-4xl font-black text-white">-- %</div>
+          </div>
+          <div class="mt-4">
+            <p id="cardFormStatus" class="text-sm font-bold text-orange-300">Calcolo in corso...</p>
+            <p id="cardFormAdvice" class="text-xs text-slate-400 mt-1">Aggiornamento biometrico basato su VFC, Body Battery e Stress.</p>
+          </div>
+        </div>
+
+        <!-- Card XL 2: Stato VFC / HRV -->
+        <div class="glass-card neon-cyan-bright p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
+              <span class="text-2xl">⚡</span>
+            </div>
+            <div id="cardHrvToday" class="text-4xl font-black text-white">-- ms</div>
+          </div>
+          <div class="mt-4">
+            <p id="cardHrvStatus" class="text-sm font-bold text-cyan-300">Bilanciato</p>
+            <p class="text-xs text-slate-400 mt-1">Variabilità della frequenza cardiaca misurata a riposo</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGA 2: 4 Card Standard (Body Battery, Stress, Sonno, VO2 Max) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        
+        <!-- Body Battery -->
         <div class="glass-card neon-emerald p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Body Battery</span>
@@ -212,17 +236,7 @@
           <p id="cardBodyBatteryStatus" class="text-xs text-emerald-300/80 mt-1">Carica Ottimale</p>
         </div>
 
-        <!-- Card 2: Stato VFC / HRV -->
-        <div class="glass-card neon-cyan-bright p-5">
-          <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Stato VFC (HRV)</span>
-            <span class="text-xl">⚡</span>
-          </div>
-          <div id="cardHrvToday" class="text-2xl font-black text-white">-- ms</div>
-          <p id="cardHrvStatus" class="text-xs text-cyan-300/80 mt-1">Bilanciato</p>
-        </div>
-
-        <!-- Card 3: Livello di Stress -->
+        <!-- Livello Stress -->
         <div class="glass-card neon-amber p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Livello Stress</span>
@@ -232,7 +246,7 @@
           <p id="cardStressStatus" class="text-xs text-amber-300/80 mt-1">Stress Basso</p>
         </div>
 
-        <!-- Card 4: Punteggio Sonno -->
+        <!-- Punteggio Sonno -->
         <div class="glass-card neon-purple p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Punteggio Sonno</span>
@@ -242,22 +256,20 @@
           <p id="cardSleepScoreStatus" class="text-xs text-purple-300/80 mt-1">Buon Riposo</p>
         </div>
 
-        <!-- Card 5: VO2 Max & Età Fitness -->
-        <div class="glass-card neon-orange-bright p-5">
+        <!-- VO2 Max -->
+        <div class="glass-card neon-azure p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-orange-400">VO2 Max</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-sky-400">VO2 Max</span>
             <span class="text-xl">🫁</span>
           </div>
           <div id="cardVo2Max" class="text-2xl font-black text-white">--</div>
-          <p id="cardFitnessAge" class="text-xs text-orange-300/80 mt-1">Età Fitness: -- anni</p>
+          <p id="cardFitnessAge" class="text-xs text-sky-300/80 mt-1">Età Fitness: -- anni</p>
         </div>
 
       </div>
 
       <!-- Grafici Salute -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        
-        <!-- Grafico 1: Body Battery & Stress -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Body Battery & Livello Stress</span>
@@ -268,7 +280,6 @@
           </div>
         </div>
 
-        <!-- Grafico 2: VFC (HRV) & FC a Riposo -->
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
             <span>Variabilità Frequenza Cardiaca (VFC) & FC Riposo</span>
@@ -278,7 +289,6 @@
             <canvas id="chartHrvRhr"></canvas>
           </div>
         </div>
-
       </div>
 
       <!-- Sezione Dettagli Fisiologici Integrati -->
@@ -540,8 +550,34 @@
       const todayYMD = formatDateYMD(today);
       const todayMatch = health.find(h => h.date === todayYMD) || health[0] || {};
 
-      document.getElementById('cardBodyBattery').innerText = (todayMatch.body_battery || todayMatch.body_battery_max || '--') + ' / 100';
+      // ALGORITMO STATO DI FORMA / PRONTEZZA
+      const bbVal = todayMatch.body_battery || todayMatch.body_battery_max || 70;
+      const hrvVal = todayMatch.hrv || todayMatch.hrv_weekly_avg || 50;
+      const stressVal = todayMatch.stress_level || todayMatch.avg_stress || 25;
+      
+      // Calcolo ponderato
+      let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
+      formScore = Math.min(100, Math.max(0, formScore));
+
+      document.getElementById('cardFormScore').innerText = formScore + ' %';
+      
+      let statusText = "Forma Ottimale";
+      let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
+      
+      if(formScore < 50) {
+        statusText = "Affaticamento Elevato";
+        adviceText = "Si consiglia riposo attivo, stretching o corsa leggera di recupero.";
+      } else if(formScore < 75) {
+        statusText = "Forma Moderata";
+        adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+      }
+
+      document.getElementById('cardFormStatus').innerText = statusText;
+      document.getElementById('cardFormAdvice').innerText = adviceText;
+
+      // Altri Dati
       document.getElementById('cardHrvToday').innerText = (todayMatch.hrv || todayMatch.hrv_weekly_avg || '--') + ' ms';
+      document.getElementById('cardBodyBattery').innerText = (todayMatch.body_battery || todayMatch.body_battery_max || '--') + ' / 100';
       document.getElementById('cardStressToday').innerText = (todayMatch.stress_level || todayMatch.avg_stress || '--') + ' / 100';
       document.getElementById('cardSleepScoreToday').innerText = (todayMatch.sleep_score || '--') + ' / 100';
       
