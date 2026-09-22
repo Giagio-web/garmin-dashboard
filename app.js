@@ -35,6 +35,11 @@ function formatDateYMD(dateObj) {
   return `${y}-${m}-${d}`;
 }
 
+function normalizeDateStr(dateInput) {
+  if (!dateInput) return '';
+  return String(dateInput).split('T')[0].split(' ')[0];
+}
+
 function getVal(obj, keys, defaultVal = null) {
   if (!obj) return defaultVal;
   for (let k of keys) {
@@ -53,11 +58,10 @@ function changeWeek(direction) {
 
 async function loadDashboard() {
   try {
-    const response = await fetch('garmin_data.json?t=' + new Date().getTime()); // Busta la cache per il sync manuale
+    const response = await fetch('garmin_data.json?t=' + new Date().getTime());
     if (!response.ok) throw new Error('File JSON non trovato');
     rawData = await response.json();
     
-    // Imposta la base date sulla data odierna di sistema
     baseDate = new Date();
 
     renderOverview();
@@ -95,8 +99,8 @@ function getWeekMetrics(mondayObj) {
 
   weekDatesYMD.forEach((dateStr) => {
     const match = health.find(h => {
-      const d = getVal(h, ['date', 'calendarDate', 'day']);
-      return d && String(d).startsWith(dateStr);
+      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+      return d === dateStr;
     });
 
     if(match) {
@@ -106,7 +110,6 @@ function getWeekMetrics(mondayObj) {
       const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours']);
       sleep.push(sl !== null ? Number(sl) : null);
 
-      // FC Media giornaliera (priorità a avg_hr)
       const hr = getVal(match, ['avg_hr', 'avg_heart_rate', 'resting_hr']);
       bpm.push(hr !== null ? Number(hr) : null);
 
@@ -123,9 +126,10 @@ function getWeekMetrics(mondayObj) {
   activities.forEach(act => {
     const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
     if (actDateRaw) {
-      const actDateStr = String(actDateRaw).split('T')[0].split(' ')[0];
+      const actDateStr = normalizeDateStr(actDateRaw);
       const dayIndex = weekDatesYMD.indexOf(actDateStr);
       const actType = String(getVal(act, ['type', 'activity_type'], '')).toLowerCase();
+      
       if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running')) {
         let dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
         if (dist > 1000) dist = dist / 1000;
@@ -184,16 +188,14 @@ function renderOverview() {
   const health = getHealthArray();
   const todayYMD = formatDateYMD(new Date());
   
-  // Cerca prima il giorno di oggi, altrimenti prende l'ultimo record disponibile
   const targetEntry = health.find(h => {
-    const d = getVal(h, ['date', 'calendarDate', 'day']);
-    return d && String(d).startsWith(todayYMD);
+    const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+    return d === todayYMD;
   }) || (health.length > 0 ? health[health.length - 1] : {});
 
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
   
-  // FC Media di oggi (avg_hr)
   const hrVal = getVal(targetEntry, ['avg_hr', 'avg_heart_rate', 'resting_hr'], '--');
   document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
   document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
@@ -244,8 +246,8 @@ function renderHealthTab() {
 
   weekDatesYMD.forEach((dateStr) => {
     const match = health.find(h => {
-      const d = getVal(h, ['date', 'calendarDate', 'day']);
-      return d && String(d).startsWith(dateStr);
+      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+      return d === dateStr;
     });
 
     if (match) {
@@ -271,8 +273,8 @@ function renderHealthTab() {
 
   const todayYMD = formatDateYMD(new Date());
   const targetEntry = health.find(h => {
-    const d = getVal(h, ['date', 'calendarDate', 'day']);
-    return d && String(d).startsWith(todayYMD);
+    const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+    return d === todayYMD;
   }) || health[health.length - 1];
 
   const sleepScoreToday = Number(getVal(targetEntry, ['sleep_score'], 80));
@@ -301,7 +303,6 @@ function renderHealthTab() {
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  // VO2 Max impostato su 52
   const vo2 = getVal(targetEntry, ['vo2_max', 'vo2max'], 52);
   document.getElementById('cardVo2Max').innerText = vo2 + ' ml/kg/min';
 
