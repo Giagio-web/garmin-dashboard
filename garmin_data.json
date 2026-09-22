@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-09-22 12:01:03",
+  "last_updated": "2026-09-22 15:50:17",
   "activities": [
+    {
+      "id": 24456989826,
+      "name": "Milano Corsa su pista",
+      "type": "running",
+      "date": "2026-09-22 16:02:37",
+      "distance_km": 5.69,
+      "duration_min": 38.23,
+      "avg_hr": 148.0,
+      "max_hr": 172.0,
+      "calories": 503.0
+    },
     {
       "id": 24434057757,
       "name": "Vercelli Corsa",
@@ -16,12 +27,12 @@
   "daily_health": [
     {
       "date": "2026-09-22",
-      "steps": 4268,
+      "steps": 15353,
       "resting_hr": 43,
-      "avg_hr": 57,
+      "avg_hr": 66,
       "sleep_hours": 6.45,
       "sleep_score": 83,
-      "calories": 1129.0,
+      "calories": 2348.0,
       "vo2_max": null,
       "hrv": 99
     },
