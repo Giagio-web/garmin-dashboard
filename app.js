@@ -55,7 +55,7 @@ async function loadDashboard() {
     if (!response.ok) throw new Error('File JSON non trovato');
     rawData = await response.json();
     
-    const health = rawData.daily_health || rawData.health_data || [];
+    const health = rawData.daily_health || rawData.health_data || rawData.user_summary || [];
     if (health.length > 0) {
       const lastEntry = health[health.length - 1];
       if (lastEntry && lastEntry.date) {
@@ -211,17 +211,22 @@ function renderOverview() {
 }
 
 function renderHealthTab() {
-  if(!rawData) return;
+  if (!rawData) return;
+
+  const health = rawData.daily_health || rawData.health_data || rawData.user_summary || [];
+  const userProfile = rawData.user_profile || rawData.profile || {};
+
+  if (health.length === 0) {
+    console.warn("Nessun dato trovato nell'array daily_health.");
+    return;
+  }
 
   const currentMonday = getMonday(baseDate);
   currentMonday.setDate(currentMonday.getDate() + (weekOffset * 7));
   currentMonday.setHours(0, 0, 0, 0);
 
-  const health = rawData.daily_health || rawData.health_data || [];
-  const userProfile = rawData.user_profile || rawData.profile || {};
-
   const weekDatesYMD = [];
-  for(let i=0; i<7; i++) {
+  for (let i = 0; i < 7; i++) {
     const d = new Date(currentMonday);
     d.setDate(d.getDate() + i);
     weekDatesYMD.push(formatDateYMD(d));
@@ -234,18 +239,11 @@ function renderHealthTab() {
 
   weekDatesYMD.forEach((dateStr) => {
     const match = health.find(h => h.date === dateStr);
-    if(match) {
-      const bb = getVal(match, ['body_battery', 'body_battery_max', 'bodyBattery']);
-      bodyBattery.push(bb !== null ? Number(bb) : null);
-
-      const st = getVal(match, ['stress_level', 'avg_stress', 'stress']);
-      stress.push(st !== null ? Number(st) : null);
-
-      const hv = getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
-      hrv.push(hv !== null ? Number(hv) : null);
-
-      const rh = getVal(match, ['resting_hr', 'resting_heart_rate', 'rhr']);
-      rhr.push(rh !== null ? Number(rh) : null);
+    if (match) {
+      bodyBattery.push(getVal(match, ['body_battery', 'bodyBattery', 'body_battery_max', 'max_body_battery'], null));
+      stress.push(getVal(match, ['stress_level', 'avg_stress', 'stress', 'averageStressLevel'], null));
+      hrv.push(getVal(match, ['hrv', 'hrv_weekly_avg', 'hrv_value', 'hrvSummary'], null));
+      rhr.push(getVal(match, ['resting_hr', 'resting_heart_rate', 'rhr', 'restingHeartRate'], null));
     } else {
       bodyBattery.push(null);
       stress.push(null);
@@ -255,24 +253,26 @@ function renderHealthTab() {
   });
 
   const todayYMD = formatDateYMD(new Date());
-  const todayMatch = health.find(h => h.date === todayYMD) || (health.length > 0 ? health[health.length - 1] : {});
+  let targetEntry = health.find(h => h.date === todayYMD);
+  if (!targetEntry) {
+    targetEntry = health[health.length - 1];
+  }
 
-  const bbVal = Number(getVal(todayMatch, ['body_battery', 'body_battery_max', 'bodyBattery'], 70));
-  const hrvVal = Number(getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value'], 50));
-  const stressVal = Number(getVal(todayMatch, ['stress_level', 'avg_stress', 'stress'], 25));
-  
+  const bbVal = Number(getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max'], 70));
+  const hrvVal = Number(getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value'], 50));
+  const stressVal = Number(getVal(targetEntry, ['stress_level', 'avg_stress', 'stress'], 25));
+
   let formScore = Math.round((bbVal * 0.4) + (Math.min(hrvVal, 100) * 0.4) + ((100 - stressVal) * 0.2));
   formScore = Math.min(100, Math.max(0, formScore));
 
   document.getElementById('cardFormScore').innerText = formScore + ' %';
-  
+
   let statusText = "Forma Ottimale";
   let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-  
-  if(formScore < 50) {
+  if (formScore < 50) {
     statusText = "Affaticamento Elevato";
     adviceText = "Si consiglia riposo attivo, stretching o corsa leggera di recupero.";
-  } else if(formScore < 75) {
+  } else if (formScore < 75) {
     statusText = "Forma Moderata";
     adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
   }
@@ -280,31 +280,31 @@ function renderHealthTab() {
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  const vo2 = getVal(userProfile, ['vo2_max', 'vo2max', 'vo2'], getVal(todayMatch, ['vo2_max', 'vo2max'], null));
+  const vo2 = getVal(userProfile, ['vo2_max', 'vo2max'], getVal(targetEntry, ['vo2_max', 'vo2max'], null));
   document.getElementById('cardVo2Max').innerText = vo2 !== null ? vo2 + ' ml/kg/min' : '--';
 
-  const fitAge = getVal(userProfile, ['fitness_age', 'fitnessAge'], getVal(todayMatch, ['fitness_age', 'fitnessAge'], null));
+  const fitAge = getVal(userProfile, ['fitness_age', 'fitnessAge'], getVal(targetEntry, ['fitness_age', 'fitnessAge'], null));
   document.getElementById('cardFitnessAge').innerText = fitAge !== null ? `Età Fitness: ${fitAge} anni` : 'Età Fitness: --';
 
-  const hrvToday = getVal(todayMatch, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
+  const hrvToday = getVal(targetEntry, ['hrv', 'hrv_weekly_avg', 'hrv_value']);
   document.getElementById('cardHrvToday').innerText = hrvToday !== null ? hrvToday + ' ms' : '-- ms';
 
-  const bbToday = getVal(todayMatch, ['body_battery', 'body_battery_max', 'bodyBattery']);
-  document.getElementById('cardBodyBattery').innerText = bbToday !== null ? bbToday + ' / 100' : '--';
+  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery', 'body_battery_max']);
+  document.getElementById('cardBodyBattery').innerText = bbToday !== null ? bbToday + ' / 100' : '-- / 100';
 
-  const stressToday = getVal(todayMatch, ['stress_level', 'avg_stress', 'stress']);
-  document.getElementById('cardStressToday').innerText = stressToday !== null ? stressToday + ' / 100' : '--';
+  const stressToday = getVal(targetEntry, ['stress_level', 'avg_stress', 'stress']);
+  document.getElementById('cardStressToday').innerText = stressToday !== null ? stressToday + ' / 100' : '-- / 100';
 
-  const sleepScoreToday = getVal(todayMatch, ['sleep_score', 'sleepScore']);
+  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore', 'sleep_quality_score']);
   document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday !== null ? sleepScoreToday + ' / 100' : '-- / 100';
 
-  const rhrToday = getVal(todayMatch, ['resting_hr', 'resting_heart_rate', 'rhr']);
+  const rhrToday = getVal(targetEntry, ['resting_hr', 'resting_heart_rate', 'rhr']);
   document.getElementById('valRhr').innerText = rhrToday !== null ? rhrToday + ' bpm' : '-- bpm';
 
-  const respToday = getVal(todayMatch, ['respiration_rate', 'avg_respiration', 'respiration']);
+  const respToday = getVal(targetEntry, ['respiration_rate', 'avg_respiration', 'respiration']);
   document.getElementById('valRespiration').innerText = respToday !== null ? respToday + ' brm' : '-- brm';
 
-  const recToday = getVal(todayMatch, ['recovery_time_hours', 'recovery_time', 'recovery']);
+  const recToday = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recovery']);
   document.getElementById('valRecoveryTime').innerText = recToday !== null ? recToday + ' ore' : '-- ore';
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
