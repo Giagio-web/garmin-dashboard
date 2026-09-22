@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-22 15:51:39",
+  "last_updated": "2026-09-22 16:25:52",
   "activities": [
     {
       "id": 24456989826,
@@ -34,7 +34,10 @@
       "sleep_score": 83,
       "calories": 2348.0,
       "vo2_max": null,
-      "hrv": 99
+      "hrv": 99,
+      "body_battery": 33,
+      "stress_level": 21,
+      "recovery_time_hours": null
     },
     {
       "date": "2026-09-21",
@@ -45,7 +48,10 @@
       "sleep_score": 82,
       "calories": 2410.0,
       "vo2_max": null,
-      "hrv": 85
+      "hrv": 85,
+      "body_battery": 44,
+      "stress_level": 17,
+      "recovery_time_hours": null
     }
   ]
 }
