@@ -347,7 +347,8 @@ function initCharts(labels, steps, runs, bpm, sleep) {
           backgroundColor: 'rgba(0, 240, 255, 0.75)',
           borderColor: '#00f0ff',
           borderWidth: 1,
-          borderRadius: 6
+          borderRadius: 6,
+          yAxisID: 'ySteps'
         },
         {
           label: 'Corsa (km)',
@@ -355,7 +356,8 @@ function initCharts(labels, steps, runs, bpm, sleep) {
           backgroundColor: 'rgba(255, 107, 0, 0.85)',
           borderColor: '#ff6b00',
           borderWidth: 1,
-          borderRadius: 6
+          borderRadius: 6,
+          yAxisID: 'yRuns'
         }
       ]
     },
@@ -365,7 +367,21 @@ function initCharts(labels, steps, runs, bpm, sleep) {
       plugins: { legend: { labels: { color: '#94a3b8' } } },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { display: false } },
-        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        ySteps: {
+          type: 'linear',
+          position: 'left',
+          ticks: { color: '#00f0ff' },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'Passi', color: '#00f0ff' }
+        },
+        yRuns: {
+          type: 'linear',
+          position: 'right',
+          ticks: { color: '#ff6b00' },
+          grid: { display: false },
+          title: { display: true, text: 'Km Corsa', color: '#ff6b00' },
+          suggestedMax: 10
+        }
       }
     }
   });
