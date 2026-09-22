@@ -279,18 +279,47 @@ function renderHealthTab() {
   const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore'], '--');
   const rhrToday = getVal(targetEntry, ['resting_hr', 'restingHeartRate'], '--');
 
-  // LEGGHI I DATI REALI INVIATI DA GARMIN CONNECT
   const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery'], '--');
   const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
   const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
 
-  // TEMPO DI RECUPERO DA GARMIN
+  // --- 1. GESTIONE TEMPO DI RECUPERO (Dato Garmin + Fallback intelligente) ---
   let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
-  if (recoveryHours === null || recoveryHours === undefined) {
-    recoveryHours = '--';
+  if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
+    if (activities.length > 0) {
+      const sortedActivities = [...activities].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const lastAct = sortedActivities[0];
+      const hoursSince = Math.max(0, (new Date() - new Date(lastAct.date)) / (1000 * 60 * 60));
+      const dist = Number(lastAct.distance_km || 0);
+      const avgHr = Number(lastAct.avg_hr || 140);
+      let baseRec = Math.round((dist * 2.5) * (avgHr / 140));
+      if (baseRec < 12 && dist > 5) baseRec = 18;
+      recoveryHours = Math.max(0, Math.round(baseRec - hoursSince));
+    } else {
+      recoveryHours = 0;
+    }
   }
 
-  // CALCOLO PUNTI FORMA DINAMICO
+  // --- 2. GESTIONE VO2 MAX PERSISTENTE (Cerca il valore più recente valido) ---
+  let vo2 = null;
+  for (let h of health) {
+    const candidate = getVal(h, ['vo2_max', 'vo2Max', 'vo2max']);
+    if (candidate !== null && candidate !== undefined && candidate !== '') {
+      vo2 = candidate;
+      break;
+    }
+  }
+  // Se non c'è nei daily_health, cerca nelle attività
+  if (!vo2 && activities.length > 0) {
+    for (let act of activities) {
+      const candidate = getVal(act, ['vo2_max', 'vo2Max', 'vo2max']);
+      if (candidate) { vo2 = candidate; break; }
+    }
+  }
+  // Se manca ancora, imposta il tuo valore di riferimento attuale (51)
+  if (!vo2) vo2 = 51;
+
+  // CALCOLO PUNTI FORMA
   let formScore = '--';
   if (bbToday !== '--' && stressToday !== '--') {
     const bbNum = Number(bbToday);
@@ -299,40 +328,30 @@ function renderHealthTab() {
     
     formScore = Math.round((bbNum * 0.40) + (Math.min(hrvNum, 100) * 0.35) + ((100 - stressNum) * 0.25));
     formScore = Math.min(100, Math.max(15, formScore));
+  } else {
+    // Formula di ripiego basata su sonno e recupero se manca il dato in tempo reale
+    const sl = Number(sleepScoreToday !== '--' ? sleepScoreToday : 80);
+    const recPenalty = Math.min(40, Number(recoveryHours) * 0.8);
+    formScore = Math.round(sl - recPenalty);
+    formScore = Math.min(100, Math.max(15, formScore));
   }
 
-  document.getElementById('cardFormScore').innerText = formScore !== '--' ? formScore + ' %' : '--';
+  document.getElementById('cardFormScore').innerText = formScore + ' %';
 
   let statusText = "Forma Ottimale";
   let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-  if (formScore !== '--') {
-    if (formScore < 50) {
-      statusText = "Affaticamento Elevato";
-      adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
-    } else if (formScore < 75) {
-      statusText = "Forma Moderata";
-      adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
-    }
-  } else {
-    statusText = "Dati in aggiornamento";
-    adviceText = "I dati Garmin vengono sincronizzati in tempo reale.";
+  if (formScore < 50) {
+    statusText = "Affaticamento Elevato";
+    adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
+  } else if (formScore < 75) {
+    statusText = "Forma Moderata";
+    adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
   }
 
   document.getElementById('cardFormStatus').innerText = statusText;
   document.getElementById('cardFormAdvice').innerText = adviceText;
 
-  // ESTRAZIONE VO2 MAX REALE DALLA CRONOLOGIA HEALTH
-  let vo2 = null;
-  for (let h of health) {
-    const candidate = getVal(h, ['vo2_max', 'vo2Max', 'vo2max']);
-    if (candidate !== null && candidate !== undefined) {
-      vo2 = candidate;
-      break;
-    }
-  }
-  if (!vo2) vo2 = "--";
-
-  document.getElementById('cardVo2Max').innerText = vo2 + (vo2 !== '--' ? ' ml/kg/min' : '');
+  document.getElementById('cardVo2Max').innerText = vo2 + ' ml/kg/min';
 
   const fitAge = getVal(targetEntry, ['fitness_age', 'fitnessAge'], 20);
   document.getElementById('cardFitnessAge').innerText = `Età Fitness: ${fitAge} anni`;
@@ -347,7 +366,7 @@ function renderHealthTab() {
   const respToday = getVal(targetEntry, ['respiration_rate', 'respirationRate'], 14);
   document.getElementById('valRespiration').innerText = respToday + ' brm';
 
-  document.getElementById('valRecoveryTime').innerText = recoveryHours + (recoveryHours !== '--' ? ' ore' : '');
+  document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
