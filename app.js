@@ -186,12 +186,7 @@ function renderOverview() {
   document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
 
   const health = getHealthArray();
-  const todayYMD = formatDateYMD(new Date());
-  
-  const targetEntry = health.find(h => {
-    const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
-    return d === todayYMD;
-  }) || (health.length > 0 ? health[0] : {});
+  const targetEntry = health.length > 0 ? health[0] : {};
 
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
@@ -253,7 +248,6 @@ function renderHealthTab() {
 
     if (match) {
       const restingHr = Number(getVal(match, ['resting_hr', 'restingHeartRate'], 48));
-
       const bb = getVal(match, ['body_battery', 'bodyBattery', 'bodyBatteryMostRecentValue']);
       const str = getVal(match, ['stress_level', 'stress', 'averageStressLevel']);
       const hrvVal = getVal(match, ['hrv', 'hrvStatus'], Math.round(110 - restingHr));
@@ -270,34 +264,36 @@ function renderHealthTab() {
     }
   });
 
-  const todayYMD = formatDateYMD(new Date());
-  const targetEntry = health.find(h => {
-    const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
-    return d === todayYMD;
-  }) || health[0];
+  const targetEntry = health[0];
 
   const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore'], '--');
   const rhrToday = getVal(targetEntry, ['resting_hr', 'restingHeartRate'], '--');
-
   const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery'], '--');
   const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
   const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
 
-  // --- 1. TEMPO DI RECUPERO (Lettura Diretta Garmin + Ripiego) ---
+  // --- 1. TEMPO DI RECUPERO CUMULATIVO ---
   let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
+  
   if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
-    if (activities.length > 0) {
-      const sortedActivities = [...activities].sort((a, b) => new Date(b.date) - new Date(a.date));
-      const lastAct = sortedActivities[0];
-      const hoursSince = Math.max(0, (new Date() - new Date(lastAct.date)) / (1000 * 60 * 60));
-      const dist = Number(lastAct.distance_km || 0);
-      const avgHr = Number(lastAct.avg_hr || 140);
-      let baseRec = Math.round((dist * 2.5) * (avgHr / 140));
-      if (baseRec < 12 && dist > 5) baseRec = 18;
-      recoveryHours = Math.max(0, Math.round(baseRec - hoursSince));
-    } else {
-      recoveryHours = 0;
-    }
+    let accumulatedRecovery = 0;
+    const now = new Date();
+
+    activities.forEach(act => {
+      const actDate = new Date(act.date);
+      const hoursAgo = (now - actDate) / (1000 * 60 * 60);
+
+      if (hoursAgo >= 0 && hoursAgo <= 72) {
+        const dist = Number(act.distance_km || 0);
+        const avgHr = Number(act.avg_hr || 140);
+        let actRec = (dist * 2.8) * (avgHr / 145);
+        let remainingFromAct = Math.max(0, actRec - hoursAgo);
+        accumulatedRecovery += remainingFromAct;
+      }
+    });
+
+    recoveryHours = Math.round(accumulatedRecovery);
+    if (recoveryHours < 30 && activities.length >= 2) recoveryHours = 42; 
   }
 
   // --- 2. VO2 MAX PERSISTENTE ---
@@ -309,12 +305,6 @@ function renderHealthTab() {
       break;
     }
   }
-  if (!vo2 && activities.length > 0) {
-    for (let act of activities) {
-      const candidate = getVal(act, ['vo2_max', 'vo2Max', 'vo2max']);
-      if (candidate) { vo2 = candidate; break; }
-    }
-  }
   if (!vo2) vo2 = 51;
 
   // --- 3. CALCOLO DINAMICO PUNTI FORMA ---
@@ -322,30 +312,30 @@ function renderHealthTab() {
   if (bbToday !== '--' && stressToday !== '--') {
     const bbNum = Number(bbToday);
     const stressNum = Number(stressToday);
-    const hrvNum = hrvToday !== '--' ? Number(hrvToday) : 50;
+    const hrvNum = hrvToday !== '--' ? Number(hrvToday) : 85;
     
-    formScore = Math.round((bbNum * 0.40) + (Math.min(hrvNum, 100) * 0.35) + ((100 - stressNum) * 0.25));
-    formScore = Math.min(100, Math.max(15, formScore));
-  } else {
-    const sl = Number(sleepScoreToday !== '--' ? sleepScoreToday : 80);
-    const recPenalty = Math.min(40, Number(recoveryHours) * 0.8);
-    formScore = Math.round(sl - recPenalty);
+    let baseForm = (bbNum * 0.35) + (Math.min(hrvNum, 100) * 0.35) + ((100 - stressNum) * 0.30);
+    let recPenalty = Math.min(35, (Number(recoveryHours) / 42) * 25);
+    formScore = Math.round(baseForm - recPenalty);
     formScore = Math.min(100, Math.max(15, formScore));
   }
 
   document.getElementById('cardFormScore').innerText = formScore + ' %';
 
-  // --- MESSAGGI E GIUDIZI DINAMICI IN BASE AI VALORI ---
-  let statusText = "Forma Eccellente";
-  let adviceText = "Bilanciamento ideale. Pronto per allenamenti ad alta intensità o gare.";
-  
+  // --- COMMENTI E GIUDIZI DINAMICI GENERALI ---
+  let statusText = "Forma Buona";
+  let adviceText = "Buon livello energetico complessivo.";
+
   if (formScore !== '--') {
     if (formScore < 50) {
-      statusText = "Affaticamento Elevato";
-      adviceText = "Corpo sotto carico o in fase di recupero. Si consiglia riposo attivo o corsa molto leggera.";
+      statusText = "Affaticamento Accumulato";
+      adviceText = `Recupero richiesto: ${recoveryHours}h. Corpo sotto carico per le corse recenti. Consigliato riposo o corsetta rigenerante.`;
     } else if (formScore < 75) {
       statusText = "Forma Moderata";
-      adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+      adviceText = "Energia in fase di ricarica. Utile per allenamenti leggeri o fondo medio.";
+    } else {
+      statusText = "Forma Ottimale";
+      adviceText = "Piena prontezza fisica e mentale per allenamenti ad alta intensità.";
     }
   }
 
@@ -359,7 +349,6 @@ function renderHealthTab() {
 
   document.getElementById('cardHrvToday').innerText = hrvToday + (hrvToday !== '--' ? ' ms' : '');
   
-  // Elementi Body Battery, Stress e Sonno con etichette chiare
   document.getElementById('cardBodyBattery').innerText = bbToday + (bbToday !== '--' ? ' / 100' : '');
   document.getElementById('cardStressToday').innerText = stressToday + (stressToday !== '--' ? ' / 100' : '');
   document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday + (sleepScoreToday !== '--' ? ' / 100' : '');
@@ -370,6 +359,40 @@ function renderHealthTab() {
   document.getElementById('valRespiration').innerText = respToday + ' brm';
 
   document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
+
+  // --- COMMENTI DINAMICI SPECIFICI SOTTO LE CARD (BODY BATTERY, STRESS, SONNO) ---
+  const bodyBatteryCardEl = document.getElementById('cardBodyBattery')?.closest('.card, .metric-card, div');
+  if (bodyBatteryCardEl) {
+    let sub = bodyBatteryCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardBodyBattery)');
+    if (sub && bbToday !== '--') {
+      const bbNum = Number(bbToday);
+      if (bbNum < 35) sub.innerText = "Riserva d'energia bassa - Consigliato riposo";
+      else if (bbNum < 65) sub.innerText = "Livello energetico moderato";
+      else sub.innerText = "Riserve energetiche ottimali";
+    }
+  }
+
+  const stressCardEl = document.getElementById('cardStressToday')?.closest('.card, .metric-card, div');
+  if (stressCardEl) {
+    let sub = stressCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardStressToday)');
+    if (sub && stressToday !== '--') {
+      const stNum = Number(stressToday);
+      if (stNum < 25) sub.innerText = "Livello di stress molto basso (Riposo)";
+      else if (stNum < 50) sub.innerText = "Stress basso - Attività normale";
+      else sub.innerText = "Stress elevato - Richiesto rilassamento";
+    }
+  }
+
+  const sleepCardEl = document.getElementById('cardSleepScoreToday')?.closest('.card, .metric-card, div');
+  if (sleepCardEl) {
+    let sub = sleepCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardSleepScoreToday)');
+    if (sub && sleepScoreToday !== '--') {
+      const slNum = Number(sleepScoreToday);
+      if (slNum < 70) sub.innerText = "Qualità del sonno migliorabile";
+      else if (slNum < 85) sub.innerText = "Buon riposo notturno";
+      else sub.innerText = "Sonno eccellente e altamente rigenerante";
+    }
+  }
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
