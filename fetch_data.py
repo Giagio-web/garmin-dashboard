@@ -37,7 +37,7 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute + Campionamento H24 Frequenza Cardiaca e Passi Live
+    # 2. Estrazione Dati Salute + Passo e FC Live
     print("Estrazione dati salute...")
     daily_health = []
     
@@ -54,20 +54,38 @@ def fetch_garmin():
                 sleep_sec = sleep['dailySleepDTO'].get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
             
-            # Recupero Passi con controllo Live
-            steps = stats.get("totalSteps", 0)
+            # --- RECUPERO PASSI ROBUSTO MULTI-LIVELLO ---
+            possible_steps = []
+            
+            # 1. Da summary principale
+            if isinstance(stats, dict):
+                possible_steps.append(stats.get("totalSteps") or 0)
+                possible_steps.append(stats.get("steps") or 0)
+            
+            # 2. Da intervalli passo di dettaglio (get_steps_data)
             try:
                 steps_data = client.get_steps_data(day_str)
-                if steps_data:
-                    live_steps = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
-                    if live_steps > steps:
-                        steps = live_steps
-            except Exception as steps_err:
-                print(f"Impossibile verificare i passi live per {day_str}: {steps_err}")
+                if steps_data and isinstance(steps_data, list):
+                    live_steps_sum = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
+                    possible_steps.append(live_steps_sum)
+            except Exception:
+                pass
 
-            resting_hr = stats.get("restingHeartRate", None)
+            # 3. Da storico passi specifico (get_daily_step_data)
+            try:
+                daily_step_data = client.get_daily_step_data(day_str)
+                if daily_step_data and isinstance(daily_step_data, list):
+                    max_step_val = max([item.get("totalSteps", 0) for item in daily_step_data if isinstance(item, dict)], default=0)
+                    possible_steps.append(max_step_val)
+            except Exception:
+                pass
 
-            # Campionamento puntuale del tracciato FC H24 per media esatta
+            # Prende sempre il valore più alto trovato
+            steps = max(possible_steps) if possible_steps else 0
+
+            resting_hr = stats.get("restingHeartRate", None) if isinstance(stats, dict) else None
+
+            # --- RECUPERO FC MEDIA REALE ---
             real_avg_hr = None
             try:
                 hr_data = client.get_heart_rates(day_str)
@@ -78,9 +96,10 @@ def fetch_garmin():
             except Exception as hr_err:
                 print(f"Impossibile campionare HR di dettaglio per {day_str}: {hr_err}")
 
-            # Fallback se il tracciato non ha campioni
-            if not real_avg_hr:
+            if not real_avg_hr and isinstance(stats, dict):
                 real_avg_hr = stats.get("averageHeartRate", resting_hr)
+
+            calories = stats.get("totalKilocalories", 0) if isinstance(stats, dict) else 0
 
             daily_health.append({
                 "date": day_str,
@@ -88,7 +107,7 @@ def fetch_garmin():
                 "resting_hr": resting_hr,
                 "avg_hr": real_avg_hr,
                 "sleep_hours": sleep_hours,
-                "calories": stats.get("totalKilocalories", 0)
+                "calories": calories
             })
         except Exception as e:
             print(f"Errore recupero dati per {day_str}: {e}")
