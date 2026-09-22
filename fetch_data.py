@@ -37,7 +37,7 @@ def fetch_garmin():
                 "calories": act.get("calories")
             })
 
-    # 2. Estrazione Dati Salute Giornalieri (Resting HR fissa e pulita)
+    # 2. Estrazione Dati Salute e Calcolo FC Media Giornaliera
     print("Estrazione dati salute...")
     daily_health = []
     
@@ -54,13 +54,35 @@ def fetch_garmin():
                 sleep_sec = sleep['dailySleepDTO'].get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
             
-            # Manteniamo la FC a Riposo (RHR) che è il dato reale e coerente
-            resting_hr = stats.get("restingHeartRate", None)
+            steps = stats.get("totalSteps", 0)
+            resting_hr = stats.get("restingHeartRate", 50) or 50
+
+            # Calcolo ore e FC media degli allenamenti del giorno
+            day_workouts = [a for a in parsed_activities if a["date"].startswith(day_str)]
+            workout_hours = sum(w["duration_min"] for w in day_workouts) / 60.0
+            
+            if day_workouts:
+                total_hr_dur = sum((w["avg_hr"] or 140) * (w["duration_min"] / 60.0) for w in day_workouts)
+                workout_avg_hr = total_hr_dur / workout_hours
+            else:
+                workout_avg_hr = 0
+
+            # Ore di sonno e ore di veglia
+            s_hours = sleep_hours if sleep_hours > 0 else 8.0
+            awake_hours = max(0, 24.0 - s_hours - workout_hours)
+
+            # Stima FC durante le ore di veglia basata sui passi
+            awake_hr = resting_hr * (1.3 + min(steps / 30000.0, 0.4))
+
+            # Algoritmo Media Pesata H24
+            total_bpm_hours = (resting_hr * s_hours) + (awake_hr * awake_hours) + (workout_avg_hr * workout_hours)
+            estimated_avg_hr = round(total_bpm_hours / 24.0)
 
             daily_health.append({
                 "date": day_str,
-                "steps": stats.get("totalSteps", 0),
+                "steps": steps,
                 "resting_hr": resting_hr,
+                "avg_hr": estimated_avg_hr,
                 "sleep_hours": sleep_hours,
                 "calories": stats.get("totalKilocalories", 0)
             })
