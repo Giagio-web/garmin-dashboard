@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-22 07:15:24",
+  "last_updated": "2026-09-22 07:34:14",
   "activities": [
     {
       "id": 24434057757,
@@ -20,6 +20,7 @@
       "resting_hr": 43,
       "avg_hr": 55,
       "sleep_hours": 6.45,
+      "sleep_score": 83,
       "calories": 942.0
     },
     {
@@ -28,6 +29,7 @@
       "resting_hr": 48,
       "avg_hr": 61,
       "sleep_hours": 6.52,
+      "sleep_score": 82,
       "calories": 2410.0
     }
   ]
