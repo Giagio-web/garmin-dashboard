@@ -283,7 +283,7 @@ function renderHealthTab() {
   const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
   const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
 
-  // --- 1. GESTIONE TEMPO DI RECUPERO (Dato Garmin + Fallback intelligente) ---
+  // --- 1. TEMPO DI RECUPERO (Lettura Diretta Garmin + Ripiego) ---
   let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
   if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
     if (activities.length > 0) {
@@ -300,7 +300,7 @@ function renderHealthTab() {
     }
   }
 
-  // --- 2. GESTIONE VO2 MAX PERSISTENTE (Cerca il valore più recente valido) ---
+  // --- 2. VO2 MAX PERSISTENTE ---
   let vo2 = null;
   for (let h of health) {
     const candidate = getVal(h, ['vo2_max', 'vo2Max', 'vo2max']);
@@ -309,17 +309,15 @@ function renderHealthTab() {
       break;
     }
   }
-  // Se non c'è nei daily_health, cerca nelle attività
   if (!vo2 && activities.length > 0) {
     for (let act of activities) {
       const candidate = getVal(act, ['vo2_max', 'vo2Max', 'vo2max']);
       if (candidate) { vo2 = candidate; break; }
     }
   }
-  // Se manca ancora, imposta il tuo valore di riferimento attuale (51)
   if (!vo2) vo2 = 51;
 
-  // CALCOLO PUNTI FORMA
+  // --- 3. CALCOLO DINAMICO PUNTI FORMA ---
   let formScore = '--';
   if (bbToday !== '--' && stressToday !== '--') {
     const bbNum = Number(bbToday);
@@ -329,7 +327,6 @@ function renderHealthTab() {
     formScore = Math.round((bbNum * 0.40) + (Math.min(hrvNum, 100) * 0.35) + ((100 - stressNum) * 0.25));
     formScore = Math.min(100, Math.max(15, formScore));
   } else {
-    // Formula di ripiego basata su sonno e recupero se manca il dato in tempo reale
     const sl = Number(sleepScoreToday !== '--' ? sleepScoreToday : 80);
     const recPenalty = Math.min(40, Number(recoveryHours) * 0.8);
     formScore = Math.round(sl - recPenalty);
@@ -338,14 +335,18 @@ function renderHealthTab() {
 
   document.getElementById('cardFormScore').innerText = formScore + ' %';
 
-  let statusText = "Forma Ottimale";
-  let adviceText = "Eccellente bilanciamento. Ideale per allenamenti ad alta intensità o gare.";
-  if (formScore < 50) {
-    statusText = "Affaticamento Elevato";
-    adviceText = "Corpo sotto carico o in fase di recupero post-allenamento. Consigliato riposo attivo o corsa leggera.";
-  } else if (formScore < 75) {
-    statusText = "Forma Moderata";
-    adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+  // --- MESSAGGI E GIUDIZI DINAMICI IN BASE AI VALORI ---
+  let statusText = "Forma Eccellente";
+  let adviceText = "Bilanciamento ideale. Pronto per allenamenti ad alta intensità o gare.";
+  
+  if (formScore !== '--') {
+    if (formScore < 50) {
+      statusText = "Affaticamento Elevato";
+      adviceText = "Corpo sotto carico o in fase di recupero. Si consiglia riposo attivo o corsa molto leggera.";
+    } else if (formScore < 75) {
+      statusText = "Forma Moderata";
+      adviceText = "Buona prontezza per allenamenti di mantenimento o fondo medio.";
+    }
   }
 
   document.getElementById('cardFormStatus').innerText = statusText;
@@ -357,6 +358,8 @@ function renderHealthTab() {
   document.getElementById('cardFitnessAge').innerText = `Età Fitness: ${fitAge} anni`;
 
   document.getElementById('cardHrvToday').innerText = hrvToday + (hrvToday !== '--' ? ' ms' : '');
+  
+  // Elementi Body Battery, Stress e Sonno con etichette chiare
   document.getElementById('cardBodyBattery').innerText = bbToday + (bbToday !== '--' ? ' / 100' : '');
   document.getElementById('cardStressToday').innerText = stressToday + (stressToday !== '--' ? ' / 100' : '');
   document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday + (sleepScoreToday !== '--' ? ' / 100' : '');
