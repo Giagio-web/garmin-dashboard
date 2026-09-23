@@ -247,10 +247,10 @@ function renderHealthTab() {
     });
 
     if (match) {
-      const restingHr = Number(getVal(match, ['resting_hr', 'restingHeartRate'], 48));
-      const bb = getVal(match, ['body_battery', 'bodyBattery', 'bodyBatteryMostRecentValue']);
+      const restingHr = Number(getVal(match, ['resting_hr', 'restingHeartRate', 'rhr'], 48));
+      const bb = getVal(match, ['body_battery', 'bodyBattery', 'bodyBatteryMostRecentValue', 'charged']);
       const str = getVal(match, ['stress_level', 'stress', 'averageStressLevel']);
-      const hrvVal = getVal(match, ['hrv', 'hrvStatus'], Math.round(110 - restingHr));
+      const hrvVal = getVal(match, ['hrv', 'hrvStatus', 'lastNightAvgHrv'], Math.round(110 - restingHr));
 
       bodyBattery.push(bb !== null ? Number(bb) : null);
       stress.push(str !== null ? Number(str) : null);
@@ -266,33 +266,36 @@ function renderHealthTab() {
 
   const targetEntry = health[0];
 
-  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore'], '--');
-  const rhrToday = getVal(targetEntry, ['resting_hr', 'restingHeartRate'], '--');
-  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery'], '--');
-  const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
-  const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
+  const sleepScoreToday = getVal(targetEntry, ['sleep_score', 'sleepScore', 'overallScore'], '--');
+  const rhrToday = getVal(targetEntry, ['resting_hr', 'restingHeartRate', 'rhr'], '--');
+  const bbToday = getVal(targetEntry, ['body_battery', 'bodyBattery', 'bodyBatteryMostRecentValue'], '--');
+  const stressToday = getVal(targetEntry, ['stress_level', 'stress', 'averageStressLevel'], '--');
+  const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus', 'lastNightAvgHrv'], '--');
 
-  let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
+  let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime', 'time_to_recovery', 'hours_to_recovery']);
   
   if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
     let accumulatedRecovery = 0;
     const now = new Date();
 
     activities.forEach(act => {
-      const actDate = new Date(act.date);
-      const hoursAgo = (now - actDate) / (1000 * 60 * 60);
+      const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
+      if (actDateRaw) {
+        const actDate = new Date(actDateRaw);
+        const hoursAgo = (now - actDate) / (1000 * 60 * 60);
 
-      if (hoursAgo >= 0 && hoursAgo <= 72) {
-        const dist = Number(act.distance_km || 0);
-        const avgHr = Number(act.avg_hr || 140);
-        let actRec = (dist * 2.8) * (avgHr / 145);
-        let remainingFromAct = Math.max(0, actRec - hoursAgo);
-        accumulatedRecovery += remainingFromAct;
+        if (hoursAgo >= 0 && hoursAgo <= 72) {
+          const dist = Number(getVal(act, ['distance_km', 'distance'], 0));
+          const avgHr = Number(getVal(act, ['avg_hr', 'averageHeartRate'], 140));
+          let actRec = (dist * 2.8) * (avgHr / 145);
+          let remainingFromAct = Math.max(0, actRec - hoursAgo);
+          accumulatedRecovery += remainingFromAct;
+        }
       }
     });
 
     recoveryHours = Math.round(accumulatedRecovery);
-    if (recoveryHours < 30 && activities.length >= 2) recoveryHours = 42; 
+    if (recoveryHours <= 0) recoveryHours = 0; 
   }
 
   let vo2 = null;
@@ -351,8 +354,8 @@ function renderHealthTab() {
 
   document.getElementById('valRhr').innerText = rhrToday + (rhrToday !== '--' ? ' bpm' : '');
   
-  const respToday = getVal(targetEntry, ['respiration_rate', 'respirationRate'], 14);
-  document.getElementById('valRespiration').innerText = respToday + ' brm';
+  const respToday = getVal(targetEntry, ['respiration_rate', 'respirationRate', 'avgRespiration', 'averageRespiration', 'sleep_respiration_rate'], '--');
+  document.getElementById('valRespiration').innerText = respToday + (respToday !== '--' ? ' brm' : '');
 
   document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
 
