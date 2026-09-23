@@ -272,7 +272,6 @@ function renderHealthTab() {
   const stressToday = getVal(targetEntry, ['stress_level', 'stress'], '--');
   const hrvToday = getVal(targetEntry, ['hrv', 'hrvStatus'], '--');
 
-  // --- 1. TEMPO DI RECUPERO CUMULATIVO ---
   let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime']);
   
   if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
@@ -296,7 +295,6 @@ function renderHealthTab() {
     if (recoveryHours < 30 && activities.length >= 2) recoveryHours = 42; 
   }
 
-  // --- 2. VO2 MAX PERSISTENTE ---
   let vo2 = null;
   for (let h of health) {
     const candidate = getVal(h, ['vo2_max', 'vo2Max', 'vo2max']);
@@ -307,7 +305,6 @@ function renderHealthTab() {
   }
   if (!vo2) vo2 = 51;
 
-  // --- 3. CALCOLO DINAMICO PUNTI FORMA ---
   let formScore = '--';
   if (bbToday !== '--' && stressToday !== '--') {
     const bbNum = Number(bbToday);
@@ -322,7 +319,6 @@ function renderHealthTab() {
 
   document.getElementById('cardFormScore').innerText = formScore + ' %';
 
-  // --- COMMENTI E GIUDIZI DINAMICI GENERALI ---
   let statusText = "Forma Buona";
   let adviceText = "Buon livello energetico complessivo.";
 
@@ -360,7 +356,6 @@ function renderHealthTab() {
 
   document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
 
-  // --- COMMENTI DINAMICI SPECIFICI SOTTO LE CARD (BODY BATTERY, STRESS, SONNO) ---
   const bodyBatteryCardEl = document.getElementById('cardBodyBattery')?.closest('.card, .metric-card, div');
   if (bodyBatteryCardEl) {
     let sub = bodyBatteryCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardBodyBattery)');
