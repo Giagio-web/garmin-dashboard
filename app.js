@@ -58,16 +58,30 @@ function changeWeek(direction) {
 
 async function loadDashboard() {
   try {
-    const response = await fetch('garmin_data.json?t=' + new Date().getTime());
-    if (!response.ok) throw new Error('File JSON non trovato');
-    rawData = await response.json();
+    // Controllo preliminare se sono caricati i dati esterni da huawei_intervals_data.js
+    if (typeof window.INTERVALS_DATA !== 'undefined' && window.INTERVALS_DATA) {
+      rawData = window.INTERVALS_DATA;
+      console.log("Dati Intervals.icu / Huawei caricati con successo da script globale.");
+    } else {
+      // Fallback sul fetch JSON classico se non presente lo script globale
+      const response = await fetch('garmin_data.json?t=' + new Date().getTime());
+      if (!response.ok) throw new Error('File JSON non trovato');
+      rawData = await response.json();
+    }
     
     baseDate = new Date();
 
     renderOverview();
     renderHealthTab();
   } catch (err) {
-    console.error("Errore nel caricamento del JSON:", err);
+    console.error("Errore nel caricamento dei dati della dashboard:", err);
+    // Tentativo di recupero estremo se esiste INTERVALS_DATA
+    if (typeof window.INTERVALS_DATA !== 'undefined') {
+      rawData = window.INTERVALS_DATA;
+      baseDate = new Date();
+      renderOverview();
+      renderHealthTab();
+    }
   }
 }
 
@@ -99,7 +113,7 @@ function getWeekMetrics(mondayObj) {
 
   weekDatesYMD.forEach((dateStr) => {
     const match = health.find(h => {
-      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day', 'day_str']));
       return d === dateStr;
     });
 
@@ -124,14 +138,14 @@ function getWeekMetrics(mondayObj) {
   });
 
   activities.forEach(act => {
-    const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
+    const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local', 'day']);
     if (actDateRaw) {
       const actDateStr = normalizeDateStr(actDateRaw);
       const dayIndex = weekDatesYMD.indexOf(actDateStr);
-      const actType = String(getVal(act, ['type', 'activity_type'], '')).toLowerCase();
+      const actType = String(getVal(act, ['type', 'activity_type', 'name'], '')).toLowerCase();
       
-      if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running')) {
-        let dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km'], 0));
+      if (dayIndex !== -1 && (actType.includes('run') || actType.includes('corsa') || actType === 'running' || actType === 'virtualrun')) {
+        let dist = Number(getVal(act, ['distance_km', 'distance', 'dist_km', 'distance_m'], 0));
         if (dist > 1000) dist = dist / 1000;
         runs[dayIndex] += dist;
         totalDist += dist;
@@ -242,7 +256,7 @@ function renderHealthTab() {
 
   weekDatesYMD.forEach((dateStr) => {
     const match = health.find(h => {
-      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day']));
+      const d = normalizeDateStr(getVal(h, ['date', 'calendarDate', 'day', 'day_str']));
       return d === dateStr;
     });
 
@@ -358,39 +372,6 @@ function renderHealthTab() {
   document.getElementById('valRespiration').innerText = respToday + (respToday !== '--' ? ' brm' : '');
 
   document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
-
-  const bodyBatteryCardEl = document.getElementById('cardBodyBattery')?.closest('.card, .metric-card, div');
-  if (bodyBatteryCardEl) {
-    let sub = bodyBatteryCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardBodyBattery)');
-    if (sub && bbToday !== '--') {
-      const bbNum = Number(bbToday);
-      if (bbNum < 35) sub.innerText = "Riserva d'energia bassa - Consigliato riposo";
-      else if (bbNum < 65) sub.innerText = "Livello energetico moderato";
-      else sub.innerText = "Riserve energetiche ottimali";
-    }
-  }
-
-  const stressCardEl = document.getElementById('cardStressToday')?.closest('.card, .metric-card, div');
-  if (stressCardEl) {
-    let sub = stressCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardStressToday)');
-    if (sub && stressToday !== '--') {
-      const stNum = Number(stressToday);
-      if (stNum < 25) sub.innerText = "Livello di stress molto basso (Riposo)";
-      else if (stNum < 50) sub.innerText = "Stress basso - Attività normale";
-      else sub.innerText = "Stress elevato - Richiesto rilassamento";
-    }
-  }
-
-  const sleepCardEl = document.getElementById('cardSleepScoreToday')?.closest('.card, .metric-card, div');
-  if (sleepCardEl) {
-    let sub = sleepCardEl.querySelector('.card-subtitle, .subtext, p, span:not(#cardSleepScoreToday)');
-    if (sub && sleepScoreToday !== '--') {
-      const slNum = Number(sleepScoreToday);
-      if (slNum < 70) sub.innerText = "Qualità del sonno migliorabile";
-      else if (slNum < 85) sub.innerText = "Buon riposo notturno";
-      else sub.innerText = "Sonno eccellente e altamente rigenerante";
-    }
-  }
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
