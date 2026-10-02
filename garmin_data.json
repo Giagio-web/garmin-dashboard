@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-01 04:19:15",
+  "last_updated": "2026-10-02 04:18:41",
   "activities": [
     {
       "id": 24551569231,
@@ -60,16 +60,16 @@
   "daily_health": [
     {
       "date": "2026-10-01",
-      "steps": 31,
+      "steps": 15674,
       "resting_hr": 48,
-      "avg_hr": 51,
+      "avg_hr": 65,
       "sleep_hours": 6.13,
       "sleep_score": 79,
-      "calories": 571.0,
+      "calories": 2546.0,
       "vo2_max": null,
       "hrv": 76,
-      "body_battery": 82,
-      "stress_level": 13,
+      "body_battery": 15,
+      "stress_level": 29,
       "recovery_time_hours": null
     },
     {
