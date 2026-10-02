@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-02 04:18:41",
+  "last_updated": "2026-10-02 21:43:18",
   "activities": [
+    {
+      "id": 24582396301,
+      "name": "Vercelli Corsa",
+      "type": "running",
+      "date": "2026-10-02 20:58:52",
+      "distance_km": 9.83,
+      "duration_min": 52.45,
+      "avg_hr": 156.0,
+      "max_hr": 174.0,
+      "calories": 721.0
+    },
     {
       "id": 24551569231,
       "name": "Vercelli Corsa",
@@ -58,6 +69,20 @@
     }
   ],
   "daily_health": [
+    {
+      "date": "2026-10-02",
+      "steps": 22101,
+      "resting_hr": 50,
+      "avg_hr": 73,
+      "sleep_hours": 6.33,
+      "sleep_score": null,
+      "calories": 3046.0,
+      "vo2_max": null,
+      "hrv": null,
+      "body_battery": 21,
+      "stress_level": 27,
+      "recovery_time_hours": null
+    },
     {
       "date": "2026-10-01",
       "steps": 15674,
