@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-04 05:55:35",
+  "last_updated": "2026-10-05 04:19:54",
   "activities": [
+    {
+      "id": 24600338207,
+      "name": "Villata Corsa",
+      "type": "running",
+      "date": "2026-10-04 10:57:24",
+      "distance_km": 14.13,
+      "duration_min": 73.43,
+      "avg_hr": 155.0,
+      "max_hr": 166.0,
+      "calories": 1047.0
+    },
     {
       "id": 24582396301,
       "name": "Vercelli Corsa",
@@ -69,6 +80,20 @@
     }
   ],
   "daily_health": [
+    {
+      "date": "2026-10-04",
+      "steps": 22119,
+      "resting_hr": 51,
+      "avg_hr": 71,
+      "sleep_hours": 7.28,
+      "sleep_score": 76,
+      "calories": 3291.0,
+      "vo2_max": null,
+      "hrv": 56,
+      "body_battery": 18,
+      "stress_level": 33,
+      "recovery_time_hours": null
+    },
     {
       "date": "2026-10-03",
       "steps": 8884,
@@ -235,20 +260,6 @@
       "hrv": 99,
       "body_battery": 14,
       "stress_level": 26,
-      "recovery_time_hours": null
-    },
-    {
-      "date": "2026-09-21",
-      "steps": 9519,
-      "resting_hr": 48,
-      "avg_hr": 61,
-      "sleep_hours": 6.52,
-      "sleep_score": 82,
-      "calories": 2410.0,
-      "vo2_max": null,
-      "hrv": 85,
-      "body_battery": 44,
-      "stress_level": 17,
       "recovery_time_hours": null
     }
   ]
