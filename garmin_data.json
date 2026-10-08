@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-07 04:18:54",
+  "last_updated": "2026-10-08 04:19:02",
   "activities": [
+    {
+      "id": 24636783285,
+      "name": "Milano Corsa",
+      "type": "running",
+      "date": "2026-10-07 10:16:22",
+      "distance_km": 6.02,
+      "duration_min": 33.68,
+      "avg_hr": 145.0,
+      "max_hr": 153.0,
+      "calories": 455.0
+    },
     {
       "id": 24627320269,
       "name": "Milano Corsa su pista",
@@ -91,6 +102,20 @@
     }
   ],
   "daily_health": [
+    {
+      "date": "2026-10-07",
+      "steps": 17134,
+      "resting_hr": 48,
+      "avg_hr": 65,
+      "sleep_hours": 7.27,
+      "sleep_score": 89,
+      "calories": 2927.0,
+      "vo2_max": null,
+      "hrv": 76,
+      "body_battery": 44,
+      "stress_level": 24,
+      "recovery_time_hours": null
+    },
     {
       "date": "2026-10-06",
       "steps": 26020,
@@ -257,20 +282,6 @@
       "hrv": 81,
       "body_battery": 22,
       "stress_level": 25,
-      "recovery_time_hours": null
-    },
-    {
-      "date": "2026-09-24",
-      "steps": 6578,
-      "resting_hr": 47,
-      "avg_hr": 61,
-      "sleep_hours": 7.85,
-      "sleep_score": 89,
-      "calories": 2284.0,
-      "vo2_max": null,
-      "hrv": 78,
-      "body_battery": 37,
-      "stress_level": 20,
       "recovery_time_hours": null
     }
   ]
