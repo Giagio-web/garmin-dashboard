@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-13 04:20:44",
+  "last_updated": "2026-10-14 04:31:00",
   "activities": [
     {
       "id": 24696920627,
@@ -135,6 +135,20 @@
     }
   ],
   "daily_health": [
+    {
+      "date": "2026-10-13",
+      "steps": 5469,
+      "resting_hr": 48,
+      "avg_hr": 60,
+      "sleep_hours": 7.82,
+      "sleep_score": 87,
+      "calories": 2250.0,
+      "vo2_max": null,
+      "hrv": 73,
+      "body_battery": 39,
+      "stress_level": 24,
+      "recovery_time_hours": null
+    },
     {
       "date": "2026-10-12",
       "steps": 16090,
@@ -286,20 +300,6 @@
       "vo2_max": null,
       "hrv": 76,
       "body_battery": 15,
-      "stress_level": 29,
-      "recovery_time_hours": null
-    },
-    {
-      "date": "2026-09-30",
-      "steps": 20126,
-      "resting_hr": 46,
-      "avg_hr": 68,
-      "sleep_hours": 6.12,
-      "sleep_score": 77,
-      "calories": 3056.0,
-      "vo2_max": null,
-      "hrv": 76,
-      "body_battery": 19,
       "stress_level": 29,
       "recovery_time_hours": null
     }
