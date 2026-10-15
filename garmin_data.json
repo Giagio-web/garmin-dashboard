@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-14 04:31:00",
+  "last_updated": "2026-10-15 04:28:42",
   "activities": [
+    {
+      "id": 24722435469,
+      "name": "Vercelli - Easy Run",
+      "type": "running",
+      "date": "2026-10-14 16:10:38",
+      "distance_km": 8.9,
+      "duration_min": 49.91,
+      "avg_hr": 147.0,
+      "max_hr": 160.0,
+      "calories": 671.0
+    },
     {
       "id": 24696920627,
       "name": "Vercelli Corsa",
@@ -135,6 +146,34 @@
     }
   ],
   "daily_health": [
+    {
+      "date": "2026-10-15",
+      "steps": 21,
+      "resting_hr": 47,
+      "avg_hr": 50,
+      "sleep_hours": 6.63,
+      "sleep_score": 84,
+      "calories": 579.0,
+      "vo2_max": null,
+      "hrv": 75,
+      "body_battery": 97,
+      "stress_level": 11,
+      "recovery_time_hours": null
+    },
+    {
+      "date": "2026-10-14",
+      "steps": 14224,
+      "resting_hr": 45,
+      "avg_hr": 61,
+      "sleep_hours": 7.08,
+      "sleep_score": 81,
+      "calories": 2838.0,
+      "vo2_max": null,
+      "hrv": 78,
+      "body_battery": 37,
+      "stress_level": 19,
+      "recovery_time_hours": null
+    },
     {
       "date": "2026-10-13",
       "steps": 5469,
@@ -287,20 +326,6 @@
       "hrv": null,
       "body_battery": 18,
       "stress_level": 28,
-      "recovery_time_hours": null
-    },
-    {
-      "date": "2026-10-01",
-      "steps": 15674,
-      "resting_hr": 48,
-      "avg_hr": 65,
-      "sleep_hours": 6.13,
-      "sleep_score": 79,
-      "calories": 2546.0,
-      "vo2_max": null,
-      "hrv": 76,
-      "body_battery": 15,
-      "stress_level": 29,
       "recovery_time_hours": null
     }
   ]
