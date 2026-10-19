@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-18 04:26:44",
+  "last_updated": "2026-10-19 04:32:12",
   "activities": [
+    {
+      "id": 24769980904,
+      "name": "Villata - Lungo bello impegnativo",
+      "type": "running",
+      "date": "2026-10-18 16:09:54",
+      "distance_km": 18.02,
+      "duration_min": 87.55,
+      "avg_hr": 164.0,
+      "max_hr": 177.0,
+      "calories": 1348.0
+    },
     {
       "id": 24736501870,
       "name": "Vercelli - Passo Gara",
@@ -158,6 +169,34 @@
   ],
   "daily_health": [
     {
+      "date": "2026-10-19",
+      "steps": 33,
+      "resting_hr": 51,
+      "avg_hr": 58,
+      "sleep_hours": 5.83,
+      "sleep_score": 70,
+      "calories": 580.0,
+      "vo2_max": null,
+      "hrv": 65,
+      "body_battery": 45,
+      "stress_level": 21,
+      "recovery_time_hours": null
+    },
+    {
+      "date": "2026-10-18",
+      "steps": 25214,
+      "resting_hr": 45,
+      "avg_hr": 73,
+      "sleep_hours": 6.48,
+      "sleep_score": 81,
+      "calories": 3688.0,
+      "vo2_max": null,
+      "hrv": 86,
+      "body_battery": 5,
+      "stress_level": 30,
+      "recovery_time_hours": null
+    },
+    {
       "date": "2026-10-16",
       "steps": 6438,
       "resting_hr": 46,
@@ -295,20 +334,6 @@
       "hrv": 82,
       "body_battery": 18,
       "stress_level": 25,
-      "recovery_time_hours": null
-    },
-    {
-      "date": "2026-10-05",
-      "steps": 9760,
-      "resting_hr": 48,
-      "avg_hr": 62,
-      "sleep_hours": 6.16,
-      "sleep_score": 65,
-      "calories": 2465.0,
-      "vo2_max": null,
-      "hrv": 70,
-      "body_battery": 37,
-      "stress_level": 21,
       "recovery_time_hours": null
     }
   ]
