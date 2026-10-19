@@ -3,30 +3,27 @@ import json
 from datetime import datetime, timedelta
 from garminconnect import Garmin
 
-email = "giacogarbin05@gmail.com"
-password = "Giacomo2005"
-
 def fetch_garmin():
-    email = os.environ.get("GARMIN_EMAIL")
-    password = os.environ.get("GARMIN_PASSWORD")
+    # Inserisci qui la tua email e password reali tra virgolette per i test in locale
+    email = "giacogarbin05@gmail.com"
+    password = "LA_TUA_PASSWORD_REALE"
     
     if not email or not password:
-        print("Credenziali Garmin non trovate negli Environment Variables.")
+        print("Credenziali Garmin non trovate.")
         return
 
     print("Connessione a Garmin Connect...")
-    # Percorso per salvare i token di sessione ed evitare blocchi 429
     tokenstore = os.path.expanduser("~/.garminconnect")
     client = Garmin(email, password)
     
     try:
-        # Tenta il login usando i token salvati
         client.login(tokenstore)
     except Exception:
-        # Se i token non esistono o sono scaduti, fa il login normale
         client.login()
-        # E salva i nuovi token per le prossime volte
-        client.garth.dump(tokenstore)
+        try:
+            client.garth.dump(tokenstore)
+        except Exception:
+            pass
 
     today = datetime.now()
 
@@ -74,24 +71,23 @@ def fetch_garmin():
                 sleep_score = dto.get('sleepScores', {}).get('overall', {}).get('value', None)
                 respiration_val = dto.get('averageRespirationValue') or dto.get('avgRespirationValue')
             
-            # Se la respirazione non è nel sonno, proviamo nello summary
             if not respiration_val and isinstance(stats, dict):
                 respiration_val = stats.get("avgRespirationValue") or stats.get("averageRespirationValue")
 
-            # --- RECUPERO PASSI ROBUSTO ---
-            possible_steps = []
+            # --- RECUPERO PASSI PRECISO ---
+            steps = 0
             if isinstance(stats, dict):
-                possible_steps.append(stats.get("totalSteps") or 0)
-                possible_steps.append(stats.get("steps") or 0)
+                steps = stats.get("totalSteps") or stats.get("steps") or 0
             
             try:
                 steps_data = client.get_steps_data(day_str)
                 if steps_data and isinstance(steps_data, list):
-                    possible_steps.append(sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict)))
+                    total_from_steps = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
+                    if total_from_steps > steps:
+                        steps = total_from_steps
             except Exception:
                 pass
 
-            steps = max(possible_steps) if possible_steps else 0
             resting_hr = stats.get("restingHeartRate", None) if isinstance(stats, dict) else None
 
             # --- RECUPERO FC MEDIA REALE ---
@@ -140,27 +136,28 @@ def fetch_garmin():
             except Exception:
                 pass
 
-            # --- RECUPERO TEMPO DI RECUPERO REALE ---
+            # --- RECUPERO TEMPO DI RECUPERO CORRETTO (ORE) ---
             recovery_time_val = None
             try:
                 training_status = client.get_training_status(day_str)
                 if training_status and isinstance(training_status, dict):
-                    recovery_time_val = (
+                    rec_raw = (
                         training_status.get("mostRecentRecoveryTime") or 
                         training_status.get("recoveryTime") or
                         training_status.get("recoveryTimeHours")
                     )
+                    if rec_raw is not None:
+                        # Se è un numero grande, è in minuti e va convertito in ore
+                        recovery_time_val = round(rec_raw / 60) if rec_raw > 72 else round(rec_raw)
             except Exception:
                 pass
 
             if recovery_time_val is None and isinstance(stats, dict):
-                recovery_time_val = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
-            
-            # Se il valore è in minuti (> 72), convertiamolo in ore
-            if recovery_time_val is not None and recovery_time_val > 72:  
-                recovery_time_val = round(recovery_time_val / 60)
+                rec_stat = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
+                if rec_stat is not None:
+                    recovery_time_val = round(rec_stat / 60) if rec_stat > 72 else round(rec_stat)
 
-            # --- RECUPERO VO2 MAX REALE MULTI-FONTE ---
+            # --- RECUPERO VO2 MAX REALE E AGGIORNATO ---
             vo2_max_val = None
             try:
                 max_metrics = client.get_max_metrics(day_str)
@@ -185,12 +182,15 @@ def fetch_garmin():
             if not vo2_max_val and isinstance(stats, dict):
                 vo2_max_val = stats.get("vo2MaxValue") or stats.get("vo2Max") or stats.get("vO2MaxValue")
 
-            # --- RECUPERO HRV (Variabilità Frequenza Cardiaca) ---
+            # --- RECUPERO HRV NOTTURNO ESATTO ---
             hrv_val = None
             try:
                 hrv_data = client.get_hrv_data(day_str)
-                if hrv_data and 'hrvSummary' in hrv_data and hrv_data['hrvSummary']:
-                    hrv_val = hrv_data['hrvSummary'].get("lastNightAvg")
+                if hrv_data:
+                    if 'hrvSummary' in hrv_data and hrv_data['hrvSummary']:
+                        hrv_val = hrv_data['hrvSummary'].get("lastNightAvg") or hrv_data['hrvSummary'].get("weeklyAverage")
+                    elif isinstance(hrv_data, dict):
+                        hrv_val = hrv_data.get("lastNightAvg") or hrv_data.get("weeklyAverage")
             except Exception:
                 pass
 
