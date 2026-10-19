@@ -58,12 +58,10 @@ function changeWeek(direction) {
 
 async function loadDashboard() {
   try {
-    // Controllo preliminare se sono caricati i dati esterni da huawei_intervals_data.js
     if (typeof window.INTERVALS_DATA !== 'undefined' && window.INTERVALS_DATA) {
       rawData = window.INTERVALS_DATA;
       console.log("Dati Intervals.icu / Huawei caricati con successo da script globale.");
     } else {
-      // Fallback sul fetch JSON classico se non presente lo script globale
       const response = await fetch('garmin_data.json?t=' + new Date().getTime());
       if (!response.ok) throw new Error('File JSON non trovato');
       rawData = await response.json();
@@ -75,7 +73,6 @@ async function loadDashboard() {
     renderHealthTab();
   } catch (err) {
     console.error("Errore nel caricamento dei dati della dashboard:", err);
-    // Tentativo di recupero estremo se esiste INTERVALS_DATA
     if (typeof window.INTERVALS_DATA !== 'undefined') {
       rawData = window.INTERVALS_DATA;
       baseDate = new Date();
@@ -348,7 +345,7 @@ function renderHealthTab() {
       adviceText = "Energia in fase di ricarica. Utile per allenamenti leggeri o fondo medio.";
     } else {
       statusText = "Forma Ottimale";
-      adviceText = "Piena prontezza fisica e mentale per allenamenti ad alta intensità.";
+      adviceText = "Piena prontezza fisica e mentale per allenamenti ad alta intensità. 🚀";
     }
   }
 
@@ -362,9 +359,51 @@ function renderHealthTab() {
 
   document.getElementById('cardHrvToday').innerText = hrvToday + (hrvToday !== '--' ? ' ms' : '');
   
+  // --- DINAMICA COMMENTI CARD VFC ---
+  let hrvStatusMsg = "Bilanciato";
+  if (hrvToday !== '--') {
+    const hrvNum = Number(hrvToday);
+    if (hrvNum >= 70) hrvStatusMsg = "Ottima stabilità del sistema nervoso ⚡";
+    else if (hrvNum >= 50) hrvStatusMsg = "Valore nella norma, buon recupero 👍";
+    else hrvStatusMsg = "VFC bassa: possibili segni di stanchezza 🛌";
+  }
+  document.getElementById('cardHrvStatus').innerText = hrvStatusMsg;
+
   document.getElementById('cardBodyBattery').innerText = bbToday + (bbToday !== '--' ? ' / 100' : '');
+  
+  // --- DINAMICA COMMENTI BODY BATTERY ---
+  let bbStatusMsg = "Carica Ottimale";
+  if (bbToday !== '--') {
+    const bbNum = Number(bbToday);
+    if (bbNum >= 80) bbStatusMsg = "Sei carico e pronto a correre! 🚀";
+    else if (bbNum >= 40) bbStatusMsg = "Energia buona, gestiscila con cura 👍";
+    else bbStatusMsg = "Batterie scariche, meglio riposare 🛌";
+  }
+  document.getElementById('cardBodyBatteryStatus').innerText = bbStatusMsg;
+
   document.getElementById('cardStressToday').innerText = stressToday + (stressToday !== '--' ? ' / 100' : '');
+  
+  // --- DINAMICA COMMENTI STRESS ---
+  let stressStatusMsg = "Stress Basso";
+  if (stressToday !== '--') {
+    const stressNum = Number(stressToday);
+    if (stressNum <= 25) stressStatusMsg = "Mente rilassata e distesa 🧘‍♂️";
+    else if (stressNum <= 50) stressStatusMsg = "Stress moderato della giornata ⚖️";
+    else stressStatusMsg = "Stress elevato, stacca la spina ⚠️";
+  }
+  document.getElementById('cardStressStatus').innerText = stressStatusMsg;
+
   document.getElementById('cardSleepScoreToday').innerText = sleepScoreToday + (sleepScoreToday !== '--' ? ' / 100' : '');
+  
+  // --- DINAMICA COMMENTI SONNO ---
+  let sleepStatusMsg = "Buon Riposo";
+  if (sleepScoreToday !== '--') {
+    const sleepNum = Number(sleepScoreToday);
+    if (sleepNum >= 85) sleepStatusMsg = "Sonno profondo e rigenerante! 🌟";
+    else if (sleepNum >= 70) sleepStatusMsg = "Riposo sufficiente 👍";
+    else sleepStatusMsg = "Qualità del sonno scarsa, recupera 😴";
+  }
+  document.getElementById('cardSleepScoreStatus').innerText = sleepStatusMsg;
 
   document.getElementById('valRhr').innerText = rhrToday + (rhrToday !== '--' ? ' bpm' : '');
   
