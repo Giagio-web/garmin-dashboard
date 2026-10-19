@@ -4,12 +4,12 @@ from datetime import datetime, timedelta
 from garminconnect import Garmin
 
 def fetch_garmin():
-    # Inserisci qui la tua email e password reali tra virgolette per i test in locale
-    email = "giacogarbin05@gmail.com"
-    password = "LA_TUA_PASSWORD_REALE"
+    # Legge le credenziali in modo sicuro dai Secrets di GitHub Actions
+    email = os.environ.get("GARMIN_EMAIL")
+    password = os.environ.get("GARMIN_PASSWORD")
     
     if not email or not password:
-        print("Credenziali Garmin non trovate.")
+        print("Credenziali Garmin non trovate negli Environment Variables.")
         return
 
     print("Connessione a Garmin Connect...")
@@ -147,7 +147,6 @@ def fetch_garmin():
                         training_status.get("recoveryTimeHours")
                     )
                     if rec_raw is not None:
-                        # Se è un numero grande, è in minuti e va convertito in ore
                         recovery_time_val = round(rec_raw / 60) if rec_raw > 72 else round(rec_raw)
             except Exception:
                 pass
