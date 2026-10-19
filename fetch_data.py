@@ -3,6 +3,9 @@ import json
 from datetime import datetime, timedelta
 from garminconnect import Garmin
 
+email = "giacogarbin05@gmail.com"
+password = "Giacomo2005"
+
 def fetch_garmin():
     email = os.environ.get("GARMIN_EMAIL")
     password = os.environ.get("GARMIN_PASSWORD")
@@ -12,8 +15,18 @@ def fetch_garmin():
         return
 
     print("Connessione a Garmin Connect...")
+    # Percorso per salvare i token di sessione ed evitare blocchi 429
+    tokenstore = os.path.expanduser("~/.garminconnect")
     client = Garmin(email, password)
-    client.login()
+    
+    try:
+        # Tenta il login usando i token salvati
+        client.login(tokenstore)
+    except Exception:
+        # Se i token non esistono o sono scaduti, fa il login normale
+        client.login()
+        # E salva i nuovi token per le prossime volte
+        client.garth.dump(tokenstore)
 
     today = datetime.now()
 
@@ -49,15 +62,22 @@ def fetch_garmin():
             stats = client.get_user_summary(day_str)
             sleep = client.get_sleep_data(day_str)
             
-            # --- DETTAGLI SONNO ---
+            # --- DETTAGLI SONNO & RESPIRAZIONE ---
             sleep_hours = 0
             sleep_score = None
+            respiration_val = None
+            
             if sleep and 'dailySleepDTO' in sleep and sleep['dailySleepDTO']:
                 dto = sleep['dailySleepDTO']
                 sleep_sec = dto.get('sleepTimeSeconds', 0)
                 sleep_hours = round(sleep_sec / 3600, 2)
                 sleep_score = dto.get('sleepScores', {}).get('overall', {}).get('value', None)
+                respiration_val = dto.get('averageRespirationValue') or dto.get('avgRespirationValue')
             
+            # Se la respirazione non è nel sonno, proviamo nello summary
+            if not respiration_val and isinstance(stats, dict):
+                respiration_val = stats.get("avgRespirationValue") or stats.get("averageRespirationValue")
+
             # --- RECUPERO PASSI ROBUSTO ---
             possible_steps = []
             if isinstance(stats, dict):
@@ -68,13 +88,6 @@ def fetch_garmin():
                 steps_data = client.get_steps_data(day_str)
                 if steps_data and isinstance(steps_data, list):
                     possible_steps.append(sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict)))
-            except Exception:
-                pass
-
-            try:
-                daily_step_data = client.get_daily_step_data(day_str)
-                if daily_step_data and isinstance(daily_step_data, list):
-                    possible_steps.append(max([item.get("totalSteps", 0) for item in daily_step_data if isinstance(item, dict)], default=0))
             except Exception:
                 pass
 
@@ -127,39 +140,45 @@ def fetch_garmin():
             except Exception:
                 pass
 
-            # --- RECUPERO TEMPO DI RECUPERO REALE CUMULATIVO ---
+            # --- RECUPERO TEMPO DI RECUPERO REALE ---
             recovery_time_val = None
             try:
                 training_status = client.get_training_status(day_str)
                 if training_status and isinstance(training_status, dict):
-                    recovery_time_val = training_status.get("mostRecentRecoveryTime") or training_status.get("recoveryTime")
+                    recovery_time_val = (
+                        training_status.get("mostRecentRecoveryTime") or 
+                        training_status.get("recoveryTime") or
+                        training_status.get("recoveryTimeHours")
+                    )
             except Exception:
                 pass
 
             if recovery_time_val is None and isinstance(stats, dict):
                 recovery_time_val = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
             
-            try:
-                if recovery_time_val is None:
-                    rec_min = stats.get("timeToRecovery")
-                    if rec_min is not None:
-                        recovery_time_val = round(rec_min / 60)
-            except Exception:
-                pass
+            # Se il valore è in minuti (> 72), convertiamolo in ore
+            if recovery_time_val is not None and recovery_time_val > 72:  
+                recovery_time_val = round(recovery_time_val / 60)
 
             # --- RECUPERO VO2 MAX REALE MULTI-FONTE ---
             vo2_max_val = None
             try:
                 max_metrics = client.get_max_metrics(day_str)
-                if max_metrics and isinstance(max_metrics, list) and len(max_metrics) > 0:
-                    first_metric = max_metrics[0]
-                    vo2_raw = (
-                        first_metric.get("genericVo2Max") or 
-                        first_metric.get("vo2MaxPrecise") or 
-                        first_metric.get("vo2Max")
-                    )
-                    if vo2_raw:
-                        vo2_max_val = round(vo2_raw, 1)
+                if max_metrics:
+                    if isinstance(max_metrics, list) and len(max_metrics) > 0:
+                        first_metric = max_metrics[0]
+                        vo2_raw = (
+                            first_metric.get("genericVo2Max") or 
+                            first_metric.get("vo2MaxPrecise") or 
+                            first_metric.get("vo2Max") or
+                            first_metric.get("vo2MaxValue")
+                        )
+                        if vo2_raw:
+                            vo2_max_val = round(float(vo2_raw), 1)
+                    elif isinstance(max_metrics, dict):
+                        vo2_raw = max_metrics.get("genericVo2Max") or max_metrics.get("vo2MaxValue")
+                        if vo2_raw:
+                            vo2_max_val = round(float(vo2_raw), 1)
             except Exception:
                 pass
 
@@ -187,7 +206,8 @@ def fetch_garmin():
                 "hrv": hrv_val,
                 "body_battery": body_battery_val,
                 "stress_level": stress_val,
-                "recovery_time_hours": recovery_time_val
+                "recovery_time_hours": recovery_time_val,
+                "respiration_rate": respiration_val
             })
         except Exception as e:
             print(f"Errore recupero dati per {day_str}: {e}")
@@ -201,7 +221,7 @@ def fetch_garmin():
     with open("garmin_data.json", "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print("Dati Garmin (Body Battery, Stress, Recovery, VO2 Max) aggiornati con successo!")
+    print("Dati Garmin aggiornati con successo!")
 
 if __name__ == "__main__":
     fetch_garmin()
