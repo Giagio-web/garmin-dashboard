@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-21 04:31:14",
+  "last_updated": "2026-10-22 04:30:47",
   "activities": [
+    {
+      "id": 24804427995,
+      "name": "Vercelli Corsa",
+      "type": "running",
+      "date": "2026-10-21 17:11:25",
+      "distance_km": 6.02,
+      "duration_min": 34.02,
+      "avg_hr": 146.0,
+      "max_hr": 153.0,
+      "calories": 467.0
+    },
     {
       "id": 24769980904,
       "name": "Villata - Lungo bello impegnativo",
@@ -169,6 +180,36 @@
   ],
   "daily_health": [
     {
+      "date": "2026-10-22",
+      "steps": 13,
+      "resting_hr": 44,
+      "avg_hr": 48,
+      "sleep_hours": 6.32,
+      "sleep_score": 66,
+      "calories": 588.0,
+      "vo2_max": null,
+      "hrv": 82,
+      "body_battery": 96,
+      "stress_level": 8,
+      "recovery_time_hours": null,
+      "respiration_rate": 14.0
+    },
+    {
+      "date": "2026-10-21",
+      "steps": 13210,
+      "resting_hr": 44,
+      "avg_hr": 60,
+      "sleep_hours": 6.73,
+      "sleep_score": 82,
+      "calories": 2746.0,
+      "vo2_max": null,
+      "hrv": 78,
+      "body_battery": 36,
+      "stress_level": 19,
+      "recovery_time_hours": null,
+      "respiration_rate": 14.0
+    },
+    {
       "date": "2026-10-20",
       "steps": 4062,
       "resting_hr": 45,
@@ -317,21 +358,6 @@
       "stress_level": 26,
       "recovery_time_hours": null,
       "respiration_rate": 15.0
-    },
-    {
-      "date": "2026-10-08",
-      "steps": 17852,
-      "resting_hr": 46,
-      "avg_hr": 64,
-      "sleep_hours": 9.04,
-      "sleep_score": 98,
-      "calories": 2917.0,
-      "vo2_max": null,
-      "hrv": 79,
-      "body_battery": 35,
-      "stress_level": 20,
-      "recovery_time_hours": null,
-      "respiration_rate": 14.0
     }
   ]
 }
