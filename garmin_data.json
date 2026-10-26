@@ -1,6 +1,17 @@
 {
-  "last_updated": "2026-10-25 09:04:21",
+  "last_updated": "2026-10-26 09:59:13",
   "activities": [
+    {
+      "id": 24843651634,
+      "name": "Torino - Mezza di Torino",
+      "type": "running",
+      "date": "2026-10-25 08:35:37",
+      "distance_km": 21.16,
+      "duration_min": 101.6,
+      "avg_hr": 173.0,
+      "max_hr": 183.0,
+      "calories": 1624.0
+    },
     {
       "id": 24815524683,
       "name": "Vercelli Corsa",
@@ -191,17 +202,32 @@
   ],
   "daily_health": [
     {
+      "date": "2026-10-26",
+      "steps": 607,
+      "resting_hr": 48,
+      "avg_hr": 57,
+      "sleep_hours": 7.57,
+      "sleep_score": 78,
+      "calories": 884.0,
+      "vo2_max": null,
+      "hrv": 65,
+      "body_battery": 62,
+      "stress_level": 20,
+      "recovery_time_hours": null,
+      "respiration_rate": 14.0
+    },
+    {
       "date": "2026-10-25",
-      "steps": 1086,
+      "steps": 34456,
       "resting_hr": 46,
-      "avg_hr": 54,
+      "avg_hr": 80,
       "sleep_hours": 6.62,
       "sleep_score": 80,
-      "calories": 771.0,
+      "calories": 4402.0,
       "vo2_max": null,
       "hrv": 82,
-      "body_battery": 84,
-      "stress_level": 16,
+      "body_battery": 5,
+      "stress_level": 44,
       "recovery_time_hours": null,
       "respiration_rate": 14.0
     },
@@ -369,21 +395,6 @@
       "stress_level": 24,
       "recovery_time_hours": null,
       "respiration_rate": 14.0
-    },
-    {
-      "date": "2026-10-12",
-      "steps": 16090,
-      "resting_hr": 45,
-      "avg_hr": 62,
-      "sleep_hours": 7.58,
-      "sleep_score": 95,
-      "calories": 2959.0,
-      "vo2_max": null,
-      "hrv": 87,
-      "body_battery": 36,
-      "stress_level": 17,
-      "recovery_time_hours": null,
-      "respiration_rate": 13.0
     }
   ]
 }
