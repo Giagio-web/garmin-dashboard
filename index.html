@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Garmin Performance Hub</title>
+  <title>Il mio Garbin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
           G
         </div>
         <div>
-          <h1 class="font-bold text-lg leading-tight text-white tracking-wide">Garmin Performance Hub</h1>
-          <p class="text-xs text-cyan-400 font-medium">Prossimo evento: PolimiRun 10K • Obiettivo Sub-47'</p>
+          <h1 class="font-bold text-lg leading-tight text-white tracking-wide">Il mio Gar<span class="line-through decoration-2 decoration-orange-400">m</span>bin</h1>
+          <p id="nextEventLabel" class="text-xs text-cyan-400 font-medium">Prossimo evento: PolimiRun 10K • Obiettivo Sub-47'</p>
         </div>
       </div>
       
@@ -66,7 +66,7 @@
 
         <div class="glass-card neon-cyan-bright p-5">
           <div class="flex justify-between items-start mb-2">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC Media Oggi</span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">FC a Riposo Oggi</span>
             <span class="text-xl">❤️</span>
           </div>
           <div id="cardBpmToday" class="text-2xl font-black text-white">-- bpm</div>
@@ -115,7 +115,7 @@
 
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>FC Media Giornaliera & Ore di Sonno</span>
+            <span>FC a Riposo & Ore di Sonno</span>
             <span id="diffBpmSleepLabel" class="text-xs text-cyan-400 font-semibold">vs sett. precedente: --</span>
           </h3>
           <div class="h-72">
@@ -205,7 +205,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="glass-card p-6">
           <h3 class="text-sm font-bold text-white mb-4 flex items-center justify-between">
-            <span>Body Battery & Livello Stress</span>
+            <span>Body Battery (range) & Livello Stress</span>
             <span class="text-xs text-emerald-400 font-semibold">Andamento Settimanale</span>
           </h3>
           <div class="h-72">
@@ -240,16 +240,16 @@
             <span class="text-lg">🌬️</span>
           </div>
           <div id="valRespiration" class="text-xl font-black text-white">-- brm</div>
-          <p id="valRespSub" class="text-xs text-slate-400 mt-1">Atti respiratori al minuto (In riposo)</p>
+          <p id="valRespSub" class="text-xs text-slate-400 mt-1">Atti respiratori al minuto (media del giorno)</p>
         </div>
 
         <div class="glass-card p-5">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Tempo di Recupero</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Ultimo Allenamento</h4>
             <span class="text-lg">⏳</span>
           </div>
-          <div id="valRecoveryTime" class="text-xl font-black text-white">-- ore</div>
-          <p id="valRecoverySub" class="text-xs text-slate-400 mt-1">Tempo stimato per il ripristino completo</p>
+          <div id="valRecoveryTime" class="text-xl font-black text-white">--</div>
+          <p id="valRecoverySub" class="text-xs text-slate-400 mt-1">Quanto tempo fa e che effetto ha avuto</p>
         </div>
       </div>
     </div>
