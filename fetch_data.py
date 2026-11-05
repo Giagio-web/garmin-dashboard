@@ -1,226 +1,845 @@
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+fetch_data.py - scarica i tuoi dati dalla Garmin Personal API (sola lettura)
+e scrive garmin_data.json, che la dashboard legge senza modifiche.
+
+Come si usa (dal terminale, dentro la cartella del progetto):
+    python fetch_data.py --test    prova la connessione e mostra le ultime 5 attivita
+    python fetch_data.py           scarica gli ultimi 12 mesi (dalla seconda volta solo le novita)
+    python fetch_data.py --tutto   scarica tutta la storia (ci vogliono alcuni minuti)
+
+Su Mac scrivi python3 al posto di python.
+
+La chiave sta SOLO nel file .env.local, in una riga fatta cosi:
+    GARMIN_PERSONAL_API_KEY=la_tua_chiave
+"""
+import csv
 import json
-from datetime import datetime, timedelta
-from garminconnect import Garmin
+import os
+import re
+import shutil
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
-def fetch_garmin():
-    # Legge le credenziali in modo sicuro dai Secrets di GitHub Actions
-    email = os.environ.get("GARMIN_EMAIL")
-    password = os.environ.get("GARMIN_PASSWORD")
-    
-    if not email or not password:
-        print("Credenziali Garmin non trovate negli Environment Variables.")
-        return
+if sys.version_info < (3, 8):
+    print("Serve Python 3.8 o piu recente. Scrivi 'python --version' per controllare quale hai.")
+    sys.exit(1)
 
-    print("Connessione a Garmin Connect...")
-    tokenstore = os.path.expanduser("~/.garminconnect")
-    client = Garmin(email, password)
-    
+try:  # evita errori di codifica sul terminale di Windows
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+# ----------------------------------------------------------------------------
+# IMPOSTAZIONI (se non sai cosa fare, non toccare nulla)
+# ----------------------------------------------------------------------------
+BASE = "https://personal.connectapi.garmin.com"
+TOKEN_URL = BASE + "/personalapitoken-service/personal-api/personal-api-key/token"
+UA = "garmin-dashboard/1.0"
+
+CARTELLA = Path(__file__).resolve().parent
+DATA = CARTELLA / "data"
+FILE_ENV = CARTELLA / ".env.local"
+FILE_TOKEN = DATA / "token.json"
+FILE_STATO = DATA / "stato.json"
+FILE_ATTIVITA = DATA / "attivita.json"
+FILE_GIORNI = DATA / "giorni.json"
+FILE_STRUTTURA = DATA / "struttura.txt"
+FILE_OUT = CARTELLA / "garmin_data.json"
+FILE_BACKUP = CARTELLA / "garmin_data.backup.json"
+FILE_STORICO_ATT = CARTELLA / "activities.csv"   # export Strava con le attivita del vecchio orologio
+
+MESI_DEFAULT = 12          # quanti mesi scaricare la prima volta
+INIZIO_STORIA = date(2015, 1, 1)
+PAUSA = 0.4                # secondi di pausa tra una chiamata e l'altra
+SOVRAPPOSIZIONE = 3        # giorni riscaricati ad ogni aggiornamento (per correggere dati parziali)
+BODY_BATTERY = "max"       # "max" = carica massima del giorno, "min" = carica minima
+
+# VO2 max: Garmin non lo fornisce in questa API, quindi lo scrivi tu qui (solo il numero).
+# Quando il tuo orologio lo cambia, modifica il numero, salva e rilancia lo script.
+# Se metti None, usa l'ultimo valore trovato nei vecchi file CSV.
+VO2_MAX_MANUALE = 54
+
+# PROSSIMO EVENTO mostrato in alto nel sito.
+# Lo script prova a leggerlo dal calendario gare di Garmin. Se non ci riesce usa EVENTO_MANUALE.
+# Esempio: EVENTO_MANUALE = ("Nome della gara", "2026-12-06")   (data nel formato AAAA-MM-GG)
+# Se lasci None e Garmin non lo da', nel sito resta il testo che c'e' in index.html.
+EVENTO_MANUALE = ("Mezza di Vercelli", "2027-02-28")
+# Obiettivo da mostrare accanto all'evento, per esempio "Sub 1h30". Lascia "" per non mostrarlo.
+OBIETTIVO_EVENTO = "Sub 1h30"
+
+RE_DATA = re.compile(r"^\d{4}-\d{2}-\d{2}")
+STATO_RUN = {"chiave": None, "token": None}
+CAMPIONI = {}              # primo elemento di ogni tipo di risposta (serve a file struttura.txt)
+
+
+class ErroreGarmin(Exception):
+    pass
+
+
+class RispostaTroppoGrande(Exception):
+    pass
+
+
+# ----------------------------------------------------------------------------
+# CHIAVE E TOKEN
+# ----------------------------------------------------------------------------
+def leggi_chiave():
+    # Su GitHub la chiave arriva dai "Secrets" come variabile d'ambiente; sul tuo PC dal file .env.local
+    chiave_ambiente = os.environ.get("GARMIN_PERSONAL_API_KEY", "").strip()
+    if chiave_ambiente:
+        return chiave_ambiente
+    if not FILE_ENV.exists():
+        raise ErroreGarmin("Non trovo il file .env.local nella cartella del progetto.")
+    chiave = ""
+    for riga in FILE_ENV.read_text(encoding="utf-8-sig").splitlines():
+        riga = riga.strip()
+        if riga.startswith("GARMIN_PERSONAL_API_KEY="):
+            chiave = riga.split("=", 1)[1].strip().strip('"').strip("'").strip()
+    if not chiave:
+        raise ErroreGarmin("In .env.local la chiave e' vuota: incollala subito dopo il simbolo =, "
+                           "senza spazi, poi salva il file.")
+    return chiave
+
+
+def richiedi_token():
+    req = urllib.request.Request(
+        TOKEN_URL, data=b"", method="POST",
+        headers={"Authorization": "ApiKey " + STATO_RUN["chiave"], "User-Agent": UA, "Accept": "*/*"},
+    )
     try:
-        client.login(tokenstore)
-    except Exception:
-        client.login()
+        with urllib.request.urlopen(req, timeout=30) as r:
+            testo = r.read().decode("utf-8", errors="replace").strip()
+    except urllib.error.HTTPError as e:
+        if e.code in (400, 401, 403):
+            raise ErroreGarmin(
+                "Garmin ha rifiutato la chiave (errore %d). La chiave e' sbagliata, copiata a meta', "
+                "scaduta o eliminata. Controlla la riga in .env.local." % e.code)
+        raise ErroreGarmin("Garmin ha risposto con l'errore %d alla richiesta del token." % e.code)
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        raise ErroreGarmin("Non riesco a collegarmi a Garmin. Controlla la connessione internet.")
+    if testo.startswith("{"):  # nel caso la risposta fosse un JSON invece di testo semplice
         try:
-            client.garth.dump(tokenstore)
+            j = json.loads(testo)
+            testo = j.get("token") or j.get("access_token") or j.get("accessToken") or ""
+        except ValueError:
+            pass
+    testo = str(testo).strip().strip('"')
+    if not testo:
+        raise ErroreGarmin("Garmin ha risposto ma senza token.")
+    return testo
+
+
+def ottieni_token(forza=False):
+    """Riusa il token salvato se ha meno di 20 ore, altrimenti ne chiede uno nuovo."""
+    if not forza and FILE_TOKEN.exists():
+        try:
+            j = json.loads(FILE_TOKEN.read_text(encoding="utf-8"))
+            if j.get("token") and time.time() - j["salvato"] < 20 * 3600:
+                STATO_RUN["token"] = j["token"]
+                return
         except Exception:
             pass
+    token = richiedi_token()
+    DATA.mkdir(exist_ok=True)
+    FILE_TOKEN.write_text(json.dumps({"token": token, "salvato": time.time()}), encoding="utf-8")
+    STATO_RUN["token"] = token
 
-    today = datetime.now()
 
-    # 1. Estrazione Attività di Corsa (ultime 50)
-    print("Estrazione attività...")
-    activities = client.get_activities(0, 50)
-    parsed_activities = []
-    
-    for act in activities:
-        act_type = act.get('activityType', {}).get('typeKey', '')
-        if act_type in ['running', 'treadmill_running', 'track_running']:
-            parsed_activities.append({
-                "id": act.get("activityId"),
-                "name": act.get("activityName"),
-                "type": "running",
-                "date": act.get("startTimeLocal"),
-                "distance_km": round(act.get("distance", 0) / 1000, 2),
-                "duration_min": round(act.get("duration", 0) / 60, 2),
-                "avg_hr": act.get("averageHR"),
-                "max_hr": act.get("maxHR"),
-                "calories": act.get("calories")
-            })
-
-    # 2. Estrazione Dati Salute, Recovery, Body Battery, Stress, VO2 Max e HRV (ultimi 14 giorni)
-    print("Estrazione dati salute, Body Battery, Stress, Recovery, VO2 Max e HRV...")
-    daily_health = []
-    
-    for i in range(14):
-        day = today - timedelta(days=i)
-        day_str = day.strftime("%Y-%m-%d")
-        
+# ----------------------------------------------------------------------------
+# CHIAMATE ALLE API
+# ----------------------------------------------------------------------------
+def chiama(percorso):
+    """GET su Garmin. Riprova da solo se il server e' occupato."""
+    rinnovato = False
+    for tentativo in range(1, 6):
+        time.sleep(PAUSA)
+        req = urllib.request.Request(
+            BASE + percorso,
+            headers={"Authorization": "Bearer " + STATO_RUN["token"],
+                     "Accept": "application/json", "User-Agent": UA},
+        )
         try:
-            stats = client.get_user_summary(day_str)
-            sleep = client.get_sleep_data(day_str)
-            
-            # --- DETTAGLI SONNO & RESPIRAZIONE ---
-            sleep_hours = 0
-            sleep_score = None
-            respiration_val = None
-            
-            if sleep and 'dailySleepDTO' in sleep and sleep['dailySleepDTO']:
-                dto = sleep['dailySleepDTO']
-                sleep_sec = dto.get('sleepTimeSeconds', 0)
-                sleep_hours = round(sleep_sec / 3600, 2)
-                sleep_score = dto.get('sleepScores', {}).get('overall', {}).get('value', None)
-                respiration_val = dto.get('averageRespirationValue') or dto.get('avgRespirationValue')
-            
-            if not respiration_val and isinstance(stats, dict):
-                respiration_val = stats.get("avgRespirationValue") or stats.get("averageRespirationValue")
+            with urllib.request.urlopen(req, timeout=60) as r:
+                corpo = r.read().decode("utf-8", errors="replace")
+            if not corpo.strip():
+                return None
+            return json.loads(corpo)
+        except urllib.error.HTTPError as e:
+            c = e.code
+            if c == 401 and not rinnovato:
+                rinnovato = True
+                ottieni_token(forza=True)
+                continue
+            if c == 500:
+                raise RispostaTroppoGrande()
+            if c in (429, 502, 503):
+                time.sleep(3 * tentativo)
+                continue
+            if c in (204, 404):
+                return None
+            raise ErroreGarmin("errore %d su %s" % (c, percorso.split("?")[0]))
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            time.sleep(3 * tentativo)
+            continue
+        except ValueError:
+            raise ErroreGarmin("risposta non leggibile su %s" % percorso.split("?")[0])
+    raise ErroreGarmin("troppi tentativi falliti su %s" % percorso.split("?")[0])
 
-            # --- RECUPERO PASSI PRECISO ---
-            steps = 0
-            if isinstance(stats, dict):
-                steps = stats.get("totalSteps") or stats.get("steps") or 0
-            
-            try:
-                steps_data = client.get_steps_data(day_str)
-                if steps_data and isinstance(steps_data, list):
-                    total_from_steps = sum(item.get("steps", 0) for item in steps_data if isinstance(item, dict))
-                    if total_from_steps > steps:
-                        steps = total_from_steps
-            except Exception:
-                pass
 
-            resting_hr = stats.get("restingHeartRate", None) if isinstance(stats, dict) else None
+def intervallo(url_fn, a, b):
+    """Scarica un intervallo di date. Se la risposta e' troppo grande lo divide a meta'."""
+    try:
+        return [chiama(url_fn(a, b))]
+    except RispostaTroppoGrande:
+        if a >= b:
+            print("\n  Avviso: il giorno %s non si riesce a scaricare, lo salto." % a)
+            return []
+        meta = a + timedelta(days=(b - a).days // 2)
+        return intervallo(url_fn, a, meta) + intervallo(url_fn, meta + timedelta(days=1), b)
 
-            # --- RECUPERO FC MEDIA REALE ---
-            real_avg_hr = None
-            try:
-                hr_data = client.get_heart_rates(day_str)
-                if hr_data and 'heartRateValues' in hr_data and hr_data['heartRateValues']:
-                    valid_samples = [item[1] for item in hr_data['heartRateValues'] if item and len(item) > 1 and item[1] is not None and item[1] > 0]
-                    if valid_samples:
-                        real_avg_hr = round(sum(valid_samples) / len(valid_samples))
-            except Exception:
-                pass
 
-            if not real_avg_hr and isinstance(stats, dict):
-                real_avg_hr = stats.get("averageHeartRate", resting_hr)
+def avanzamento(testo):
+    print(("  " + testo).ljust(72), end="\r", flush=True)
 
-            calories = stats.get("totalKilocalories", 0) if isinstance(stats, dict) else 0
 
-            # --- RECUPERO BODY BATTERY REALE ---
-            body_battery_val = None
-            if isinstance(stats, dict):
-                body_battery_val = (
-                    stats.get("bodyBatteryMostRecentValue") or 
-                    stats.get("bodyBatteryChargedValue") or
-                    stats.get("bodyBatteryHighestValue")
-                )
-            try:
-                if not body_battery_val:
-                    bb_data = client.get_body_battery(day_str)
-                    if bb_data and isinstance(bb_data, list) and len(bb_data) > 0:
-                        last_bb = bb_data[-1]
-                        if isinstance(last_bb, dict):
-                            body_battery_val = last_bb.get("charged") or last_bb.get("bodyBatteryVersion") or last_bb.get("value")
-            except Exception:
-                pass
+def scarica_a_pezzi(nome, url_fn, a, b, giorni_max):
+    """Ritorna (lista_risposte, tutto_ok)."""
+    risposte, ok, cur = [], True, a
+    while cur <= b:
+        fine = min(b, cur + timedelta(days=giorni_max - 1))
+        avanzamento("%s: %s -> %s" % (nome, cur, fine))
+        try:
+            risposte.extend(intervallo(url_fn, cur, fine))
+        except ErroreGarmin as e:
+            print("\n  Avviso (%s, %s -> %s): %s" % (nome, cur, fine, e))
+            ok = False
+        cur = fine + timedelta(days=1)
+    print(" " * 72, end="\r")
+    return risposte, ok
 
-            # --- RECUPERO STRESS REALE ---
-            stress_val = None
-            if isinstance(stats, dict):
-                stress_val = stats.get("averageStressLevel") or stats.get("stressLevel")
-            try:
-                if not stress_val:
-                    stress_data = client.get_stress_data(day_str)
-                    if stress_data and isinstance(stress_data, dict):
-                        stress_val = stress_data.get("avgStressLevel") or stress_data.get("averageStressLevel")
-            except Exception:
-                pass
 
-            # --- RECUPERO TEMPO DI RECUPERO CORRETTO (ORE) ---
-            recovery_time_val = None
-            try:
-                training_status = client.get_training_status(day_str)
-                if training_status and isinstance(training_status, dict):
-                    rec_raw = (
-                        training_status.get("mostRecentRecoveryTime") or 
-                        training_status.get("recoveryTime") or
-                        training_status.get("recoveryTimeHours")
-                    )
-                    if rec_raw is not None:
-                        recovery_time_val = round(rec_raw / 60) if rec_raw > 72 else round(rec_raw)
-            except Exception:
-                pass
+# ----------------------------------------------------------------------------
+# AIUTI PER LEGGERE LE RISPOSTE
+# ----------------------------------------------------------------------------
+def num(v):
+    if isinstance(v, dict):
+        v = v.get("value")
+    if v is None or v == "" or isinstance(v, bool):
+        return None
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return int(f) if f == int(f) else round(f, 2)
 
-            if recovery_time_val is None and isinstance(stats, dict):
-                rec_stat = stats.get("recoveryTime") or stats.get("recoveryTimeHours")
-                if rec_stat is not None:
-                    recovery_time_val = round(rec_stat / 60) if rec_stat > 72 else round(rec_stat)
 
-            # --- RECUPERO VO2 MAX REALE E AGGIORNATO ---
-            vo2_max_val = None
-            try:
-                max_metrics = client.get_max_metrics(day_str)
-                if max_metrics:
-                    if isinstance(max_metrics, list) and len(max_metrics) > 0:
-                        first_metric = max_metrics[0]
-                        vo2_raw = (
-                            first_metric.get("genericVo2Max") or 
-                            first_metric.get("vo2MaxPrecise") or 
-                            first_metric.get("vo2Max") or
-                            first_metric.get("vo2MaxValue")
-                        )
-                        if vo2_raw:
-                            vo2_max_val = round(float(vo2_raw), 1)
-                    elif isinstance(max_metrics, dict):
-                        vo2_raw = max_metrics.get("genericVo2Max") or max_metrics.get("vo2MaxValue")
-                        if vo2_raw:
-                            vo2_max_val = round(float(vo2_raw), 1)
-            except Exception:
-                pass
+def dct(x):
+    return x if isinstance(x, dict) else {}
 
-            if not vo2_max_val and isinstance(stats, dict):
-                vo2_max_val = stats.get("vo2MaxValue") or stats.get("vo2Max") or stats.get("vO2MaxValue")
 
-            # --- RECUPERO HRV NOTTURNO ESATTO ---
-            hrv_val = None
-            try:
-                hrv_data = client.get_hrv_data(day_str)
-                if hrv_data:
-                    if 'hrvSummary' in hrv_data and hrv_data['hrvSummary']:
-                        hrv_val = hrv_data['hrvSummary'].get("lastNightAvg") or hrv_data['hrvSummary'].get("weeklyAverage")
-                    elif isinstance(hrv_data, dict):
-                        hrv_val = hrv_data.get("lastNightAvg") or hrv_data.get("weeklyAverage")
-            except Exception:
-                pass
+def dig(d, *percorso):
+    for k in percorso:
+        if not isinstance(d, dict):
+            return None
+        d = d.get(k)
+    return d
 
-            daily_health.append({
-                "date": day_str,
-                "steps": steps,
-                "resting_hr": resting_hr,
-                "avg_hr": real_avg_hr,
-                "sleep_hours": sleep_hours,
-                "sleep_score": sleep_score,
-                "calories": calories,
-                "vo2_max": vo2_max_val,
-                "hrv": hrv_val,
-                "body_battery": body_battery_val,
-                "stress_level": stress_val,
-                "recovery_time_hours": recovery_time_val,
-                "respiration_rate": respiration_val
-            })
-        except Exception as e:
-            print(f"Errore recupero dati per {day_str}: {e}")
 
-    output_data = {
-        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "activities": parsed_activities,
-        "daily_health": daily_health
+def deep_find(obj, nomi):
+    """Cerca in profondita' la prima chiave (senza badare alle maiuscole) con un numero."""
+    coda = [obj]
+    while coda:
+        x = coda.pop(0)
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k.lower() in nomi and num(v) is not None:
+                    return num(v)
+            coda.extend(x.values())
+        elif isinstance(x, list):
+            coda.extend(x)
+    return None
+
+
+def lista(risposta):
+    if isinstance(risposta, list):
+        return [x for x in risposta if isinstance(x, dict)]
+    if isinstance(risposta, dict):
+        for v in risposta.values():
+            if isinstance(v, list) and v and isinstance(v[0], dict):
+                return v
+    return []
+
+
+def data_di(item):
+    for k in ("calendarDate", "date", "summaryDate", "day", "sleepDate"):
+        v = item.get(k)
+        if isinstance(v, str) and RE_DATA.match(v):
+            return v[:10]
+    for v in item.values():
+        if isinstance(v, str) and RE_DATA.match(v):
+            return v[:10]
+    return None
+
+
+def forma(x):
+    """Descrive la struttura di una risposta (nomi dei campi e tipi, mai i valori)."""
+    if isinstance(x, dict):
+        return {k: forma(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [forma(x[0])] if x else []
+    return type(x).__name__
+
+
+def ricorda(nome, item):
+    if nome not in CAMPIONI and item is not None:
+        CAMPIONI[nome] = forma(item)
+
+
+def leggi_json(percorso, default):
+    try:
+        return json.loads(percorso.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def scrivi_json(percorso, contenuto):
+    DATA.mkdir(exist_ok=True)
+    tmp = percorso.with_suffix(percorso.suffix + ".tmp")
+    tmp.write_text(json.dumps(contenuto, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(percorso)
+
+
+# ----------------------------------------------------------------------------
+# TRASFORMAZIONE NEL FORMATO DELLA DASHBOARD
+# ----------------------------------------------------------------------------
+def mappa_attivita(a):
+    tipo = a.get("activityType")
+    tipo = tipo.get("typeKey") if isinstance(tipo, dict) else tipo
+    dist = num(a.get("distance")) or 0
+    dur = num(a.get("duration")) or 0
+    return {
+        "id": a.get("activityId"),
+        "name": a.get("activityName") or "",
+        "type": tipo or "",
+        "date": a.get("startTimeLocal"),
+        "distance_km": round(dist / 1000, 2),
+        "duration_min": round(dur / 60, 2),
+        "avg_hr": num(a.get("averageHR")),
+        "max_hr": num(a.get("maxHR")),
+        "calories": num(a.get("calories")),
+        "elevation_gain_m": num(a.get("elevationGain")),
+        "training_load": num(a.get("activityTrainingLoad")),
+        "aerobic_te": num(a.get("aerobicTrainingEffect")),
+        "vo2_max": num(a.get("vO2MaxValue")),
+        "hr_zones_sec": [num(a.get("hrTimeInZone_%d" % i)) for i in range(1, 6)],
+        "fastest_1km_s": num(a.get("fastestSplit_1000")),
+        "fastest_5km_s": num(a.get("fastestSplit_5000")),
+        "avg_cadence": num(a.get("averageRunningCadenceInStepsPerMinute")),
     }
 
-    with open("garmin_data.json", "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print("Dati Garmin aggiornati con successo!")
+def mappa_giorno(d):
+    hr, stress = dct(d.get("heartRate")), dct(d.get("stress"))
+    bb, resp = dct(d.get("bodyBattery")), dct(d.get("respiration"))
+    inten = dct(d.get("intensityMinutes"))
+    avg_hr = None
+    for k in ("avgValue", "averageValue", "avg", "average"):
+        if num(hr.get(k)) is not None:
+            avg_hr = num(hr.get(k))
+            break
+    steps = num(dig(d, "movement", "steps", "value"))
+    if steps is None:
+        steps = deep_find(d, {"totalsteps", "steps"})
+    campo_bb = "maxValue" if BODY_BATTERY == "max" else "minValue"
+    moderati, vigorosi = num(inten.get("moderate")), num(inten.get("vigorous"))
+    minuti = None
+    if moderati is not None or vigorosi is not None:
+        minuti = (moderati or 0) + 2 * (vigorosi or 0)
+    return {
+        "steps": steps,
+        "resting_hr": num(hr.get("restingValue")),
+        "avg_hr": avg_hr,
+        "calories": num(dig(d, "calories", "burnedTotal"))
+        or deep_find(d, {"burnedtotal", "totalkilocalories", "totalcalories", "kilocalories"}),
+        "stress_level": num(stress.get("avgLevel")),
+        "body_battery": num(bb.get(campo_bb)),
+        "body_battery_min": num(bb.get("minValue")),
+        "respiration_rate": num(resp.get("avgValue")),
+        "intensity_minutes": minuti,
+    }
+
+
+def mappa_sonno(s):
+    tot = num(s.get("sleepTimeSeconds"))
+    punteggio = num(dig(s, "sleepScores", "overall", "value"))
+    if punteggio is None:
+        punteggio = num(dig(s, "sleepScores", "overall"))
+
+    def ore(chiave):
+        v = num(s.get(chiave))
+        return round(v / 3600, 2) if v else None
+
+    return {
+        "sleep_hours": round(tot / 3600, 2) if tot else None,
+        "sleep_score": punteggio,
+        "sleep_deep_h": ore("deepSleepSeconds"),
+        "sleep_light_h": ore("lightSleepSeconds"),
+        "sleep_rem_h": ore("remSleepSeconds"),
+        "sleep_awake_h": ore("awakeSleepSeconds"),
+    }
+
+
+def mappa_hrv(h):
+    return {
+        "hrv": num(h.get("lastNightAvg")),
+        "hrv_weekly_avg": num(h.get("weeklyAvg")),
+        "hrv_stato": h.get("status") if isinstance(h.get("status"), str) else None,
+    }
+
+
+def unisci(giorni, data_str, campi):
+    rec = giorni.setdefault(data_str, {})
+    for k, v in campi.items():
+        if v is not None:
+            rec[k] = v
+
+
+# ----------------------------------------------------------------------------
+# I VARI SCARICAMENTI
+# ----------------------------------------------------------------------------
+def scarica_attivita(da_data, tutto, stato):
+    noti = leggi_json(FILE_ATTIVITA, {})
+    # fermarsi alla prima pagina "gia' nota" e' sicuro solo se un passaggio completo e' gia' riuscito
+    gia_completo = bool(stato.get("attivita_ok")) and not tutto
+    finito = False
+    limite, start, nuove = 20, 0, 0
+    print("Attivita...")
+    for _ in range(2000):
+        avanzamento("attivita: %d scaricate finora" % nuove)
+        try:
+            pagina = chiama("/activitylist-service/activities/search/activities?start=%d&limit=%d"
+                            % (start, limite))
+        except RispostaTroppoGrande:
+            if limite > 5:
+                limite = max(5, limite // 2)
+                continue
+            print("\n  Avviso: una pagina di attivita non si riesce a scaricare, mi fermo qui.")
+            break
+        except ErroreGarmin as e:
+            print("\n  Avviso (attivita): %s" % e)
+            break
+        items = lista(pagina)
+        if items:
+            ricorda("attivita", items[0])
+        tutte_vecchie, tutte_note = True, True
+        for a in items:
+            rec = mappa_attivita(a)
+            if rec["id"] is None:
+                continue
+            giorno = (rec["date"] or "")[:10]
+            if tutto or not giorno or giorno >= str(da_data):
+                tutte_vecchie = False
+            if str(rec["id"]) not in noti:
+                tutte_note = False
+                nuove += 1
+            if tutto or not giorno or giorno >= str(da_data):
+                noti[str(rec["id"])] = rec
+        if len(items) < limite or (items and tutte_vecchie) or (items and tutte_note and gia_completo):
+            finito = True
+            break
+        start += limite
+    print(" " * 72, end="\r")
+    scrivi_json(FILE_ATTIVITA, noti)
+    if finito:
+        stato["attivita_ok"] = True
+    return noti, nuove
+
+
+def scarica_giorni(giorni, stato, inizio_default, oggi, tutto):
+    def da_dove(nome):
+        if tutto or not stato.get(nome):
+            return inizio_default
+        ultimo = datetime.strptime(stato[nome], "%Y-%m-%d").date()
+        return max(inizio_default, ultimo - timedelta(days=SOVRAPPOSIZIONE))
+
+    # Riepiloghi giornalieri (passi, FC riposo, stress, body battery...)
+    print("Riepiloghi giornalieri...")
+    a = da_dove("giorni")
+    risp, ok = scarica_a_pezzi(
+        "giorni", lambda x, y: "/usersummary-service/v2/dailysummaries?startDate=%s&endDate=%s" % (x, y),
+        a, oggi, 60)
+    for r in risp:
+        for item in lista(r):
+            ricorda("giorni", item)
+            d = data_di(item)
+            if d:
+                unisci(giorni, d, mappa_giorno(item))
+    if ok:
+        stato["giorni"] = str(oggi)
+
+    # Sonno (massimo 31 giorni per chiamata)
+    print("Sonno...")
+    a = da_dove("sonno")
+    risp, ok = scarica_a_pezzi(
+        "sonno", lambda x, y: "/sleep-service/sleep/dailySleepSummariesByDate?startDate=%s&endDate=%s" % (x, y),
+        a, oggi, 31)
+    for r in risp:
+        for item in lista(r):
+            ricorda("sonno", item)
+            d = data_di(item)
+            if d:
+                unisci(giorni, d, mappa_sonno(item))
+    if ok:
+        stato["sonno"] = str(oggi)
+
+    # HRV
+    print("HRV...")
+    a = da_dove("hrv")
+    risp, ok = scarica_a_pezzi(
+        "hrv", lambda x, y: "/hrv-service/hrv/daily/%s/%s" % (x, y), a, oggi, 90)
+    for r in risp:
+        riepiloghi = r.get("hrvSummaries") if isinstance(r, dict) else None
+        for item in (riepiloghi or []):
+            if isinstance(item, dict):
+                ricorda("hrv", item)
+                d = data_di(item)
+                if d:
+                    unisci(giorni, d, mappa_hrv(item))
+    if ok:
+        stato["hrv"] = str(oggi)
+
+
+def scarica_eta_fitness(oggi):
+    try:
+        r = chiama("/fitnessage-service/fitnessage/v2/%s" % oggi)
+    except (ErroreGarmin, RispostaTroppoGrande):
+        return None
+    if r is None:
+        return None
+    ricorda("eta_fitness", r)
+    v = deep_find(r, {"fitnessage", "fitness_age"})
+    return round(v) if v is not None else None
+
+
+def normalizza_data(testo):
+    """Accetta 2027-02-28 ma anche 28/02/2027, 28-02-2027, 28.02.2027 e le riporta a AAAA-MM-GG."""
+    t = str(testo or "").strip()
+    for formato in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%d/%m/%y"):
+        try:
+            return datetime.strptime(t, formato).strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+    return None
+
+
+def trova_prossimo_evento(oggi):
+    """Tentativo: cerca nel calendario Garmin la prima gara/evento da oggi in poi (prossimi 12 mesi)."""
+    migliore = None
+    for passo in range(13):
+        mese0 = oggi.year * 12 + (oggi.month - 1) + passo
+        anno, mese = mese0 // 12, mese0 % 12  # Garmin conta i mesi da 0 a 11
+        try:
+            r = chiama("/calendar-service/year/%d/month/%d" % (anno, mese))
+        except (ErroreGarmin, RispostaTroppoGrande):
+            if passo == 0:
+                return None  # il calendario non e' raggiungibile: inutile insistere
+            continue
+        if r is None:
+            if passo == 0:
+                return None
+            continue
+        elementi = r.get("calendarItems") if isinstance(r, dict) else None
+        for it in (elementi or []):
+            if not isinstance(it, dict) or str(it.get("itemType", "")).lower() not in ("event", "events", "race", "races"):
+                continue
+            ricorda("evento", it)
+            d = data_di(it)
+            titolo = it.get("title") or it.get("eventName") or it.get("name")
+            if d and titolo and d >= str(oggi) and (migliore is None or d < migliore["date"]):
+                migliore = {"title": str(titolo), "date": d}
+        if migliore:
+            break  # i mesi sono in ordine: il primo evento trovato e' il piu' vicino
+    return migliore
+
+
+def prova_recupero_garmin(oggi):
+    """Tentativo: legge da Garmin 'prontezza all'allenamento' e 'stato allenamento' (tempo di recupero, VO2 max).
+    Non so se la Personal API li offra: i valori trovati vengono solo mostrati a fine riepilogo."""
+    trovati = {}
+    for nome, percorso in (("prontezza", "/metrics-service/metrics/trainingreadiness/%s" % oggi),
+                           ("stato_allenamento", "/metrics-service/metrics/trainingstatus/aggregated/%s" % oggi)):
+        try:
+            r = chiama(percorso)
+        except (ErroreGarmin, RispostaTroppoGrande):
+            continue
+        if r is None:
+            continue
+        ricorda(nome, r)
+        rec = deep_find(r, {"recoverytime"})
+        if rec is not None and "recupero (valore grezzo)" not in trovati:
+            trovati["recupero (valore grezzo)"] = rec
+        vo2 = deep_find(r, {"vo2maxprecisevalue", "vo2maxvalue"})
+        if vo2 is not None and "VO2 max" not in trovati:
+            trovati["VO2 max"] = vo2
+    return trovati
+
+
+def scarica_vo2(giorni, oggi):
+    """Tentativo: Garmin potrebbe non offrire il VO2 max nella Personal API. Se non c'e', si va avanti."""
+    try:
+        r = chiama("/metrics-service/metrics/maxmet/daily/%s/%s" % (oggi - timedelta(days=90), oggi))
+    except (ErroreGarmin, RispostaTroppoGrande):
+        return
+    for item in lista(r):
+        ricorda("vo2", item)
+        base = dct(item.get("generic")) or item
+        d = data_di(base)
+        v = deep_find(base, {"vo2maxprecisevalue", "vo2maxvalue"})
+        if d and v is not None:
+            unisci(giorni, d, {"vo2_max": v})
+
+
+# ----------------------------------------------------------------------------
+# STORICO DEL VECCHIO OROLOGIO (file CSV nella cartella del sito)
+# ----------------------------------------------------------------------------
+MESI_EN = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+           "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+TIPI_STRAVA = {"run": "running", "trail run": "trail_running", "walk": "walking", "ride": "cycling",
+               "hike": "hiking", "swim": "lap_swimming", "weight training": "strength_training",
+               "workout": "other", "tennis": "tennis_v2"}
+
+
+def data_strava(testo):
+    """Strava scrive le date in UTC (es. 'Sep 20, 2026, 2:12:12 PM'): le converto all'ora locale."""
+    m = re.match(r"^(\w{3}) (\d{1,2}), (\d{4}), (\d{1,2}):(\d{2}):(\d{2}) (AM|PM)$", (testo or "").strip())
+    if not m or m.group(1) not in MESI_EN:
+        return None
+    ora = int(m.group(4)) % 12 + (12 if m.group(7) == "PM" else 0)
+    dt = datetime(int(m.group(3)), MESI_EN[m.group(1)], int(m.group(2)), ora,
+                  int(m.group(5)), int(m.group(6)), tzinfo=timezone.utc)
+    return dt.astimezone().replace(tzinfo=None)
+
+
+def leggi_storico_attivita(primo_garmin):
+    """Attivita del vecchio orologio, solo quelle PRIMA della prima attivita Garmin (niente doppioni)."""
+    if not FILE_STORICO_ATT.exists():
+        return []
+    out = []
+    with open(FILE_STORICO_ATT, encoding="utf-8-sig", newline="") as f:
+        righe = list(csv.reader(f))
+    if not righe:
+        return []
+    intestazione = righe[0]
+    for r in righe[1:]:
+        d = dict(zip(intestazione, r))  # con colonne doppie vale l'ultima (quella in metri/secondi)
+        dt = data_strava(d.get("Activity Date"))
+        if not dt:
+            continue
+        data_loc = dt.strftime("%Y-%m-%d %H:%M:%S")
+        if primo_garmin and data_loc >= primo_garmin:
+            continue
+        id_txt = (d.get("Activity ID") or "").strip()
+        tipo = (d.get("Activity Type") or "").strip().lower()
+        durata = num(d.get("Moving Time")) or num(d.get("Elapsed Time")) or 0
+        out.append({
+            "id": int(id_txt) if id_txt.isdigit() else None,
+            "name": d.get("Activity Name") or "",
+            "type": TIPI_STRAVA.get(tipo, tipo.replace(" ", "_") or "other"),
+            "date": data_loc,
+            "distance_km": round((num(d.get("Distance")) or 0) / 1000, 2),
+            "duration_min": round(durata / 60, 2),
+            "avg_hr": num(d.get("Average Heart Rate")),
+            "max_hr": num(d.get("Max Heart Rate")),
+            "calories": num(d.get("Calories")),
+            "elevation_gain_m": num(d.get("Elevation Gain")),
+            "fonte": "storico",
+        })
+    return out
+
+
+def leggi_storico_benessere():
+    """Dati giornalieri del vecchio orologio (export Intervals.icu 'wellness')."""
+    f = next(CARTELLA.glob("*wellness*.csv"), None)
+    if f is None:
+        return {}
+    out = {}
+    with open(f, encoding="utf-8-sig", newline="") as fh:
+        for r in csv.DictReader(fh):
+            d = (r.get("date") or "")[:10]
+            if not RE_DATA.match(d):
+                continue
+            sonno = num(r.get("sleepSecs"))
+            campi = {
+                "steps": num(r.get("steps")),
+                "resting_hr": num(r.get("restingHR")),
+                "hrv": num(r.get("hrv")),
+                "sleep_hours": round(sonno / 3600, 2) if sonno else None,
+                "sleep_score": num(r.get("sleepScore")),
+                "vo2_max": num(r.get("vo2max")),
+                "respiration_rate": num(r.get("respiration")),
+                "stress_level": num(r.get("stress")),
+            }
+            campi = {k: v for k, v in campi.items() if v is not None}
+            if campi:
+                out[d] = campi
+    return out
+
+
+# ----------------------------------------------------------------------------
+# COSTRUZIONE DI garmin_data.json
+# ----------------------------------------------------------------------------
+def costruisci_output(attivita, giorni, eta_fitness, da_data, tutto, storico_att=(), storico_ben=None, evento=None):
+    elenco_att = sorted(list(attivita.values()) + list(storico_att),
+                        key=lambda a: a.get("date") or "", reverse=True)
+    giorni_garmin = set(giorni.keys())
+    giorni = {d: dict(v) for d, v in giorni.items()}
+    for d, campi in (storico_ben or {}).items():
+        rec = giorni.setdefault(d, {})
+        for k, v in campi.items():
+            if rec.get(k) is not None:
+                continue
+            if d in giorni_garmin and k != "vo2_max":
+                continue  # nei giorni coperti da Garmin vale Garmin; dallo storico prendo solo il VO2 max
+            rec[k] = v
+    if not tutto:
+        elenco_att = [a for a in elenco_att if (a.get("date") or "")[:10] >= str(da_data)]
+
+    vo2_per_giorno = {}
+    for a in sorted(elenco_att, key=lambda a: a.get("date") or ""):
+        if a.get("vo2_max") is not None and a.get("date"):
+            vo2_per_giorno[a["date"][:10]] = a["vo2_max"]
+
+    salute = []
+    for d in sorted(giorni.keys(), reverse=True):
+        if not tutto and d < str(da_data):
+            continue
+        rec = {k: v for k, v in giorni[d].items() if v is not None}
+        if not rec:
+            continue
+        if d in vo2_per_giorno:
+            rec["vo2_max"] = vo2_per_giorno[d]
+        rec["date"] = d
+        salute.append(rec)
+    if salute and eta_fitness is not None:
+        salute[0]["fitness_age"] = eta_fitness
+    if salute and VO2_MAX_MANUALE is not None:
+        salute[0]["vo2_max"] = VO2_MAX_MANUALE
+
+    out = {
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "activities": elenco_att,
+        "daily_health": salute,
+    }
+    if evento is None and EVENTO_MANUALE:
+        evento = {"title": EVENTO_MANUALE[0], "date": normalizza_data(EVENTO_MANUALE[1])}
+    if evento:
+        if OBIETTIVO_EVENTO:
+            evento = dict(evento, goal=OBIETTIVO_EVENTO)
+        out["next_event"] = evento
+    return out
+
+
+def riepilogo(out):
+    att, sal = out["activities"], out["daily_health"]
+    print("\nFatto. Ecco cosa e' arrivato:")
+    print("  Attivita:        %d" % len(att))
+    print("  Giorni di dati:  %d" % len(sal))
+    notti = sum(1 for g in sal if g.get("sleep_hours") is not None)
+    print("  Notti di sonno:  %d" % notti)
+    date_tutte = [a["date"][:10] for a in att if a.get("date")] + [g["date"] for g in sal]
+    if date_tutte:
+        print("  Periodo:         dal %s al %s" % (min(date_tutte), max(date_tutte)))
+    print("\nCampi riempiti (giorni su %d):" % len(sal))
+    etichette = [("steps", "passi"), ("resting_hr", "FC a riposo"),
+                 ("calories", "calorie"), ("stress_level", "stress"), ("body_battery", "body battery"),
+                 ("sleep_hours", "ore di sonno"), ("sleep_score", "punteggio sonno"), ("hrv", "HRV"),
+                 ("respiration_rate", "respirazione"), ("vo2_max", "VO2 max")]
+    for chiave, nome in etichette:
+        n = sum(1 for g in sal if g.get(chiave) is not None)
+        avviso = "" if n else "   <-- vuoto"
+        print("  %-16s %d%s" % (nome, n, avviso))
+    ev = out.get("next_event")
+    print("\nProssimo evento: %s" % (("%s (%s)" % (ev["title"], ev.get("date") or "data non valida")) if ev else
+          "non trovato nel calendario Garmin (si puo' impostare a mano in cima a fetch_data.py)"))
+    if ev and not ev.get("date"):
+        print("ATTENZIONE: la data dell'evento non e' valida. In EVENTO_MANUALE scrivila cosi: 2027-02-28")
+    print("\nIl file garmin_data.json e' stato aggiornato.")
+
+
+def test_connessione():
+    print("Provo a leggere le tue ultime 5 attivita...\n")
+    r = chiama("/activitylist-service/activities/search/activities?start=0&limit=5")
+    items = lista(r)
+    if not items:
+        print("Connessione riuscita, ma Garmin non ha restituito attivita.")
+        return
+    for a in items:
+        rec = mappa_attivita(a)
+        print("  %s  %-18s %6.2f km" % ((rec["date"] or "")[:10], rec["type"], rec["distance_km"]))
+    print("\nTutto funziona.")
+
+
+# ----------------------------------------------------------------------------
+# PROGRAMMA PRINCIPALE
+# ----------------------------------------------------------------------------
+def main():
+    args = sys.argv[1:]
+    test, tutto = "--test" in args, "--tutto" in args
+    oggi = date.today()
+    da_data = oggi - timedelta(days=round(MESI_DEFAULT * 30.5))
+    inizio_default = INIZIO_STORIA if tutto else da_data
+
+    try:
+        STATO_RUN["chiave"] = leggi_chiave()
+        print("Chiave trovata.")
+        ottieni_token()
+        print("Token pronto.\n")
+
+        if test:
+            test_connessione()
+            return
+
+        if FILE_OUT.exists() and not FILE_BACKUP.exists():
+            shutil.copy(FILE_OUT, FILE_BACKUP)
+            print("Copia di sicurezza del vecchio file: garmin_data.backup.json\n")
+
+        stato = {} if tutto else leggi_json(FILE_STATO, {})
+        giorni = leggi_json(FILE_GIORNI, {})
+
+        attivita, _ = scarica_attivita(da_data, tutto, stato)
+        scarica_giorni(giorni, stato, inizio_default, oggi, tutto)
+        scrivi_json(FILE_GIORNI, giorni)
+        scrivi_json(FILE_STATO, stato)
+        eta = scarica_eta_fitness(oggi)
+
+        primo_garmin = min((a["date"] for a in attivita.values() if a.get("date")), default=None)
+        storico_att, storico_ben = [], {}
+        try:
+            storico_att = leggi_storico_attivita(primo_garmin)
+            storico_ben = leggi_storico_benessere()
+        except Exception as e:  # lo storico e' un extra: se qualcosa va storto si prosegue con i soli dati Garmin
+            print("Avviso: non sono riuscito a leggere lo storico dei CSV (%s). Vado avanti senza." % e)
+        if storico_att or storico_ben:
+            print("Storico del vecchio orologio: %d attivita e %d giorni dai file CSV." % (len(storico_att), len(storico_ben)))
+
+        evento = trova_prossimo_evento(oggi)
+        out = costruisci_output(attivita, giorni, eta, da_data, tutto, storico_att, storico_ben, evento)
+        scrivi_json(FILE_OUT, out)
+        FILE_STRUTTURA.write_text(json.dumps(CAMPIONI, indent=1, ensure_ascii=False), encoding="utf-8")
+        riepilogo(out)
+    except ErroreGarmin as e:
+        print("\nPROBLEMA: %s" % e)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nInterrotto. Quello che era gia' stato scaricato e' salvato: rilancia il comando per continuare.")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    fetch_garmin()
+    main()
