@@ -50,6 +50,29 @@ function getVal(obj, keys, defaultVal = null) {
   return defaultVal;
 }
 
+function formatOreMinuti(ore) {
+  const n = Number(ore);
+  if (!isFinite(n) || n <= 0) return '0h 0m';
+  const totMin = Math.round(n * 60);
+  return Math.floor(totMin / 60) + 'h ' + String(totMin % 60).padStart(2, '0') + 'm';
+}
+
+function renderNextEvent() {
+  const ev = rawData && rawData.next_event;
+  const el = document.getElementById('nextEventLabel');
+  if (!ev || !ev.title || !el) return;
+  let testo = 'Prossimo evento: ' + ev.title;
+  if (ev.date) {
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    const giorni = Math.round((new Date(ev.date + 'T00:00:00') - oggi) / 86400000);
+    if (giorni === 0) testo += ' \u2022 Oggi!';
+    else if (giorni === 1) testo += ' \u2022 Domani';
+    else if (giorni > 1) testo += ' \u2022 Tra ' + giorni + ' giorni';
+  }
+  if (ev.goal) testo += ' \u2022 Obiettivo ' + ev.goal;
+  el.innerText = testo;
+}
+
 function changeWeek(direction) {
   weekOffset += direction;
   renderOverview();
@@ -69,6 +92,7 @@ async function loadDashboard() {
     
     baseDate = new Date();
 
+    renderNextEvent();
     renderOverview();
     renderHealthTab();
   } catch (err) {
@@ -121,7 +145,7 @@ function getWeekMetrics(mondayObj) {
       const sl = getVal(match, ['sleep_hours', 'sleep_time', 'total_sleep_hours']);
       sleep.push(sl !== null ? Number(sl) : null);
 
-      const hr = getVal(match, ['avg_hr', 'avg_heart_rate', 'resting_hr']);
+      const hr = getVal(match, ['resting_hr', 'restingHeartRate', 'rhr']);
       bpm.push(hr !== null ? Number(hr) : null);
 
       const cal = getVal(match, ['calories', 'total_calories', 'active_calories']);
@@ -186,15 +210,15 @@ function renderOverview() {
   const diffSteps = currData.avgSteps - prevData.avgSteps;
   const diffRuns = currData.totalDist - prevData.totalDist;
   const diffBpm = currData.avgBpm - prevData.avgBpm;
-  const diffSleep = (currData.avgSleep - prevData.avgSleep).toFixed(1);
+  const diffSleep = Number(currData.avgSleep) - Number(prevData.avgSleep);
 
   const stepsDiffStr = diffSteps >= 0 ? `+${diffSteps.toLocaleString('it-IT')}` : `${diffSteps.toLocaleString('it-IT')}`;
   const runsDiffStr = diffRuns >= 0 ? `+${diffRuns.toFixed(1)}` : `${diffRuns.toFixed(1)}`;
   const bpmDiffStr = diffBpm >= 0 ? `+${diffBpm}` : `${diffBpm}`;
-  const sleepDiffStr = diffSleep >= 0 ? `+${diffSleep}` : `${diffSleep}`;
+  const sleepDiffStr = (diffSleep >= 0 ? '+' : '-') + formatOreMinuti(Math.abs(diffSleep));
 
   document.getElementById('diffRunsStepsLabel').innerText = `Corsa: ${runsDiffStr} km | Passi: ${stepsDiffStr}/gg`;
-  document.getElementById('diffBpmSleepLabel').innerText = `FC: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}h/gg`;
+  document.getElementById('diffBpmSleepLabel').innerText = `FC riposo: ${bpmDiffStr} bpm | Sonno: ${sleepDiffStr}/gg`;
 
   const health = getHealthArray();
   const targetEntry = health.length > 0 ? health[0] : {};
@@ -202,7 +226,7 @@ function renderOverview() {
   document.getElementById('cardDist').innerText = currData.totalDist.toFixed(1) + ' km';
   document.getElementById('cardWorkouts').innerText = currData.runs.filter(r => r > 0).length + ' corse svolte';
   
-  const hrVal = getVal(targetEntry, ['avg_hr', 'avg_heart_rate', 'resting_hr'], '--');
+  const hrVal = getVal(targetEntry, ['resting_hr', 'restingHeartRate', 'rhr'], '--');
   document.getElementById('cardBpmToday').innerText = hrVal + (hrVal !== '--' ? ' bpm' : '');
   document.getElementById('cardBpmAvg').innerText = `Media sett.: ${currData.avgBpm || '--'} bpm`;
 
@@ -211,8 +235,8 @@ function renderOverview() {
   document.getElementById('cardStepsAvg').innerText = `Media sett.: ${currData.avgSteps.toLocaleString('it-IT')} passi/gg`;
 
   let sleepVal = getVal(targetEntry, ['sleep_hours', 'sleep_time'], 0);
-  document.getElementById('cardSleepToday').innerText = sleepVal + 'h';
-  document.getElementById('cardSleepAvg').innerText = `Media sett.: ${currData.avgSleep}h/gg`;
+  document.getElementById('cardSleepToday').innerText = formatOreMinuti(sleepVal);
+  document.getElementById('cardSleepAvg').innerText = `Media sett.: ${formatOreMinuti(currData.avgSleep)}/gg`;
 
   const calVal = getVal(targetEntry, ['calories', 'total_calories'], 0);
   document.getElementById('cardCalToday').innerText = Number(calVal).toLocaleString('it-IT') + ' kcal';
@@ -226,6 +250,38 @@ function renderOverview() {
   });
 
   initCharts(weekDays, currData.steps, currData.runs, currData.bpm, currData.sleep);
+}
+
+function renderUltimoAllenamento(activities) {
+  const elTempo = document.getElementById('valRecoveryTime');
+  const elSub = document.getElementById('valRecoverySub');
+  const adesso = new Date();
+  let ultima = null;
+  let ore = null;
+  activities.forEach(act => {
+    const raw = getVal(act, ['date', 'start_time', 'start_time_local']);
+    if (!raw) return;
+    const h = (adesso - new Date(String(raw).replace(' ', 'T'))) / 3600000;
+    if (isNaN(h) || h < 0) return;
+    if (ore === null || h < ore) { ultima = act; ore = h; }
+  });
+  if (!ultima) {
+    elTempo.innerText = '--';
+    elSub.innerText = 'Nessun allenamento trovato';
+    return;
+  }
+  elTempo.innerText = ore < 1 ? 'Meno di 1 ora fa' : ore < 48 ? Math.floor(ore) + ' ore fa' : Math.floor(ore / 24) + ' giorni fa';
+  const nomi = { running: 'Corsa', trail_running: 'Trail', strength_training: 'Forza', tennis_v2: 'Tennis', cycling: 'Bici', walking: 'Camminata', hiking: 'Escursione' };
+  const tipo = String(getVal(ultima, ['type'], 'Allenamento'));
+  let testo = nomi[tipo] || (tipo.charAt(0).toUpperCase() + tipo.slice(1).replace(/_/g, ' '));
+  const km = Number(getVal(ultima, ['distance_km'], 0));
+  if (km > 0) testo += ' ' + km.toFixed(1) + ' km';
+  const te = Number(getVal(ultima, ['aerobic_te'], 0));
+  if (te > 0) {
+    const giudizio = te >= 5 ? 'sovraccarico' : te >= 4 ? 'miglioramento notevole' : te >= 3 ? 'miglioramento' : te >= 2 ? 'mantenimento' : te >= 1 ? 'beneficio minimo' : 'nessun beneficio';
+    testo += ' \u2022 Effetto allenante ' + te.toFixed(1) + ' (' + giudizio + ')';
+  }
+  elSub.innerText = testo;
 }
 
 function renderHealthTab() {
@@ -247,6 +303,7 @@ function renderHealthTab() {
   }
 
   const bodyBattery = [];
+  const bodyBatteryMin = [];
   const stress = [];
   const hrv = [];
   const rhr = [];
@@ -263,12 +320,15 @@ function renderHealthTab() {
       const str = getVal(match, ['stress_level', 'stress', 'averageStressLevel']);
       const hrvVal = getVal(match, ['hrv', 'hrvStatus', 'lastNightAvgHrv'], Math.round(110 - restingHr));
 
+      const bbLow = getVal(match, ['body_battery_min']);
       bodyBattery.push(bb !== null ? Number(bb) : null);
+      bodyBatteryMin.push(bbLow !== null ? Number(bbLow) : null);
       stress.push(str !== null ? Number(str) : null);
       hrv.push(hrvVal !== null ? Number(hrvVal) : null);
       rhr.push(restingHr);
     } else {
       bodyBattery.push(null);
+      bodyBatteryMin.push(null);
       stress.push(null);
       hrv.push(null);
       rhr.push(null);
@@ -286,27 +346,18 @@ function renderHealthTab() {
   let recoveryHours = getVal(targetEntry, ['recovery_time_hours', 'recovery_time', 'recoveryTime', 'time_to_recovery', 'hours_to_recovery']);
   
   if (recoveryHours === null || recoveryHours === undefined || recoveryHours === '--') {
-    let accumulatedRecovery = 0;
-    const now = new Date();
-
+    // Garmin non fornisce il tempo di recupero: stima prudente basata sull'effetto allenante (TE) degli ultimi 4 giorni
+    const oreRecupero = (te) => te >= 5 ? 72 : te >= 4 ? 54 : te >= 3 ? 30 : te >= 2 ? 12 : 0;
+    const adesso = new Date();
+    let massimo = 0;
     activities.forEach(act => {
-      const actDateRaw = getVal(act, ['date', 'start_time', 'start_time_local']);
-      if (actDateRaw) {
-        const actDate = new Date(actDateRaw);
-        const hoursAgo = (now - actDate) / (1000 * 60 * 60);
-
-        if (hoursAgo >= 0 && hoursAgo <= 72) {
-          const dist = Number(getVal(act, ['distance_km', 'distance'], 0));
-          const avgHr = Number(getVal(act, ['avg_hr', 'averageHeartRate'], 140));
-          let actRec = (dist * 2.8) * (avgHr / 145);
-          let remainingFromAct = Math.max(0, actRec - hoursAgo);
-          accumulatedRecovery += remainingFromAct;
-        }
-      }
+      const raw = getVal(act, ['date', 'start_time', 'start_time_local']);
+      const te = Number(getVal(act, ['aerobic_te'], 0));
+      if (!raw || !te) return;
+      const passate = (adesso - new Date(String(raw).replace(' ', 'T'))) / 3600000;
+      if (passate >= 0 && passate <= 96) massimo = Math.max(massimo, oreRecupero(te) - passate);
     });
-
-    recoveryHours = Math.round(accumulatedRecovery);
-    if (recoveryHours <= 0) recoveryHours = 0; 
+    recoveryHours = Math.max(0, Math.round(massimo));
   }
 
   let vo2 = null;
@@ -339,7 +390,7 @@ function renderHealthTab() {
   if (formScore !== '--') {
     if (formScore < 50) {
       statusText = "Affaticamento Accumulato";
-      adviceText = `Recupero richiesto: ${recoveryHours}h. Corpo sotto carico per le corse recenti. Consigliato riposo o corsetta rigenerante.`;
+      adviceText = "Corpo ancora sotto carico per gli ultimi allenamenti. Consigliato riposo o corsetta rigenerante.";
     } else if (formScore < 75) {
       statusText = "Forma Moderata";
       adviceText = "Energia in fase di ricarica. Utile per allenamenti leggeri o fondo medio.";
@@ -410,7 +461,7 @@ function renderHealthTab() {
   const respToday = getVal(targetEntry, ['respiration_rate', 'respirationRate', 'avgRespiration', 'averageRespiration', 'sleep_respiration_rate'], '--');
   document.getElementById('valRespiration').innerText = respToday + (respToday !== '--' ? ' brm' : '');
 
-  document.getElementById('valRecoveryTime').innerText = recoveryHours + ' ore';
+  renderUltimoAllenamento(activities);
 
   const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const weekDays = dayLabels.map((lbl, idx) => {
@@ -419,7 +470,8 @@ function renderHealthTab() {
     return `${lbl} ${d.getDate()}`;
   });
 
-  initHealthCharts(weekDays, bodyBattery, stress, hrv, rhr);
+  const bbRange = bodyBattery.map((mx, i) => mx === null ? null : [bodyBatteryMin[i] !== null ? bodyBatteryMin[i] : mx, mx]);
+  initHealthCharts(weekDays, bbRange, stress, hrv, rhr);
 }
 
 function initCharts(labels, steps, runs, bpm, sleep) {
@@ -485,7 +537,7 @@ function initCharts(labels, steps, runs, bpm, sleep) {
       datasets: [
         {
           type: 'line',
-          label: 'FC Media (bpm)',
+          label: 'FC a Riposo (bpm)',
           data: bpm,
           borderColor: '#00f0ff',
           backgroundColor: '#00f0ff',
@@ -512,13 +564,22 @@ function initCharts(labels, steps, runs, bpm, sleep) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      plugins: {
+        legend: { labels: { color: '#94a3b8' } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ctx.dataset.yAxisID === 'ySleep'
+              ? 'Sonno: ' + formatOreMinuti(ctx.parsed.y)
+              : ctx.dataset.label + ': ' + ctx.parsed.y
+          }
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { display: false } },
         yBpm: {
           type: 'linear',
           position: 'left',
-          title: { display: true, text: 'FC Media (bpm)', color: '#00f0ff' },
+          title: { display: true, text: 'FC a Riposo (bpm)', color: '#00f0ff' },
           ticks: { color: '#00f0ff' },
           grid: { color: 'rgba(255,255,255,0.05)' }
         },
@@ -539,37 +600,50 @@ function initHealthCharts(labels, bodyBattery, stress, hrv, rhr) {
   if(chartBodyBatteryStressInstance) chartBodyBatteryStressInstance.destroy();
 
   chartBodyBatteryStressInstance = new Chart(ctxBbStress, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: labels,
       datasets: [
         {
-          label: 'Body Battery',
+          type: 'bar',
+          label: 'Body Battery (min - max)',
           data: bodyBattery,
+          backgroundColor: 'rgba(16, 185, 129, 0.45)',
           borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
-          fill: true,
-          borderWidth: 3,
-          tension: 0.3
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false,
+          order: 2
         },
         {
-          label: 'Livello Stress',
+          type: 'line',
+          label: 'Livello Stress (media)',
           data: stress,
           borderColor: '#ff9d00',
           backgroundColor: 'transparent',
           borderWidth: 2,
           borderDash: [5, 5],
-          tension: 0.3
+          tension: 0.3,
+          order: 1
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      plugins: {
+        legend: { labels: { color: '#94a3b8' } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => Array.isArray(ctx.raw)
+              ? 'Body Battery: da ' + ctx.raw[0] + ' a ' + ctx.raw[1]
+              : ctx.dataset.label + ': ' + ctx.parsed.y
+          }
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { display: false } },
-        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        y: { min: 0, max: 100, ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
       }
     }
   });
