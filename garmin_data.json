@@ -1,6 +1,31 @@
 {
- "last_updated": "2026-11-05 10:31:41",
+ "last_updated": "2026-11-05 20:10:26",
  "activities": [
+  {
+   "id": 24978295634,
+   "name": "Pesi",
+   "type": "strength_training",
+   "date": "2026-11-05 18:12:03",
+   "distance_km": 0.0,
+   "duration_min": 43.05,
+   "avg_hr": 102,
+   "max_hr": 147,
+   "calories": 257,
+   "elevation_gain_m": null,
+   "training_load": null,
+   "aerobic_te": 0.9,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    1131.14,
+    388.31,
+    74,
+    0,
+    0
+   ],
+   "fastest_1km_s": null,
+   "fastest_5km_s": null,
+   "avg_cadence": null
+  },
   {
    "id": 24967257435,
    "name": "Vercelli Corsa",
@@ -1330,14 +1355,14 @@
  ],
  "daily_health": [
   {
-   "steps": 2644,
+   "steps": 12025,
    "resting_hr": 48,
-   "calories": 869,
-   "stress_level": 14,
+   "calories": 2317,
+   "stress_level": 27,
    "body_battery": 91,
    "body_battery_min": 22,
-   "respiration_rate": 14,
-   "intensity_minutes": 0,
+   "respiration_rate": 15,
+   "intensity_minutes": 35,
    "sleep_hours": 6.25,
    "sleep_score": 78,
    "sleep_deep_h": 1.72,
