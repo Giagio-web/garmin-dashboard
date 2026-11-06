@@ -1,6 +1,31 @@
 {
- "last_updated": "2026-11-06 14:22:17",
+ "last_updated": "2026-11-06 23:28:34",
  "activities": [
+  {
+   "id": 24989809880,
+   "name": "Tennis",
+   "type": "tennis_v2",
+   "date": "2026-11-06 19:15:14",
+   "distance_km": 0.51,
+   "duration_min": 40.37,
+   "avg_hr": 133,
+   "max_hr": 175,
+   "calories": 437,
+   "elevation_gain_m": null,
+   "training_load": null,
+   "aerobic_te": 2.4,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    166.97,
+    1135.04,
+    989.11,
+    118.0,
+    7.0
+   ],
+   "fastest_1km_s": null,
+   "fastest_5km_s": null,
+   "avg_cadence": 32.25
+  },
   {
    "id": 24978295634,
    "name": "Pesi",
@@ -1356,13 +1381,13 @@
  "daily_health": [
   {
    "resting_hr": 47,
-   "calories": 1318,
-   "stress_level": 20,
+   "calories": 2672,
+   "stress_level": 26,
    "body_battery": 78,
    "body_battery_min": 18,
    "respiration_rate": 14,
-   "intensity_minutes": 0,
-   "steps": 3577,
+   "intensity_minutes": 77,
+   "steps": 15103,
    "sleep_hours": 5.98,
    "sleep_score": 74,
    "sleep_deep_h": 1.0,
