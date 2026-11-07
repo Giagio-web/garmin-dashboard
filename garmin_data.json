@@ -1,6 +1,31 @@
 {
- "last_updated": "2026-11-07 04:29:52",
+ "last_updated": "2026-11-07 13:00:02",
  "activities": [
+  {
+   "id": 24995517432,
+   "name": "Vercelli - Fartlek Veloce",
+   "type": "running",
+   "date": "2026-11-07 10:57:41",
+   "distance_km": 7.63,
+   "duration_min": 38.12,
+   "avg_hr": 156,
+   "max_hr": 176,
+   "calories": 566,
+   "elevation_gain_m": 6,
+   "training_load": null,
+   "aerobic_te": 3.5,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    4,
+    1188.71,
+    919.67,
+    145.66,
+    0
+   ],
+   "fastest_1km_s": 265.08,
+   "fastest_5km_s": 1422.77,
+   "avg_cadence": 177.98
+  },
   {
    "id": 24989809880,
    "name": "Tennis",
@@ -1380,14 +1405,23 @@
  ],
  "daily_health": [
   {
-   "steps": 149,
-   "resting_hr": 53,
-   "calories": 125,
-   "stress_level": 43,
-   "body_battery": 10,
+   "steps": 594,
+   "resting_hr": 51,
+   "calories": 979,
+   "stress_level": 27,
+   "body_battery": 68,
    "body_battery_min": 8,
-   "respiration_rate": 16,
+   "respiration_rate": 13,
    "intensity_minutes": 0,
+   "sleep_hours": 8.23,
+   "sleep_score": 79,
+   "sleep_deep_h": 0.8,
+   "sleep_light_h": 5.97,
+   "sleep_rem_h": 1.47,
+   "sleep_awake_h": 0.1,
+   "hrv": 60,
+   "hrv_weekly_avg": 70,
+   "hrv_stato": "UNBALANCED",
    "date": "2026-11-07",
    "fitness_age": 18,
    "vo2_max": 54
