@@ -72,6 +72,25 @@ VO2_MAX_MANUALE = 54
 EVENTO_MANUALE = ("Mezza di Vercelli", "2027-02-28")
 # Obiettivo da mostrare accanto all'evento, per esempio "Sub 1h30". Lascia "" per non mostrarlo.
 OBIETTIVO_EVENTO = "Sub 1h30"
+# Dati della gara per la pagina Record & PB (distanza in km e tempo obiettivo ore:minuti:secondi)
+EVENTO_DISTANZA_KM = 21.0975
+EVENTO_TEMPO_OBIETTIVO = "1:30:00"
+
+# PREVISIONI DI GARA. Lo script prova a leggerle da Garmin. Se Garmin non le da', puoi scriverle a mano
+# (dall'orologio), per esempio: {"5k": "21:30", "10k": "45:00", "mezza": "1:38:00", "maratona": "3:30:00"}
+# Se lasci None, il sito le calcola dalle tue corse recenti.
+# RECORD PERSONALI segnati dall'orologio. Il sito prova a ritrovarli da solo nelle tue corse (con la data):
+# questi valori servono come riferimento ufficiale. Formato: "tempo" oppure ("tempo", "AAAA-MM-GG" della data).
+# Distanze possibili: "1k", "5k", "10k", "15k", "mezza", "maratona".
+# Se un giorno batti un record, il sito lo mostra da solo; aggiorni qui solo se vuoi allinearlo all'orologio.
+RECORD_MANUALI = {
+    "1k": "4:03",
+    "5k": ("21:33", "2026-09-27"),
+    "10k": ("43:29", "2026-09-27"),
+    "mezza": ("1:40:56", "2026-10-25"),
+}
+
+PREVISIONI_MANUALI = {"5k": "19:23", "10k": "41:17", "mezza": "1:32:40", "maratona": "3:25:52"}
 
 RE_DATA = re.compile(r"^\d{4}-\d{2}-\d{2}")
 STATO_RUN = {"chiave": None, "token": None}
@@ -590,6 +609,40 @@ def prova_recupero_garmin(oggi):
     return trovati
 
 
+def tempo_in_secondi(testo):
+    """'1:30:00' -> 5400, '21:30' -> 1290. Ritorna None se il formato non e' valido."""
+    try:
+        parti = [float(p) for p in str(testo).strip().split(":")]
+    except ValueError:
+        return None
+    if len(parti) == 2:
+        return parti[0] * 60 + parti[1]
+    if len(parti) == 3:
+        return parti[0] * 3600 + parti[1] * 60 + parti[2]
+    return None
+
+
+def previsioni_garmin():
+    """Tentativo: legge le previsioni di gara dell'orologio. Non so se la Personal API le offra."""
+    try:
+        profilo = chiama("/userprofile-service/socialProfile")
+        nome = profilo.get("displayName") if isinstance(profilo, dict) else None
+        if not nome:
+            return None
+        r = chiama("/metrics-service/metrics/racepredictions/latest/%s" % nome)
+    except (ErroreGarmin, RispostaTroppoGrande):
+        return None
+    if isinstance(r, list) and r:
+        r = r[0]
+    if not isinstance(r, dict):
+        return None
+    ricorda("previsioni", r)
+    mappa = {"5k": "time5K", "10k": "time10K", "mezza": "timeHalfMarathon", "maratona": "timeMarathon"}
+    out = {k: num(r.get(v)) for k, v in mappa.items()}
+    out = {k: v for k, v in out.items() if v}
+    return out or None
+
+
 def scarica_vo2(giorni, oggi):
     """Tentativo: Garmin potrebbe non offrire il VO2 max nella Personal API. Se non c'e', si va avanti."""
     try:
@@ -694,7 +747,7 @@ def leggi_storico_benessere():
 # ----------------------------------------------------------------------------
 # COSTRUZIONE DI garmin_data.json
 # ----------------------------------------------------------------------------
-def costruisci_output(attivita, giorni, eta_fitness, da_data, tutto, storico_att=(), storico_ben=None, evento=None):
+def costruisci_output(attivita, giorni, eta_fitness, da_data, tutto, storico_att=(), storico_ben=None, evento=None, previsioni=None):
     elenco_att = sorted(list(attivita.values()) + list(storico_att),
                         key=lambda a: a.get("date") or "", reverse=True)
     giorni_garmin = set(giorni.keys())
@@ -741,7 +794,31 @@ def costruisci_output(attivita, giorni, eta_fitness, da_data, tutto, storico_att
     if evento:
         if OBIETTIVO_EVENTO:
             evento = dict(evento, goal=OBIETTIVO_EVENTO)
+        if EVENTO_DISTANZA_KM:
+            evento = dict(evento, distance_km=EVENTO_DISTANZA_KM)
+        obiettivo_s = tempo_in_secondi(EVENTO_TEMPO_OBIETTIVO) if EVENTO_TEMPO_OBIETTIVO else None
+        if obiettivo_s:
+            evento = dict(evento, goal_time_s=round(obiettivo_s))
         out["next_event"] = evento
+    if RECORD_MANUALI:
+        record, date_record = {}, {}
+        for k, v in RECORD_MANUALI.items():
+            tempo, data_txt = (v[0], v[1]) if isinstance(v, (tuple, list)) and len(v) > 1 else (v, None)
+            secondi = tempo_in_secondi(tempo)
+            if secondi:
+                record[k] = round(secondi)
+                data_ok = normalizza_data(data_txt) if data_txt else None
+                if data_ok:
+                    date_record[k] = data_ok
+        if record:
+            out["personal_records"] = dict(record, dates=date_record, fonte="manuale")
+    if previsioni:
+        out["race_predictions"] = dict(previsioni, fonte="garmin")
+    elif PREVISIONI_MANUALI:
+        manuali = {k: tempo_in_secondi(v) for k, v in PREVISIONI_MANUALI.items()}
+        manuali = {k: round(v) for k, v in manuali.items() if v}
+        if manuali:
+            out["race_predictions"] = dict(manuali, fonte="manuale")
     return out
 
 
@@ -769,6 +846,9 @@ def riepilogo(out):
           "non trovato nel calendario Garmin (si puo' impostare a mano in cima a fetch_data.py)"))
     if ev and not ev.get("date"):
         print("ATTENZIONE: la data dell'evento non e' valida. In EVENTO_MANUALE scrivila cosi: 2027-02-28")
+    rp = out.get("race_predictions")
+    if rp:
+        print("Previsioni di gara: %s" % ("da Garmin" if rp.get("fonte") == "garmin" else "inserite a mano"))
     print("\nIl file garmin_data.json e' stato aggiornato.")
 
 
@@ -829,7 +909,8 @@ def main():
             print("Storico del vecchio orologio: %d attivita e %d giorni dai file CSV." % (len(storico_att), len(storico_ben)))
 
         evento = trova_prossimo_evento(oggi)
-        out = costruisci_output(attivita, giorni, eta, da_data, tutto, storico_att, storico_ben, evento)
+        previsioni = previsioni_garmin()
+        out = costruisci_output(attivita, giorni, eta, da_data, tutto, storico_att, storico_ben, evento, previsioni)
         scrivi_json(FILE_OUT, out)
         FILE_STRUTTURA.write_text(json.dumps(CAMPIONI, indent=1, ensure_ascii=False), encoding="utf-8")
         riepilogo(out)
