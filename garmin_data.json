@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-10 01:55:54",
+ "last_updated": "2026-11-10 14:52:55",
  "activities": [
   {
    "id": 24995517432,
@@ -1405,6 +1405,27 @@
  ],
  "daily_health": [
   {
+   "steps": 3176,
+   "resting_hr": 45,
+   "calories": 891,
+   "stress_level": 11,
+   "body_battery": 98,
+   "body_battery_min": 40,
+   "respiration_rate": 14,
+   "intensity_minutes": 0,
+   "sleep_hours": 6.77,
+   "sleep_score": 83,
+   "sleep_deep_h": 1.73,
+   "sleep_light_h": 3.97,
+   "sleep_rem_h": 1.07,
+   "hrv": 87,
+   "hrv_weekly_avg": 70,
+   "hrv_stato": "UNBALANCED",
+   "date": "2026-11-10",
+   "fitness_age": 18,
+   "vo2_max": 54
+  },
+  {
    "calories": 2402,
    "stress_level": 27,
    "intensity_minutes": 0,
@@ -1415,9 +1436,7 @@
    "respiration_rate": 15,
    "hrv_weekly_avg": 69,
    "hrv_stato": "UNBALANCED",
-   "date": "2026-11-09",
-   "fitness_age": 18,
-   "vo2_max": 54
+   "date": "2026-11-09"
   },
   {
    "steps": 5312,
@@ -2704,6 +2723,27 @@
  "next_event": {
   "title": "Mezza di Vercelli",
   "date": "2027-02-28",
-  "goal": "Sub 1h30"
+  "goal": "Sub 1h30",
+  "distance_km": 21.0975,
+  "goal_time_s": 5400
+ },
+ "personal_records": {
+  "1k": 243,
+  "5k": 1293,
+  "10k": 2609,
+  "mezza": 6056,
+  "dates": {
+   "5k": "2026-09-27",
+   "10k": "2026-09-27",
+   "mezza": "2026-10-25"
+  },
+  "fonte": "manuale"
+ },
+ "race_predictions": {
+  "5k": 1163,
+  "10k": 2477,
+  "mezza": 5560,
+  "maratona": 12352,
+  "fonte": "manuale"
  }
 }
