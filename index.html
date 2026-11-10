@@ -130,6 +130,21 @@
           </div>
         </div>
       </div>
+
+      <!-- Ore di attività per disciplina -->
+      <div class="glass-card p-6 mt-6">
+        <h3 class="text-sm font-bold text-white mb-1 flex items-center justify-between flex-wrap gap-2">
+          <span>Ore di attività per disciplina</span>
+          <span id="hoursWeekTotal" class="text-xs text-orange-400 font-semibold">--</span>
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">Ultime 8 settimane fino a quella selezionata. Tutte le attività, non solo la corsa.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div class="lg:col-span-3 h-72">
+            <canvas id="chartWeeklyHours"></canvas>
+          </div>
+          <div id="hoursTable" class="lg:col-span-2"></div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 2: SALUTE & RECOVERY -->
