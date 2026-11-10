@@ -1,6 +1,56 @@
 {
- "last_updated": "2026-11-10 14:52:55",
+ "last_updated": "2026-11-10 23:06:29",
  "activities": [
+  {
+   "id": 25035051166,
+   "name": "Ellittica",
+   "type": "elliptical",
+   "date": "2026-11-10 19:32:35",
+   "distance_km": 0.0,
+   "duration_min": 45.01,
+   "avg_hr": 142,
+   "max_hr": 154,
+   "calories": 560,
+   "elevation_gain_m": null,
+   "training_load": null,
+   "aerobic_te": 3,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    207.0,
+    2475.84,
+    3.0,
+    0,
+    0
+   ],
+   "fastest_1km_s": null,
+   "fastest_5km_s": null,
+   "avg_cadence": 5.08
+  },
+  {
+   "id": 25034414689,
+   "name": "Ciclismo indoor",
+   "type": "indoor_cycling",
+   "date": "2026-11-10 19:24:59",
+   "distance_km": 0.0,
+   "duration_min": 6.15,
+   "avg_hr": 97,
+   "max_hr": 126,
+   "calories": 38,
+   "elevation_gain_m": null,
+   "training_load": null,
+   "aerobic_te": 0.2,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    194.58,
+    0,
+    0,
+    0,
+    0
+   ],
+   "fastest_1km_s": null,
+   "fastest_5km_s": null,
+   "avg_cadence": null
+  },
   {
    "id": 24995517432,
    "name": "Vercelli - Fartlek Veloce",
@@ -1405,14 +1455,14 @@
  ],
  "daily_health": [
   {
-   "steps": 3176,
+   "steps": 9384,
    "resting_hr": 45,
-   "calories": 891,
-   "stress_level": 11,
+   "calories": 2609,
+   "stress_level": 20,
    "body_battery": 98,
-   "body_battery_min": 40,
+   "body_battery_min": 29,
    "respiration_rate": 14,
-   "intensity_minutes": 0,
+   "intensity_minutes": 99,
    "sleep_hours": 6.77,
    "sleep_score": 83,
    "sleep_deep_h": 1.73,
