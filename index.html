@@ -262,7 +262,22 @@
     </div>
 
     <!-- ALTRE TAB -->
-    <div id="tab-record" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Personal Best & Predictor</div></div>
+    <div id="tab-record" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-2xl font-black text-white tracking-tight">Record & PB</h2>
+        <p class="text-xs text-slate-400 mt-0.5">I tuoi migliori risultati e i tempi stimati di gara</p>
+      </div>
+
+      <h3 class="text-sm font-extrabold uppercase tracking-wider text-orange-400 mb-3">I tuoi record</h3>
+      <div id="recordGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2"></div>
+      <p id="recordNote" class="text-xs text-slate-500 mb-8"></p>
+
+      <h3 class="text-sm font-extrabold uppercase tracking-wider text-cyan-400 mb-1">Tempi stimati</h3>
+      <p id="predSource" class="text-xs text-slate-500 mb-3"></p>
+      <div id="predGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+
+      <div id="nextRaceBlock"></div>
+    </div>
     <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
     <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
     <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
