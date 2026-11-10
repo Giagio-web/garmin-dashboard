@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-09 15:32:53",
+ "last_updated": "2026-11-10 01:55:54",
  "activities": [
   {
    "id": 24995517432,
@@ -1405,14 +1405,14 @@
  ],
  "daily_health": [
   {
-   "calories": 1086,
-   "stress_level": 23,
+   "calories": 2402,
+   "stress_level": 27,
    "intensity_minutes": 0,
-   "steps": 2546,
-   "resting_hr": 54,
+   "steps": 8948,
+   "resting_hr": 50,
    "body_battery": 81,
-   "body_battery_min": 67,
-   "respiration_rate": 14,
+   "body_battery_min": 35,
+   "respiration_rate": 15,
    "hrv_weekly_avg": 69,
    "hrv_stato": "UNBALANCED",
    "date": "2026-11-09",
