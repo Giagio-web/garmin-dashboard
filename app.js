@@ -76,6 +76,7 @@ function renderNextEvent() {
 // ==== RECORD & PB ====
 const RIEGEL = 1.06;
 const DIST_GARA = { '5k': 5, '10k': 10, 'mezza': 21.0975, 'maratona': 42.195 };
+const TITOLO_COLORE = { 'neon-orange-bright': 'text-orange-400', 'neon-cyan-bright': 'text-cyan-400', 'neon-amber': 'text-amber-400', 'neon-azure': 'text-sky-400', 'neon-coral': 'text-orange-500', 'neon-emerald': 'text-emerald-400', 'neon-purple': 'text-purple-400' };
 const NEON_CLASSI = ['neon-orange-bright', 'neon-cyan-bright', 'neon-amber', 'neon-azure', 'neon-coral', 'neon-emerald', 'neon-purple'];
 
 function esc(s) {
@@ -150,7 +151,7 @@ function lunediDi(d) {
 function cartaRecord(neon, c) {
   return '<div class="glass-card ' + neon + ' p-5">' +
     '<div class="flex justify-between items-start mb-2">' +
-    '<span class="text-xs font-extrabold uppercase tracking-wider text-slate-300">' + esc(c.titolo) + '</span>' +
+    '<span class="text-xs font-extrabold uppercase tracking-wider ' + (TITOLO_COLORE[neon] || 'text-slate-300') + '">' + esc(c.titolo) + '</span>' +
     '<span class="text-xl">' + c.icona + '</span></div>' +
     '<div class="text-3xl font-black text-white">' + esc(c.valore) + '</div>' +
     '<p class="text-xs text-slate-400 mt-1">' + esc(c.sub) + '</p></div>';
@@ -378,6 +379,124 @@ function renderPrevisioni(runs) {
 }
 // ==== FINE RECORD & PB ====
 
+// ==== ORE PER DISCIPLINA ====
+let chartWeeklyHoursInstance = null;
+const TIPI_DISCIPLINA = {
+  running: 'Corsa', trail_running: 'Corsa', treadmill_running: 'Corsa', track_running: 'Corsa',
+  strength_training: 'Forza', tennis_v2: 'Tennis', tennis: 'Tennis',
+  cycling: 'Bici', indoor_cycling: 'Bici', road_biking: 'Bici', mountain_biking: 'Bici', virtual_ride: 'Bici',
+  walking: 'Camminata', hiking: 'Escursione',
+  lap_swimming: 'Nuoto', open_water_swimming: 'Nuoto', swimming: 'Nuoto',
+  yoga: 'Yoga', pilates: 'Pilates', elliptical: 'Ellittica', indoor_cardio: 'Cardio', cardio: 'Cardio', hiit: 'HIIT', rowing: 'Canottaggio', other: 'Altro'
+};
+const COLORI_DISCIPLINA = { 'Corsa': '#ff6b00', 'Forza': '#a855f7', 'Tennis': '#00f0ff', 'Bici': '#10b981', 'Camminata': '#ff9d00', 'Nuoto': '#00a6ff', 'Escursione': '#84cc16', 'Yoga': '#ec4899' };
+const COLORI_EXTRA = ['#f43f5e', '#eab308', '#14b8a6', '#8b5cf6', '#94a3b8', '#fb923c'];
+
+function disciplinaDi(a) {
+  const t = String(a.type || 'other').toLowerCase();
+  return TIPI_DISCIPLINA[t] || (t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' '));
+}
+
+function renderWeeklyHours(selMonday) {
+  const canvas = document.getElementById('chartWeeklyHours');
+  const tab = document.getElementById('hoursTable');
+  if (!canvas || !tab || !rawData) return;
+  const acts = (rawData.activities || []).filter(a => Number(a.duration_min) > 0);
+
+  const lunedi = [];
+  for (let i = 7; i >= 0; i--) {
+    const m = new Date(selMonday.getTime());
+    m.setDate(m.getDate() - i * 7);
+    m.setHours(0, 0, 0, 0);
+    lunedi.push(m);
+  }
+  const inizio = lunedi[0].getTime();
+  const fine = lunedi[7].getTime() + 7 * 86400000;
+  const perSettimana = lunedi.map(() => ({}));   // { disciplina: minuti }
+  acts.forEach(a => {
+    const d = dataAttivita(a);
+    if (isNaN(d)) return;
+    const t = d.getTime();
+    if (t < inizio || t >= fine) return;
+    const i = Math.min(7, Math.floor((t - inizio) / (7 * 86400000)));
+    const nome = disciplinaDi(a);
+    perSettimana[i][nome] = (perSettimana[i][nome] || 0) + Number(a.duration_min);
+  });
+
+  // discipline presenti, ordinate per minuti totali
+  const totaliDisc = {};
+  perSettimana.forEach(w => Object.keys(w).forEach(k => { totaliDisc[k] = (totaliDisc[k] || 0) + w[k]; }));
+  const discipline = Object.keys(totaliDisc).sort((a, b) => totaliDisc[b] - totaliDisc[a]);
+  let extra = 0;
+  const colori = {};
+  discipline.forEach(n => { colori[n] = COLORI_DISCIPLINA[n] || COLORI_EXTRA[extra++ % COLORI_EXTRA.length]; });
+
+  if (chartWeeklyHoursInstance) chartWeeklyHoursInstance.destroy();
+  chartWeeklyHoursInstance = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: lunedi.map(m => formatDateShort(m)),
+      datasets: discipline.map(n => ({
+        label: n,
+        data: perSettimana.map(w => Math.round(((w[n] || 0) / 60) * 100) / 100),
+        backgroundColor: colori[n],
+        borderRadius: 4,
+        stack: 'ore'
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#94a3b8' } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ctx.dataset.label + ': ' + formatOreMinuti(ctx.parsed.y),
+            footer: (items) => 'Totale: ' + formatOreMinuti(items.reduce((s, i) => s + i.parsed.y, 0))
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#64748b' }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: '#64748b', callback: (v) => v + 'h' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  // tabella della settimana selezionata
+  const corrente = perSettimana[7], precedente = perSettimana[6];
+  const sommaMin = w => Object.keys(w).reduce((s, k) => s + w[k], 0);
+  const totCorr = sommaMin(corrente), totPrec = sommaMin(precedente);
+  const diffMin = totCorr - totPrec;
+  const diffTxt = (diffMin >= 0 ? '+' : '-') + formatOreMinuti(Math.abs(diffMin) / 60);
+  document.getElementById('hoursWeekTotal').innerText = 'Totale: ' + formatOreMinuti(totCorr / 60) + ' • ' + diffTxt + ' vs sett. precedente';
+
+  const righe = Object.keys(corrente).sort((a, b) => corrente[b] - corrente[a]);
+  if (!righe.length) {
+    tab.innerHTML = '<p class="text-sm text-slate-400">Nessuna attività registrata in questa settimana.</p>';
+    return;
+  }
+  const sessioni = {};
+  acts.forEach(a => {
+    const d = dataAttivita(a);
+    if (isNaN(d)) return;
+    const t = d.getTime();
+    if (t >= lunedi[7].getTime() && t < lunedi[7].getTime() + 7 * 86400000) {
+      const n = disciplinaDi(a);
+      sessioni[n] = (sessioni[n] || 0) + 1;
+    }
+  });
+  tab.innerHTML = '<table class="w-full text-xs"><thead><tr class="text-slate-500 uppercase tracking-wider text-left">' +
+    '<th class="pb-2 font-bold">Disciplina</th><th class="pb-2 font-bold text-right">Sessioni</th><th class="pb-2 font-bold text-right">Ore</th><th class="pb-2 font-bold text-right">%</th></tr></thead><tbody>' +
+    righe.map(n => '<tr class="border-t border-white/5"><td class="py-2 text-white font-semibold"><span class="inline-block w-2.5 h-2.5 rounded-full mr-2" style="background:' + colori[n] + '"></span>' + esc(n) + '</td>' +
+      '<td class="py-2 text-right text-slate-300">' + (sessioni[n] || 0) + '</td>' +
+      '<td class="py-2 text-right text-slate-300">' + formatOreMinuti(corrente[n] / 60) + '</td>' +
+      '<td class="py-2 text-right text-slate-300">' + Math.round((corrente[n] / totCorr) * 100) + '%</td></tr>').join('') +
+    '<tr class="border-t border-white/20"><td class="py-2 text-white font-extrabold">Totale</td><td class="py-2 text-right text-white font-bold">' +
+    Object.keys(sessioni).reduce((s, k) => s + sessioni[k], 0) + '</td><td class="py-2 text-right text-white font-bold">' + formatOreMinuti(totCorr / 60) + '</td><td class="py-2 text-right text-white font-bold">100%</td></tr></tbody></table>';
+}
+// ==== FINE ORE PER DISCIPLINA ====
+
 function changeWeek(direction) {
   weekOffset += direction;
   renderOverview();
@@ -512,6 +631,7 @@ function renderOverview() {
 
   const currData = getWeekMetrics(currentMonday);
   const prevData = getWeekMetrics(prevMonday);
+  renderWeeklyHours(currentMonday);
 
   const diffSteps = currData.avgSteps - prevData.avgSteps;
   const diffRuns = currData.totalDist - prevData.totalDist;
