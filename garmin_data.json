@@ -1,6 +1,31 @@
 {
- "last_updated": "2026-11-11 14:08:10",
+ "last_updated": "2026-11-11 21:57:03",
  "activities": [
+  {
+   "id": 25046263912,
+   "name": "Vercelli Corsa",
+   "type": "running",
+   "date": "2026-11-11 18:28:06",
+   "distance_km": 6.94,
+   "duration_min": 38.97,
+   "avg_hr": 143,
+   "max_hr": 150,
+   "calories": 532,
+   "elevation_gain_m": 5,
+   "training_load": null,
+   "aerobic_te": 3.1,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    71.93,
+    2264.38,
+    0,
+    0,
+    0
+   ],
+   "fastest_1km_s": 322.38,
+   "fastest_5km_s": 1669.2,
+   "avg_cadence": 171.95
+  },
   {
    "id": 25035051166,
    "name": "Ellittica",
@@ -1456,13 +1481,13 @@
  "daily_health": [
   {
    "resting_hr": 51,
-   "calories": 1416,
-   "stress_level": 24,
+   "calories": 2719,
+   "stress_level": 26,
    "body_battery": 73,
    "body_battery_min": 20,
    "respiration_rate": 14,
-   "intensity_minutes": 0,
-   "steps": 6838,
+   "intensity_minutes": 80,
+   "steps": 16622,
    "sleep_hours": 7.33,
    "sleep_score": 80,
    "sleep_deep_h": 2.17,
