@@ -1,6 +1,31 @@
 {
- "last_updated": "2026-11-13 14:32:21",
+ "last_updated": "2026-11-13 23:58:14",
  "activities": [
+  {
+   "id": 25068514289,
+   "name": "Tennis",
+   "type": "tennis_v2",
+   "date": "2026-11-13 19:17:15",
+   "distance_km": 0.58,
+   "duration_min": 49.03,
+   "avg_hr": 133,
+   "max_hr": 177,
+   "calories": 515,
+   "elevation_gain_m": null,
+   "training_load": null,
+   "aerobic_te": 2.6,
+   "vo2_max": null,
+   "hr_zones_sec": [
+    1508.64,
+    1178.99,
+    206.99,
+    9.02,
+    0
+   ],
+   "fastest_1km_s": null,
+   "fastest_5km_s": null,
+   "avg_cadence": 29.95
+  },
   {
    "id": 25046263912,
    "name": "Vercelli Corsa",
@@ -1480,14 +1505,14 @@
  ],
  "daily_health": [
   {
-   "steps": 22,
+   "steps": 7843,
    "resting_hr": 47,
-   "calories": 800,
-   "stress_level": 12,
+   "calories": 2537,
+   "stress_level": 19,
    "body_battery": 100,
    "body_battery_min": 26,
-   "respiration_rate": 12,
-   "intensity_minutes": 0,
+   "respiration_rate": 14,
+   "intensity_minutes": 81,
    "sleep_hours": 9.1,
    "sleep_score": 86,
    "sleep_deep_h": 1.23,
