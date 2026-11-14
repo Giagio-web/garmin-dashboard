@@ -293,9 +293,115 @@
 
       <div id="nextRaceBlock"></div>
     </div>
-    <div id="tab-comparazione" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Comparazione Attività</div></div>
-    <div id="tab-attivita" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Elenco Completo Attività</div></div>
-    <div id="tab-coach" class="tab-content hidden"><div class="glass-card p-8 text-center text-slate-400">Modulo Calendario & AI Coach</div></div>
+    <div id="tab-comparazione" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-2xl font-black text-white tracking-tight">Comparazione</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Confronta periodi e allenamenti, guarda i progressi e dove stai andando</p>
+      </div>
+
+      <div class="glass-card neon-orange-bright p-6 mb-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-orange-400 mb-3">Periodo contro periodo</h3>
+        <div class="flex flex-wrap items-center gap-3 mb-4 text-xs">
+          <select id="cmpTipo" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 max-w-full"><option value="settimana">Settimane</option><option value="mese">Mesi</option></select>
+          <select id="cmpA" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 max-w-full"></select>
+          <span class="text-slate-400">contro</span>
+          <select id="cmpB" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 max-w-full"></select>
+        </div>
+        <div id="cmpPeriodiTabella" class="overflow-x-auto"></div>
+      </div>
+
+      <div class="glass-card neon-cyan-bright p-6 mb-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-cyan-400 mb-3">Allenamento contro allenamento</h3>
+        <div class="flex flex-wrap items-center gap-3 mb-4 text-xs">
+          <select id="cmpActA" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 max-w-full"></select>
+          <span class="text-slate-400">contro</span>
+          <select id="cmpActB" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 max-w-full"></select>
+        </div>
+        <div id="cmpAttivitaTabella" class="overflow-x-auto"></div>
+      </div>
+
+      <div class="glass-card neon-emerald p-6 mb-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-emerald-400 mb-1">Progressi: efficienza nelle corse tranquille</h3>
+        <p id="effSommario" class="text-xs text-slate-400 mb-4">--</p>
+        <div class="h-72"><canvas id="chartEfficienza"></canvas></div>
+      </div>
+
+      <div class="glass-card neon-coral p-6 mb-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-orange-500 mb-1">Progressi: lavori di qualità (soglia, ripetute)</h3>
+        <p id="qualSommario" class="text-xs text-slate-400 mb-4">--</p>
+        <div class="h-72"><canvas id="chartQualita"></canvas></div>
+      </div>
+
+      <div class="glass-card neon-purple p-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-purple-400 mb-1">Dove sto andando: previsione verso la gara</h3>
+        <p id="prevSommario" class="text-xs text-slate-400 mb-3">--</p>
+        <div class="flex flex-wrap items-center gap-3 mb-2 text-xs">
+          <span class="text-slate-400">Periodo di stop:</span>
+          <label class="flex items-center gap-2 text-slate-400">dal <input type="date" id="cmpStopDa" style="color-scheme: dark" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2"></label>
+          <label class="flex items-center gap-2 text-slate-400">al <input type="date" id="cmpStopA" style="color-scheme: dark" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2"></label>
+          <button id="cmpStopReset" class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition">Nessuno stop</button>
+        </div>
+        <p id="prevStopInfo" class="text-xs text-slate-500 mb-4"></p>
+        <div class="h-72"><canvas id="chartPrevisione"></canvas></div>
+        <div id="prevTabella" class="overflow-x-auto mt-4"></div>
+        <p class="text-xs text-slate-500 mt-3">Sono stime con ipotesi semplici (progresso mensile costante e una variabilità del 2,5% il giorno della gara). Non conoscono il tuo piano di allenamento, il meteo o gli infortuni: servono per orientarti, non sono una promessa.</p>
+      </div>
+    </div>
+    <div id="tab-attivita" class="tab-content hidden">
+      <div id="attListaWrap">
+        <div class="mb-6">
+          <h2 class="text-2xl font-black text-white tracking-tight">Attività</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Tutti i tuoi allenamenti: tocca un'attività per vedere ogni dettaglio e la valutazione</p>
+        </div>
+        <div class="glass-card neon-cyan-bright p-4 mb-4">
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <input id="attTesto" type="search" placeholder="Cerca per nome o luogo…" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2 flex-1 min-w-[160px]">
+            <select id="attDisc" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2"></select>
+            <select id="attPeriodo" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2">
+              <option value="tutto">Tutto il periodo</option><option value="7">Ultimi 7 giorni</option><option value="30">Ultimi 30 giorni</option>
+              <option value="90">Ultimi 90 giorni</option><option value="365">Ultimi 12 mesi</option>
+            </select>
+            <select id="attOrdine" class="bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2">
+              <option value="data">Più recenti</option><option value="dist">Più lunghe</option><option value="dur">Più durature</option>
+              <option value="passo">Più veloci</option><option value="fc">FC più alta</option><option value="te">Effetto allenante</option>
+            </select>
+          </div>
+          <p id="attRiepilogo" class="text-xs text-slate-400 mt-3"></p>
+        </div>
+        <div id="attProgressiLista" class="mb-4"></div>
+        <div id="attLista" class="space-y-3"></div>
+        <div class="flex flex-wrap items-center gap-3 mt-6 text-xs text-slate-400">
+          <span>Note, sforzi ed esercizi si salvano in questo browser:</span>
+          <button id="attEsporta" class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition cursor-pointer">Salva una copia</button>
+          <label class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition cursor-pointer">Ripristina da file<input id="attImporta" type="file" accept="application/json,.json" class="hidden"></label>
+        </div>
+        <div class="text-center mt-4"><button id="attAltre" class="hidden px-4 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white text-xs transition">Mostra altre attività</button></div>
+      </div>
+      <div id="attDettaglio" class="hidden"></div>
+    </div>
+    <div id="tab-coach" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-2xl font-black text-white tracking-tight">Piano & Coach</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Il calendario dei tuoi allenamenti: tocca un'attività per aprirne il dettaglio</p>
+      </div>
+      <div class="glass-card neon-azure p-6 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h3 id="calTitolo" class="text-lg font-black text-sky-400">--</h3>
+          <div class="flex items-center gap-2 text-xs">
+            <button onclick="calSposta(-1)" class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition">← Mese prec.</button>
+            <button onclick="calOggi()" class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition">Oggi</button>
+            <button onclick="calSposta(1)" class="px-3 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white transition">Mese succ. →</button>
+          </div>
+        </div>
+        <p id="calRiepilogo" class="text-xs text-slate-400 mb-4"></p>
+        <div class="overflow-x-auto"><div id="calGriglia" class="min-w-[560px]"></div></div>
+        <div id="calLegenda" class="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-[11px] text-slate-400"></div>
+      </div>
+      <div class="glass-card neon-purple p-6">
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-purple-400 mb-2">Il piano di allenamento</h3>
+        <p class="text-xs text-slate-400">Quando avremo la scheda, gli allenamenti previsti compariranno nel calendario con il bordo tratteggiato e potremo confrontarli con quelli fatti, con volumi settimanali e valutazioni.</p>
+      </div>
+    </div>
 
   </main>
 
