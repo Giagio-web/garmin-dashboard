@@ -2,7 +2,7 @@ name: Aggiorna dati Garmin
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # ogni 6 ore
+    - cron: "0 */3 * * *"   # ogni 3 ore
   workflow_dispatch:         # permette di lanciarlo a mano dal sito GitHub
 
 permissions:
@@ -41,6 +41,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add garmin_data.json
+          if [ -d dettagli ]; then git add dettagli; fi
           if git diff --cached --quiet; then
             echo "Nessuna novita"
           else
