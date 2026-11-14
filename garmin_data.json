@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-14 17:07:43",
+ "last_updated": "2026-11-14 17:18:26",
  "activities": [
   {
    "id": 25068514289,
@@ -139,7 +139,15 @@
    "extra": null,
    "fastest_1km_s": 322.38,
    "fastest_5km_s": 1669.2,
-   "avg_cadence": 171.95
+   "avg_cadence": 171.95,
+   "meteo": {
+    "t": 11.1,
+    "app": 10.4,
+    "um": 85.0,
+    "vento": 1.9,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 25035051166,
@@ -376,7 +384,15 @@
    "extra": null,
    "fastest_1km_s": 265.08,
    "fastest_5km_s": 1422.77,
-   "avg_cadence": 177.98
+   "avg_cadence": 177.98,
+   "meteo": {
+    "t": 10.0,
+    "app": 8.9,
+    "um": 90.0,
+    "vento": 4.1,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24989809880,
@@ -600,7 +616,15 @@
    "extra": null,
    "fastest_1km_s": 346.37,
    "fastest_5km_s": 1870.86,
-   "avg_cadence": 165.11
+   "avg_cadence": 165.11,
+   "meteo": {
+    "t": 10.3,
+    "app": 8.4,
+    "um": 82.0,
+    "vento": 8.0,
+    "pioggia": 0.0,
+    "codice": 61
+   }
   },
   {
    "id": 24953883493,
@@ -763,7 +787,15 @@
    "extra": null,
    "fastest_1km_s": 263.11,
    "fastest_5km_s": 1382.72,
-   "avg_cadence": 179.72
+   "avg_cadence": 179.72,
+   "meteo": {
+    "t": 13.2,
+    "app": 11.7,
+    "um": 59.0,
+    "vento": 2.9,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24949179237,
@@ -832,7 +864,15 @@
    },
    "fastest_1km_s": null,
    "fastest_5km_s": null,
-   "avg_cadence": 29.77
+   "avg_cadence": 29.77,
+   "meteo": {
+    "t": 5.7,
+    "app": 3.4,
+    "um": 76.0,
+    "vento": 2.8,
+    "pioggia": 0.0,
+    "codice": 1
+   }
   },
   {
    "id": 24941018381,
@@ -901,7 +941,15 @@
    },
    "fastest_1km_s": null,
    "fastest_5km_s": null,
-   "avg_cadence": 33.36
+   "avg_cadence": 33.36,
+   "meteo": {
+    "t": 15.9,
+    "app": 13.6,
+    "um": 33.0,
+    "vento": 1.5,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24932052281,
@@ -1012,7 +1060,15 @@
    "extra": null,
    "fastest_1km_s": 274.33,
    "fastest_5km_s": 1477.09,
-   "avg_cadence": 171.44
+   "avg_cadence": 171.44,
+   "meteo": {
+    "t": 12.6,
+    "app": 11.0,
+    "um": 62.0,
+    "vento": 3.2,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24884484524,
@@ -1099,7 +1155,15 @@
    "extra": null,
    "fastest_1km_s": 287.62,
    "fastest_5km_s": 1467.1,
-   "avg_cadence": 174.25
+   "avg_cadence": 174.25,
+   "meteo": {
+    "t": 15.4,
+    "app": 14.9,
+    "um": 66.0,
+    "vento": 1.6,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24843651634,
@@ -1178,7 +1242,15 @@
    "extra": null,
    "fastest_1km_s": 264.65,
    "fastest_5km_s": 1350.87,
-   "avg_cadence": 180
+   "avg_cadence": 180,
+   "meteo": {
+    "t": 10.6,
+    "app": 9.6,
+    "um": 83.0,
+    "vento": 2.2,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24815524683,
@@ -1265,7 +1337,15 @@
    "extra": null,
    "fastest_1km_s": 324.62,
    "fastest_5km_s": 1743.83,
-   "avg_cadence": 154.19
+   "avg_cadence": 154.19,
+   "meteo": {
+    "t": 18.2,
+    "app": 15.8,
+    "um": 33.0,
+    "vento": 4.3,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24804427995,
@@ -1336,7 +1416,15 @@
    "extra": null,
    "fastest_1km_s": 331.01,
    "fastest_5km_s": 1692.26,
-   "avg_cadence": 170.23
+   "avg_cadence": 170.23,
+   "meteo": {
+    "t": 15.7,
+    "app": 16.5,
+    "um": 92.0,
+    "vento": 4.7,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24769980904,
@@ -1415,7 +1503,15 @@
    "extra": null,
    "fastest_1km_s": 271.19,
    "fastest_5km_s": 1374.05,
-   "avg_cadence": 181.67
+   "avg_cadence": 181.67,
+   "meteo": {
+    "t": 15.4,
+    "app": 14.8,
+    "um": 90.0,
+    "vento": 11.8,
+    "pioggia": 0.3,
+    "codice": 80
+   }
   },
   {
    "id": 24736501870,
@@ -1510,7 +1606,15 @@
    "extra": null,
    "fastest_1km_s": 267.92,
    "fastest_5km_s": 1437.24,
-   "avg_cadence": 174.3
+   "avg_cadence": 174.3,
+   "meteo": {
+    "t": 19.0,
+    "app": 19.6,
+    "um": 70.0,
+    "vento": 2.8,
+    "pioggia": 0.0,
+    "codice": 2
+   }
   },
   {
    "id": 24722435469,
@@ -1589,7 +1693,15 @@
    "extra": null,
    "fastest_1km_s": 328.39,
    "fastest_5km_s": 1682.66,
-   "avg_cadence": 167.31
+   "avg_cadence": 167.31,
+   "meteo": {
+    "t": 20.6,
+    "app": 20.2,
+    "um": 54.0,
+    "vento": 4.4,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24696920627,
@@ -1660,7 +1772,15 @@
    "extra": null,
    "fastest_1km_s": 258.17,
    "fastest_5km_s": 1435.92,
-   "avg_cadence": 174.3
+   "avg_cadence": 174.3,
+   "meteo": {
+    "t": 20.2,
+    "app": 19.0,
+    "um": 66.0,
+    "vento": 15.8,
+    "pioggia": 0.0,
+    "codice": 1
+   }
   },
   {
    "id": 24689284737,
@@ -1731,7 +1851,15 @@
    "extra": null,
    "fastest_1km_s": 285.1,
    "fastest_5km_s": 1530.78,
-   "avg_cadence": 177.09
+   "avg_cadence": 177.09,
+   "meteo": {
+    "t": 19.3,
+    "app": 19.8,
+    "um": 66.0,
+    "vento": 2.6,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24654463321,
@@ -1802,7 +1930,15 @@
    "extra": null,
    "fastest_1km_s": 275.45,
    "fastest_5km_s": 1434.04,
-   "avg_cadence": 176.03
+   "avg_cadence": 176.03,
+   "meteo": {
+    "t": 18.1,
+    "app": 18.6,
+    "um": 88.0,
+    "vento": 11.3,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24636783285,
@@ -1873,7 +2009,15 @@
    "extra": null,
    "fastest_1km_s": 330.32,
    "fastest_5km_s": 1676.08,
-   "avg_cadence": 176.42
+   "avg_cadence": 176.42,
+   "meteo": {
+    "t": 17.5,
+    "app": 17.1,
+    "um": 68.0,
+    "vento": 6.2,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24627320269,
@@ -1944,7 +2088,15 @@
    "extra": null,
    "fastest_1km_s": 243.18,
    "fastest_5km_s": 1322.3,
-   "avg_cadence": 176.16
+   "avg_cadence": 176.16,
+   "meteo": {
+    "t": 21.9,
+    "app": 20.6,
+    "um": 46.0,
+    "vento": 7.6,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24626505019,
@@ -2013,7 +2165,15 @@
    },
    "fastest_1km_s": null,
    "fastest_5km_s": null,
-   "avg_cadence": 29.2
+   "avg_cadence": 29.2,
+   "meteo": {
+    "t": 21.6,
+    "app": 20.9,
+    "um": 48.0,
+    "vento": 5.8,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24600338207,
@@ -2084,7 +2244,15 @@
    "extra": null,
    "fastest_1km_s": 302.72,
    "fastest_5km_s": 1548.71,
-   "avg_cadence": 175.98
+   "avg_cadence": 175.98,
+   "meteo": {
+    "t": 20.3,
+    "app": 20.8,
+    "um": 60.0,
+    "vento": 2.5,
+    "pioggia": 0.0,
+    "codice": 1
+   }
   },
   {
    "id": 24582396301,
@@ -2155,7 +2323,15 @@
    "extra": null,
    "fastest_1km_s": 258.81,
    "fastest_5km_s": 1472.22,
-   "avg_cadence": 173.97
+   "avg_cadence": 173.97,
+   "meteo": {
+    "t": 19.5,
+    "app": 20.3,
+    "um": 68.0,
+    "vento": 2.5,
+    "pioggia": 0.0,
+    "codice": 1
+   }
   },
   {
    "id": 24551569231,
@@ -2226,7 +2402,15 @@
    "extra": null,
    "fastest_1km_s": 329.84,
    "fastest_5km_s": 1691.55,
-   "avg_cadence": 167
+   "avg_cadence": 167,
+   "meteo": {
+    "t": 20.4,
+    "app": 21.6,
+    "um": 72.0,
+    "vento": 3.4,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 24512895450,
@@ -2297,7 +2481,15 @@
    "extra": null,
    "fastest_1km_s": 246.55,
    "fastest_5km_s": 1292.56,
-   "avg_cadence": 174.98
+   "avg_cadence": 174.98,
+   "meteo": {
+    "t": 17.2,
+    "app": 17.5,
+    "um": 72.0,
+    "vento": 1.9,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24472702331,
@@ -2384,7 +2576,15 @@
    "extra": null,
    "fastest_1km_s": 256.51,
    "fastest_5km_s": 1508.59,
-   "avg_cadence": 159.25
+   "avg_cadence": 159.25,
+   "meteo": {
+    "t": 22.0,
+    "app": 21.8,
+    "um": 49.0,
+    "vento": 3.2,
+    "pioggia": 0.0,
+    "codice": 1
+   }
   },
   {
    "id": 24456989826,
@@ -2463,7 +2663,15 @@
    "extra": null,
    "fastest_1km_s": 390.7,
    "fastest_5km_s": 2015.11,
-   "avg_cadence": 154.98
+   "avg_cadence": 154.98,
+   "meteo": {
+    "t": 25.0,
+    "app": 25.1,
+    "um": 49.0,
+    "vento": 6.6,
+    "pioggia": 0.0,
+    "codice": 0
+   }
   },
   {
    "id": 24434057757,
@@ -2542,7 +2750,15 @@
    "extra": null,
    "fastest_1km_s": 275.4,
    "fastest_5km_s": 1396.25,
-   "avg_cadence": 170.27
+   "avg_cadence": 170.27,
+   "meteo": {
+    "t": 26.9,
+    "app": 29.0,
+    "um": 54.0,
+    "vento": 1.7,
+    "pioggia": 0.0,
+    "codice": 3
+   }
   },
   {
    "id": 20230548754,
