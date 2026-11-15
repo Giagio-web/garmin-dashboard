@@ -1,0 +1,370 @@
+{
+ "nome": "Road to Mezza di Vercelli — Rientro 16-30 novembre 2026 (v5)",
+ "gara": {
+  "nome": "Mezza di Vercelli",
+  "data": "2027-02-28"
+ },
+ "obiettivi": {
+  "A": "1h35'-1h37'",
+  "B": "sub 1h30' (4'16\"/km)"
+ },
+ "fase": "Rientro graduale",
+ "scarpe": "Nimbus 27 (Zoom Fly 6 non prima di dicembre)",
+ "settimane": [
+  {
+   "da": "2026-11-16",
+   "a": "2026-11-22",
+   "nome": "Settimana 1 — rientro graduale",
+   "km": 24,
+   "progresso": 0.4
+  },
+  {
+   "da": "2026-11-23",
+   "a": "2026-11-29",
+   "nome": "Settimana 2 — consolidamento",
+   "km": 25,
+   "progresso": 0.5
+  },
+  {
+   "da": "2026-11-30",
+   "a": "2026-11-30",
+   "nome": "Apre la settimana 3",
+   "km": 11,
+   "progresso": 0.5
+  }
+ ],
+ "regole": [
+  "Cautela, non fretta: il rientro è volutamente graduale. Se per un giorno qualcosa non va, ripeti la seduta precedente.",
+  "Dolore durante la corsa al massimo 2 su 10, e la mattina dopo la gamba deve stare come prima. Se senti una fitta o la contrattura che torna, ferma la corsa, cammina e salta la seduta successiva.",
+  "Prima di ogni corsa e di ogni seduta di forza: gli esercizi per soleo e quadricipite della fisioterapista, più cammino o cardio leggero.",
+  "Passaggio alla settimana 2: le corse della settimana 1 senza dolore (≤2/10) e senza rigidità al mattino dopo. Altrimenti ripeti la settimana 1.",
+  "Tennis: al massimo una volta a settimana, leggero, nei giorni di riposo indicati; mai il giorno prima di un lungo e mai insieme al Workout B.",
+  "Scarpe: solo Nimbus 27. Le Zoom Fly 6 si riprendono a dicembre, una volta a settimana e solo per la qualità.",
+  "Sospesi: salti, ankle hops, Bulgarian split squat, ripetute e fartlek veloci. Tornano gradualmente da dicembre."
+ ],
+ "giorni": [
+  {
+   "date": "2026-11-16",
+   "tipo": "facile",
+   "titolo": "Corsa facile 7 km",
+   "distanza_km": 7,
+   "passo_min_s": 340,
+   "passo_max_s": 360,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'40\"-6'00\"/km). Prima: riscaldamento della fisio (soleo e quadricipite).",
+   "obiettivo": "Consolidare il rientro dopo la prova di mercoledì scorso.",
+   "kpi": "Gamba sciolta dopo il riscaldamento, nessuna rigidità la mattina dopo."
+  },
+  {
+   "date": "2026-11-17",
+   "tipo": "forza",
+   "titolo": "Palestra / Casa — Workout A",
+   "workout": "A",
+   "descrizione": "Prevenzione, core e glutei. Riscaldamento di 5-8' prima. Senza salti né tibiali.",
+   "obiettivo": "Proteggere schiena e bacino e mantenere la forza.",
+   "kpi": "Lombare stabile, esecuzione pulita, nessun fastidio.",
+   "esercizi": [
+    {
+     "nome": "Dead bug con fermo",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 8,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Plank tocco spalla",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 10,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Side plank sugli avambracci",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 30,
+     "nota": "secondi per lato, recupero 30\""
+    },
+    {
+     "nome": "Hip thrust",
+     "attrezzo": "Bilanciere",
+     "serie": 3,
+     "rip": 12,
+     "nota": "20-30 kg totali, tenuta 1\" in alto, recupero 60\""
+    },
+    {
+     "nome": "Stacco rumeno (RDL)",
+     "attrezzo": "Bilanciere",
+     "serie": 3,
+     "rip": 10,
+     "nota": "20-30 kg o 2 manubri leggeri, schiena neutra, recupero 60\""
+    },
+    {
+     "nome": "Abduzioni con elastico",
+     "attrezzo": "Altro",
+     "serie": 2,
+     "rip": 15,
+     "nota": "per lato, recupero 30\""
+    }
+   ]
+  },
+  {
+   "date": "2026-11-18",
+   "tipo": "facile",
+   "titolo": "Corsa facile 8 km",
+   "distanza_km": 8,
+   "passo_min_s": 340,
+   "passo_max_s": 360,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'40\"-6'00\"/km). Prima: riscaldamento della fisio (soleo e quadricipite).",
+   "obiettivo": "Aumentare un poco il volume.",
+   "kpi": "Passo regolare e FC stabile."
+  },
+  {
+   "date": "2026-11-19",
+   "tipo": "forza",
+   "titolo": "Palestra / Casa — Workout B",
+   "workout": "B",
+   "descrizione": "Forza gambe e polpaccio graduale: leg press, goblet squat, ponte a una gamba e calf raise da seduto (soleo). Pesi moderati.",
+   "obiettivo": "Rinforzare gambe e soleo in modo progressivo.",
+   "kpi": "Esecuzione lenta e controllata, nessuna contrattura.",
+   "esercizi": [
+    {
+     "nome": "Leg press",
+     "attrezzo": "Macchina",
+     "serie": 3,
+     "rip": 10,
+     "nota": "carico moderato, discesa in 3\", recupero 60\""
+    },
+    {
+     "nome": "Goblet squat profondo",
+     "attrezzo": "Kettlebell",
+     "serie": 3,
+     "rip": 10,
+     "nota": "10-14 kg, talloni a terra, recupero 60\""
+    },
+    {
+     "nome": "Ponte a una gamba con piede su rialzo",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 10,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Calf raise da seduto",
+     "attrezzo": "Macchina",
+     "serie": 2,
+     "rip": 15,
+     "nota": "settimana 1: 2 serie, recupero 45\""
+    }
+   ]
+  },
+  {
+   "date": "2026-11-20",
+   "tipo": "riposo",
+   "titolo": "Riposo totale",
+   "descrizione": "Riposo. Facoltativo: tennis leggero (max 40-50', intensità facile) oppure camminata.",
+   "obiettivo": "Recupero prima della corsa più lunga.",
+   "kpi": "Gambe fresche per sabato.",
+   "facoltativo_max_min": 50
+  },
+  {
+   "date": "2026-11-21",
+   "tipo": "facile",
+   "titolo": "Corsa facile 9 km",
+   "distanza_km": 9,
+   "passo_min_s": 340,
+   "passo_max_s": 360,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'40\"-6'00\"/km). Prima: riscaldamento della fisio (soleo e quadricipite).",
+   "obiettivo": "La corsa più lunga della settimana, ma sempre facile.",
+   "kpi": "Passo costante, busto eretto negli ultimi km."
+  },
+  {
+   "date": "2026-11-22",
+   "tipo": "riposo",
+   "titolo": "Riposo totale",
+   "descrizione": "Riposo.",
+   "obiettivo": "Assimilare il carico della settimana.",
+   "kpi": "Sonno ristoratore e gambe rigenerate."
+  },
+  {
+   "date": "2026-11-23",
+   "tipo": "facile",
+   "titolo": "Corsa facile 8 km",
+   "distanza_km": 8,
+   "passo_min_s": 335,
+   "passo_max_s": 355,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'35\"-5'55\"/km). Prima: riscaldamento della fisio (soleo e quadricipite).",
+   "obiettivo": "Riprendere il volume dopo il riposo.",
+   "kpi": "Sensazione di facilità, FC sotto controllo."
+  },
+  {
+   "date": "2026-11-24",
+   "tipo": "forza",
+   "titolo": "Palestra / Casa — Workout A",
+   "workout": "A",
+   "descrizione": "Come nella settimana precedente. Riscaldamento di 5-8' prima.",
+   "obiettivo": "Mantenere core, glutei e schiena.",
+   "kpi": "Esecuzione pulita e nessun fastidio.",
+   "esercizi": [
+    {
+     "nome": "Dead bug con fermo",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 8,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Plank tocco spalla",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 10,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Side plank sugli avambracci",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 30,
+     "nota": "secondi per lato, recupero 30\""
+    },
+    {
+     "nome": "Hip thrust",
+     "attrezzo": "Bilanciere",
+     "serie": 3,
+     "rip": 12,
+     "nota": "20-30 kg totali, tenuta 1\" in alto, recupero 60\""
+    },
+    {
+     "nome": "Stacco rumeno (RDL)",
+     "attrezzo": "Bilanciere",
+     "serie": 3,
+     "rip": 10,
+     "nota": "20-30 kg o 2 manubri leggeri, schiena neutra, recupero 60\""
+    },
+    {
+     "nome": "Abduzioni con elastico",
+     "attrezzo": "Altro",
+     "serie": 2,
+     "rip": 15,
+     "nota": "per lato, recupero 30\""
+    }
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "tipo": "facile",
+   "titolo": "Corsa facile + allunghi 8 km",
+   "distanza_km": 8,
+   "passo_min_s": 335,
+   "passo_max_s": 355,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'35\"-5'55\"/km). Prima: riscaldamento della fisio (soleo e quadricipite). Alla fine: 5 allunghi da 15-20\" rilassati (circa 4'30\"/km a sensazione, non a tutta) con 1' di cammino.",
+   "obiettivo": "Ripresentare la velocità in modo dolce, senza lavoro di qualità.",
+   "kpi": "Allunghi fluidi, appoggio leggero, nessuna contrattura il giorno dopo."
+  },
+  {
+   "date": "2026-11-26",
+   "tipo": "forza",
+   "titolo": "Palestra / Casa — Workout B",
+   "workout": "B",
+   "descrizione": "Come nella settimana precedente, con in più il calf raise in piedi lento (3\" in discesa). Pesi moderati.",
+   "obiettivo": "Continuare a rinforzare gambe e polpaccio.",
+   "kpi": "Esecuzione lenta e controllata, nessuna contrattura.",
+   "esercizi": [
+    {
+     "nome": "Leg press",
+     "attrezzo": "Macchina",
+     "serie": 3,
+     "rip": 10,
+     "nota": "carico moderato, discesa in 3\", recupero 60\""
+    },
+    {
+     "nome": "Goblet squat profondo",
+     "attrezzo": "Kettlebell",
+     "serie": 3,
+     "rip": 10,
+     "nota": "10-14 kg, talloni a terra, recupero 60\""
+    },
+    {
+     "nome": "Ponte a una gamba con piede su rialzo",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 10,
+     "nota": "per lato, recupero 45\""
+    },
+    {
+     "nome": "Calf raise da seduto",
+     "attrezzo": "Macchina",
+     "serie": 3,
+     "rip": 15,
+     "nota": "recupero 45\""
+    },
+    {
+     "nome": "Calf raise in piedi lento",
+     "attrezzo": "Corpo libero",
+     "serie": 3,
+     "rip": 12,
+     "nota": "su uno scalino, sali in 1\" e scendi in 3\", recupero 45\""
+    }
+   ]
+  },
+  {
+   "date": "2026-11-27",
+   "tipo": "riposo",
+   "titolo": "Riposo totale",
+   "descrizione": "Riposo. Facoltativo: tennis leggero (max 40-50', intensità facile) oppure camminata.",
+   "obiettivo": "Recupero prima della corsa più lunga.",
+   "kpi": "Gambe fresche per sabato.",
+   "facoltativo_max_min": 50
+  },
+  {
+   "date": "2026-11-28",
+   "tipo": "facile",
+   "titolo": "Corsa facile 9 km",
+   "distanza_km": 9,
+   "passo_min_s": 335,
+   "passo_max_s": 355,
+   "fc_max": 145,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'35\"-5'55\"/km). Prima: riscaldamento della fisio (soleo e quadricipite).",
+   "obiettivo": "Consolidare il volume della settimana.",
+   "kpi": "Passo costante, nessun cedimento nel finale."
+  },
+  {
+   "date": "2026-11-29",
+   "tipo": "riposo",
+   "titolo": "Riposo totale",
+   "descrizione": "Riposo.",
+   "obiettivo": "Assimilare il carico.",
+   "kpi": "Gambe fresche per lunedì."
+  },
+  {
+   "date": "2026-11-30",
+   "tipo": "lungo",
+   "titolo": "Lungo facile 11 km",
+   "distanza_km": 11,
+   "passo_min_s": 335,
+   "passo_max_s": 350,
+   "fc_max": 147,
+   "dolore_max": 2,
+   "scarpa": "Nimbus 27",
+   "descrizione": "Ritmo morbido (5'35\"-5'50\"/km). Prima: riscaldamento della fisio (soleo e quadricipite). Niente progressioni né qualità.",
+   "obiettivo": "Primo lungo dopo il rientro (apre la settimana 3).",
+   "kpi": "Passo omogeneo, busto eretto, gamba sciolta nei giorni dopo."
+  }
+ ]
+}
