@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-15 04:57:02",
+ "last_updated": "2026-11-15 14:13:15",
  "activities": [
   {
    "id": 25068514289,
@@ -3439,12 +3439,34 @@
  ],
  "daily_health": [
   {
-   "steps": 5955,
+   "steps": 31,
+   "resting_hr": 49,
+   "calories": 1069,
+   "stress_level": 19,
+   "body_battery": 91,
+   "body_battery_min": 14,
+   "respiration_rate": 15,
+   "intensity_minutes": 0,
+   "sleep_hours": 10.72,
+   "sleep_score": 81,
+   "sleep_deep_h": 1.18,
+   "sleep_light_h": 8.15,
+   "sleep_rem_h": 1.38,
+   "sleep_awake_h": 0.12,
+   "hrv": 69,
+   "hrv_weekly_avg": 71,
+   "hrv_stato": "BALANCED",
+   "date": "2026-11-15",
+   "fitness_age": 18,
+   "vo2_max": 55
+  },
+  {
+   "steps": 6795,
    "resting_hr": 46,
-   "calories": 1997,
-   "stress_level": 27,
+   "calories": 2244,
+   "stress_level": 30,
    "body_battery": 65,
-   "body_battery_min": 25,
+   "body_battery_min": 16,
    "respiration_rate": 13,
    "intensity_minutes": 0,
    "sleep_hours": 4.3,
@@ -3455,9 +3477,7 @@
    "hrv": 63,
    "hrv_weekly_avg": 69,
    "hrv_stato": "UNBALANCED",
-   "date": "2026-11-14",
-   "fitness_age": 18,
-   "vo2_max": 55
+   "date": "2026-11-14"
   },
   {
    "steps": 7979,
