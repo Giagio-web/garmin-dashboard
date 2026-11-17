@@ -727,12 +727,20 @@ function testoStop(stop) {
 
 // Giorno per giorno: in stop si perde un po' di forma, altrimenti si progredisce al ritmo dello scenario.
 // (Qui, in futuro, si potrà usare un ritmo diverso per ogni settimana in base alla scheda di allenamento.)
+// Quanto "vale" un giorno per il progresso (1 = normale): il piano può ridurlo nelle settimane di rientro
+function fattoreGiorno(d) {
+  if (!pianoMeta || !Array.isArray(pianoMeta.settimane)) return 1;
+  const oggi = new Date();
+  const iso = isoLocale(new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() + d));
+  const w = pianoMeta.settimane.find(x => iso >= x.da && iso <= x.a);
+  return w && typeof w.progresso === 'number' ? w.progresso : 1;
+}
+
 function simulaGiorni(E, rate, giorni, stop) {
   const serie = [E];
-  const prog = Math.pow(1 - rate, 1 / 30.44);
   let t = E;
   for (let d = 0; d < giorni; d++) {
-    t = (stop && d >= stop.s && d <= stop.e) ? t * (1 + DETRAIN_SETT / 7) : t * prog;
+    t = (stop && d >= stop.s && d <= stop.e) ? t * (1 + DETRAIN_SETT / 7) : t * Math.pow(1 - rate, fattoreGiorno(d) / 30.44);
     serie.push(t);
   }
   return serie;
@@ -1033,6 +1041,10 @@ function renderPrevisioneFutura() {
   info.innerText = stop
     ? 'Ipotesi: ' + testoStop(stop) + '. Durante lo stop non c\'è progresso e si perde un po\' di forma (circa 0,3% a settimana).'
     : 'Nessuno stop: se prevedi di fermarti, scegli le date qui sopra (se indichi solo "dal", lo stop dura fino alla gara).';
+  if (pianoMeta && Array.isArray(pianoMeta.settimane) && pianoMeta.settimane.length) {
+    const prima = pianoMeta.settimane[0].da, ultima = pianoMeta.settimane[pianoMeta.settimane.length - 1].a;
+    info.innerText += ' Piano «' + (pianoMeta.nome || 'caricato') + '»: dal ' + formatDateShort(new Date(prima + 'T00:00:00')) + ' al ' + formatDateShort(new Date(ultima + 'T00:00:00')) + ' conto il progresso ridotto (' + pianoMeta.settimane.map(w => Math.round((w.progresso === undefined ? 1 : w.progresso) * 100) + '%').join(', ') + ' del ritmo normale, per le settimane di rientro senza qualità); dopo non ho ancora un piano e riprendo il ritmo pieno dello scenario.';
+  }
   sommario.innerText = 'Partendo dalla stima di oggi su ' + (D === 21.0975 ? 'mezza maratona' : D + ' km') + ' (' + fmtTempo(E) + '), giorno per giorno fino a ' + titolo + ' (' + giorni + ' giorni): ecco i tempi che potresti ottenere in base al ritmo di progresso. La linea più spessa è lo scenario scelto nella card della gara.';
 
   const scenari = elencoScenari();
@@ -1132,9 +1144,10 @@ let attCorrente = null;
 let attDettCorrente = null;
 let attCharts = [];
 let pianoDati = null;
+let pianoMeta = null;
 const attPerChiave = {};
 
-const NOMI_TIPO = { tennis: 'Tennis', camminata: 'Camminata', bici: 'Bici', nuoto: 'Nuoto', facile: 'Facile', lungo: 'Lungo', progressivo: 'Progressivo', soglia: 'Soglia', ritmogara: 'Ritmo gara', ripetute: 'Ripetute', fartlek: 'Fartlek', gara: 'Gara', forza: 'Forza', corsa: 'Corsa', altro: 'Altro' };
+const NOMI_TIPO = { riposo: 'Riposo', tennis: 'Tennis', camminata: 'Camminata', bici: 'Bici', nuoto: 'Nuoto', facile: 'Facile', lungo: 'Lungo', progressivo: 'Progressivo', soglia: 'Soglia', ritmogara: 'Ritmo gara', ripetute: 'Ripetute', fartlek: 'Fartlek', gara: 'Gara', forza: 'Forza', corsa: 'Corsa', altro: 'Altro' };
 const TIPI_ALLENAMENTO = [['auto', 'Automatico'], ['facile', 'Facile / rigenerante'], ['lungo', 'Lungo'], ['progressivo', 'Progressivo'], ['soglia', 'Soglia / medio'], ['ritmogara', 'Ritmo gara'], ['ripetute', 'Ripetute'], ['fartlek', 'Fartlek'], ['gara', 'Gara'], ['altro', 'Altro']];
 const PAROLE_TIPO = [
   ['ritmogara', /passo gara|ritmo gara|race pace/i],
@@ -1242,10 +1255,32 @@ function derivaCardiaca(laps) {
   return { deriva: ((b.hr / a.hr) / (b.v / a.v) - 1) * 100, passoA: 1000 / a.v, passoB: 1000 / b.v, hrA: a.hr, hrB: b.hr };
 }
 
+const RUN_TIPI = ['facile', 'lungo', 'progressivo', 'soglia', 'ritmogara', 'ripetute', 'fartlek', 'gara'];
+
+function shiftIso(iso, d) { const t = new Date(iso + 'T00:00:00'); t.setDate(t.getDate() + d); return isoLocale(t); }
+
+function applicaPiano(j) {
+  pianoDati = Array.isArray(j) ? j : (j && Array.isArray(j.giorni) ? j.giorni : null);
+  pianoMeta = j && !Array.isArray(j) ? j : null;
+  try { renderCalendario(); renderPianoCard(); renderRecords(); renderComparazione(); } catch (e) { /* ignoro: la pagina funziona anche senza piano */ }
+}
+
+function pianoDelGiorno(iso) { return Array.isArray(pianoDati) ? pianoDati.filter(p => p && p.date === iso) : []; }
+
+// Voce del piano che corrisponde a un'attività: stesso giorno e stesso tipo; per corse e forza anche spostata di un giorno
 function pianoPer(a) {
   if (!Array.isArray(pianoDati)) return null;
-  const g = String(a.date || '').slice(0, 10);
-  return pianoDati.find(p => p && p.date === g) || null;
+  const g = String(a.date || '').slice(0, 10), sport = tipoSport(a);
+  const adatta = p => sport === 'corsa' ? RUN_TIPI.indexOf(p.tipo) >= 0 : sport === 'forza' ? p.tipo === 'forza' : false;
+  const stessa = pianoDelGiorno(g).find(adatta);
+  if (stessa) return stessa;
+  if (sport !== 'corsa' && sport !== 'forza') return null;
+  const altre = (rawData.activities || []).filter(x => x !== a && tipoSport(x) === sport);
+  for (const dd of [-1, 1]) {
+    const iso = shiftIso(g, dd), cand = pianoDelGiorno(iso).find(adatta);
+    if (cand && !altre.some(x => String(x.date || '').slice(0, 10) === iso)) return cand;
+  }
+  return null;
 }
 
 function riconosciTipo(a, det, base) {
@@ -1277,7 +1312,7 @@ function analizzaAttivita(a, det, note, piano) {
   else if (piano && piano.tipo) info = { tipo: piano.tipo, fonte: 'piano' };
   else info = riconosciTipo(a, det, base);
   const tipo = info.tipo;
-  const out = { tipo, fonte: info.fonte, obiettivo: (piano && piano.obiettivo) || OBIETTIVI[tipo] || OBIETTIVI.altro, punti: [], voto: null, sintesi: '' };
+  const out = { tipo, fonte: info.fonte, obiettivo: (piano && piano.obiettivo) ? piano.obiettivo + (piano.kpi ? ' Come capire che è andata bene: ' + piano.kpi : '') : (OBIETTIVI[tipo] || OBIETTIVI.altro), punti: [], voto: null, sintesi: '', confronto: null, pianoTitolo: piano ? (piano.titolo || '') : '' };
   const P = (s, t) => out.punti.push({ s, t });
   const km = Number(a.distance_km), min = Number(a.duration_min), passo = passoAtt(a), hr = Number(a.avg_hr) || null;
   const durataTxt = min > 0 ? fmtTempo(min * 60) : '--';
@@ -1378,9 +1413,44 @@ function analizzaAttivita(a, det, note, piano) {
   }
 
   puntiMeteo(a, P);
-  if (piano && Number(piano.distanza_km) > 0) { const r = km / Number(piano.distanza_km); if (r >= 0.9 && r <= 1.1) { voto += 0.3; P('+', 'Distanza in linea col piano (' + fmtNum(km, 1) + ' km su ' + fmtNum(piano.distanza_km, 1) + ').'); } else P('-', 'Distanza diversa dal piano: ' + fmtNum(km, 1) + ' km invece di ' + fmtNum(piano.distanza_km, 1) + '.'); }
+  if (piano) {
+    const righe = [], OK = '✅', NO = '⚠️', INF = 'ℹ️';
+    const pk = Number(piano.distanza_km) || 0;
+    if (pk > 0 && km > 0) {
+      const r = km / pk, es = r >= 0.9 && r <= 1.1 ? OK : (r >= 0.75 && r <= 1.25 ? INF : NO);
+      if (es === OK) voto += 0.3;
+      righe.push(['Distanza', fmtNum(pk, 1) + ' km', fmtNum(km, 2) + ' km', es]);
+    }
+    if (piano.passo_min_s && piano.passo_max_s && passo) {
+      const lo = Number(piano.passo_min_s), hi = Number(piano.passo_max_s);
+      const dentro = passo >= lo - 5 && passo <= hi + 5;
+      if (dentro) voto += 0.5;
+      else if (passo < lo - 10 && (tipo === 'facile' || tipo === 'lungo')) { voto -= 0.5; P('-', 'Passo più veloce del target del piano (' + fmtPasso(passo) + ' contro ' + fmtPasso(lo) + '–' + fmtPasso(hi) + '): nei giorni facili l\'obiettivo è tenere il ritmo morbido.'); }
+      righe.push(['Passo', fmtPasso(lo) + ' – ' + fmtPasso(hi), fmtPasso(passo) + (passo < lo - 5 ? ' (più veloce)' : passo > hi + 5 ? ' (più lento)' : ''), dentro ? OK : INF]);
+    }
+    if (piano.fc_max && hr) {
+      const sotto = hr < Number(piano.fc_max);
+      if (sotto) voto += 0.5; else { voto -= Math.min(1.5, 0.3 + (hr - Number(piano.fc_max)) * 0.08); P('-', 'FC media sopra il target del piano (' + Math.round(hr) + ' contro meno di ' + piano.fc_max + ' bpm).'); }
+      righe.push(['FC media', '< ' + piano.fc_max + ' bpm', Math.round(hr) + ' bpm', sotto ? OK : NO]);
+    }
+    if (piano.dolore_max !== undefined) {
+      const dol = note && note.dolore !== undefined && note.dolore !== '' ? Number(note.dolore) : null, mx = Number(piano.dolore_max);
+      if (dol === null) righe.push(['Dolore', '≤ ' + mx + '/10', 'non inserito', INF]);
+      else {
+        righe.push(['Dolore', '≤ ' + mx + '/10', dol + '/10', dol <= mx ? OK : NO]);
+        if (dol > mx) { voto -= 1.5; P('-', 'Dolore ' + dol + '/10, sopra il limite del piano (≤ ' + mx + '): come da piano, ferma la corsa e salta la seduta successiva.'); } else voto += 0.3;
+      }
+    }
+    const dPiano = String(piano.date || ''), dAtt = String(a.date || '').slice(0, 10);
+    if (dPiano && dPiano !== dAtt) P('i', 'Seduta spostata: nel piano era prevista il ' + fmtData(new Date(dPiano + 'T00:00:00')) + '.');
+    out.confronto = righe;
+  }
   if (!out.punti.length) P('i', 'Dati insufficienti per una valutazione: servono zone cardiache o i dettagli km per km.');
 
+  const doloreFuori = piano && piano.dolore_max !== undefined && note && note.dolore !== undefined && note.dolore !== '' && Number(note.dolore) > Number(piano.dolore_max);
+  if (piano && out.punti.some(p => p.s === '-')) P('i', 'Il voto pesa lo scostamento dal piano: se le sensazioni e il dolore sono buoni la corsa non è andata male, ma non ha rispettato lo scopo della seduta.');
+  // intensità/distanza fuori piano pesano sullo stesso problema: li limito a un massimo di circa 2,5 punti, a meno che ci sia dolore sopra il limite
+  if (!doloreFuori) voto = Math.max(voto, 4.5);
   out.voto = out.punti.some(p => p.s !== 'i') ? Math.max(3, Math.min(10, voto)) : null;
   out.sintesi = (NOMI_TIPO[tipo] || 'Corsa') + ' da ' + fmtNum(km, 2) + ' km in ' + durataTxt + ' a ' + fmtPasso(passo) + (hr ? ' con FC media ' + Math.round(hr) + ' bpm' : '') + (out.voto !== null ? ' • ' + etichettaVoto(out.voto) : '') + '.';
   return out;
@@ -1451,7 +1521,7 @@ function initAttivita() {
     r.onload = () => { const n = importaNote(String(r.result)); alert(n < 0 ? 'File non valido.' : 'Ripristinate le note di ' + n + ' attività.'); renderListaAttivita(); };
     r.readAsText(f);
   });
-  try { fetch('piano.json').then(r => r.ok ? r.json() : null).then(j => { pianoDati = j; if (typeof renderCalendario === 'function') renderCalendario(); }).catch(() => {}); } catch (e) { /* nessun piano */ }
+  try { fetch('piano.json').then(r => r.ok ? r.json() : null).then(applicaPiano).catch(() => {}); } catch (e) { /* nessun piano */ }
 }
 
 function registraAttivita() { (rawData.activities || []).forEach(a => { attPerChiave[chiaveAtt(a)] = a; }); }
@@ -1515,6 +1585,8 @@ function htmlValutazione(an) {
     '<div class="text-right"><p class="text-xs text-slate-400">Voto indicativo</p><p class="text-4xl font-black ' + col + '">' + an.voto.toFixed(1).replace('.', ',') + '<span class="text-lg text-slate-500"> / 10</span></p>' +
     '<p class="text-xs font-bold ' + col + '">' + etichettaVoto(an.voto) + '</p></div></div>') +
     '<p class="text-sm text-slate-200 mb-3">' + esc(an.sintesi) + '</p>' +
+    (an.confronto && an.confronto.length ? '<div class="mb-3 overflow-x-auto"><p class="text-xs font-bold uppercase tracking-wider text-sky-400 mb-1">Piano contro fatto' + (an.pianoTitolo ? ' — ' + esc(an.pianoTitolo) : '') + '</p><table class="w-full text-xs min-w-[300px]"><thead><tr class="text-slate-500 text-left"><th class="pb-1 font-bold"></th><th class="pb-1 font-bold">Previsto</th><th class="pb-1 font-bold">Fatto</th><th></th></tr></thead><tbody>' +
+      an.confronto.map(r => '<tr class="border-t border-white/5"><td class="py-1.5 pr-3 text-slate-400">' + esc(r[0]) + '</td><td class="py-1.5 pr-3 text-slate-300">' + esc(r[1]) + '</td><td class="py-1.5 pr-3 text-white font-semibold">' + esc(r[2]) + '</td><td class="py-1.5">' + r[3] + '</td></tr>').join('') + '</tbody></table></div>' : '') +
     '<p class="text-xs text-slate-400 mb-3"><span class="font-bold text-orange-300">Obiettivo di questo allenamento:</span> ' + esc(an.obiettivo) + '</p>' +
     '<ul class="space-y-1.5 text-sm text-slate-300">' + an.punti.map(p => '<li>' + icone[p.s] + ' ' + esc(p.t) + '</li>').join('') + '</ul>' +
     '<p class="text-xs text-slate-500 mt-3">Valutazione automatica basata su regole (battiti, zone, passo, costanza): è un\'indicazione, non un\'analisi personalizzata. Non conosce meteo, sensazioni e contesto, se non quelli che segni qui sopra.</p>';
@@ -1749,6 +1821,20 @@ function analizzaNonCorsa(a, note, out, P) {
       if (colpi > 0) P('i', 'Colpi registrati dall\'orologio: ' + colpi + (min > 0 ? ' (circa ' + fmtNum(colpi / (min / 60), 0) + ' all\'ora)' : '') + '.');
     }
   }
+  const pian = pianoPer(a), riposoG = pianoDelGiorno(String(a.date || '').slice(0, 10)).find(p => p.tipo === 'riposo');
+  if (kind === 'forza' && pian) {
+    P('i', 'Piano: ' + (pian.titolo || 'seduta di forza') + (pian.kpi ? ' — come capire che è andata bene: ' + pian.kpi : ''));
+    const ex = (note && note.esercizi) || [], previsti = pian.esercizi || [];
+    if (previsti.length && ex.length) {
+      const chiave = t => String(t || '').toLowerCase().replace(/[^a-zàèéìòù ]/g, ' ').trim();
+      const fatti = previsti.filter(pe => ex.some(r => { const x = chiave(r.nome), y = chiave(pe.nome); return x && y && (x.includes(y) || y.includes(x) || x.split(' ')[0] === y.split(' ')[0]); })).length;
+      P(fatti === previsti.length ? '+' : 'i', 'Esercizi del piano registrati: ' + fatti + ' su ' + previsti.length + '.');
+    }
+  }
+  if ((kind === 'tennis' || kind === 'camminata') && riposoG) {
+    if (riposoG.facoltativo_max_min && min > 0) P(min <= riposoG.facoltativo_max_min ? '+' : '-', 'Giorno di riposo con ' + NOMI_TIPO[kind].toLowerCase() + ' facoltativo: ' + Math.round(min) + ' min (nel piano al massimo ' + riposoG.facoltativo_max_min + ').');
+    else P('i', 'Era un giorno di riposo nel piano.');
+  }
   if (kind !== 'forza') puntiMeteo(a, P);
   const rpe = note && Number(note.rpe) > 0 ? Number(note.rpe) : null;
   if (rpe) P('i', 'Sforzo percepito segnato da te: ' + rpe + '/10.');
@@ -1763,8 +1849,20 @@ function risultatoPartita(sets) {
 }
 
 // ---- registro esercizi ----
+function precompilaDaPiano() {
+  const p = attCorrente ? pianoPer(attCorrente) : null;
+  if (!p || !Array.isArray(p.esercizi)) return;
+  modificaNota(n => { n.esercizi = p.esercizi.map(e => ({ nome: e.nome, attrezzo: e.attrezzo || 'Altro', serie: e.serie, rip: e.rip, kg: '' })); });
+  const box = document.getElementById('attRegistro');
+  if (box) box.innerHTML = htmlRegistroEsercizi(leggiNote()[chiaveAtt(attCorrente)] || {});
+  dopoModificaEsercizi();
+}
+
 function htmlRegistroEsercizi(note) {
   const ex = note.esercizi || [];
+  const pianoEs = attCorrente ? pianoPer(attCorrente) : null;
+  const prec = !ex.length && pianoEs && Array.isArray(pianoEs.esercizi) && pianoEs.esercizi.length
+    ? '<div class="mb-3 rounded-xl border border-white/10 bg-slate-900/60 p-3 text-xs text-slate-300">Nel piano: ' + esc(pianoEs.titolo || 'seduta di forza') + '. <button onclick="precompilaDaPiano()" class="ml-2 px-3 py-1.5 rounded-lg border border-orange-400/40 text-orange-300 hover:text-white transition">Precompila con gli esercizi del piano</button> <span class="text-slate-500">poi inserisci i kg.</span></div>' : '';
   const nomi = {};
   righeEsercizi().forEach(r => { nomi[r.nome] = true; });
   const CLS = 'bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-2 py-2';
@@ -1775,7 +1873,7 @@ function htmlRegistroEsercizi(note) {
     '<td class="py-1.5 pr-2"><input type="number" min="0" value="' + esc(r.rip || '') + '" onchange="aggiornaEsercizio(' + i + ', \'rip\', this.value)" class="' + CLS + ' w-16"></td>' +
     '<td class="py-1.5 pr-2"><input type="number" min="0" step="0.5" value="' + esc(r.kg === undefined ? '' : r.kg) + '" onchange="aggiornaEsercizio(' + i + ', \'kg\', this.value)" class="' + CLS + ' w-20"></td>' +
     '<td class="py-1.5"><button onclick="eliminaEsercizio(' + i + ')" class="text-slate-500 hover:text-red-400 text-sm" title="Elimina">✕</button></td></tr>').join('');
-  return '<datalist id="listaEsercizi">' + Object.keys(nomi).map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
+  return prec + '<datalist id="listaEsercizi">' + Object.keys(nomi).map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
     '<div class="overflow-x-auto"><table class="w-full text-xs min-w-[460px]"><thead><tr class="text-slate-500 uppercase tracking-wider text-left"><th class="pb-2 font-bold">Esercizio</th><th class="pb-2 font-bold">Attrezzo</th><th class="pb-2 font-bold">Serie</th><th class="pb-2 font-bold">Rip.</th><th class="pb-2 font-bold">Kg</th><th></th></tr></thead><tbody>' + righe + '</tbody></table></div>' +
     '<button onclick="aggiungiEsercizio()" class="mt-3 px-3 py-2 rounded-lg border border-white/10 text-xs text-slate-300 hover:text-white transition">+ Aggiungi esercizio</button>' +
     '<p id="attTotaliForza" class="text-xs text-slate-400 mt-3">' + testoTotaliForza(ex) + '</p>' +
@@ -1933,6 +2031,7 @@ function renderDettaglio(a, det) {
   const an = analizzaAttivita(a, det, note, pianoPer(a));
   const dt = dataAttivita(a);
   const opzTipo = TIPI_ALLENAMENTO.map(t => '<option value="' + t[0] + '"' + ((note.tipo || 'auto') === t[0] ? ' selected' : '') + '>' + t[1] + '</option>').join('');
+  const opzDolore = '<option value="">--</option>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => '<option value="' + n + '"' + (note.dolore !== undefined && note.dolore !== '' && Number(note.dolore) === n ? ' selected' : '') + '>' + n + '</option>').join('');
   const opzRpe = '<option value="">--</option>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => '<option value="' + n + '"' + (Number(note.rpe) === n ? ' selected' : '') + '>' + n + '</option>').join('');
   const CLS = 'bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2';
   const selTipo = kind === 'corsa' ? '<label class="flex flex-col gap-1 text-slate-400">Tipo di allenamento<select class="' + CLS + '" onchange="salvaNotaAtt(\'tipo\', this.value)">' + opzTipo + '</select></label>' : '';
@@ -1942,6 +2041,7 @@ function renderDettaglio(a, det) {
     '<h2 class="text-2xl font-black text-white">' + esc(a.name || disciplinaDi(a)) + '</h2><p class="text-xs text-slate-400">' + esc(a.location || '') + '</p>' +
     '<div class="flex flex-wrap items-end gap-3 mt-4 text-xs">' + selTipo +
     '<label class="flex flex-col gap-1 text-slate-400">Sforzo percepito<select class="' + CLS + '" onchange="salvaNotaAtt(\'rpe\', this.value)">' + opzRpe + '</select></label>' +
+    '<label class="flex flex-col gap-1 text-slate-400">Dolore (0-10)<select class="' + CLS + '" onchange="salvaNotaAtt(\'dolore\', this.value)">' + opzDolore + '</select></label>' +
     '<label class="flex flex-col gap-1 text-slate-400 flex-1 min-w-[200px]">Note e sensazioni<input type="text" value="' + esc(note.testo || '') + '" onchange="salvaNotaAtt(\'testo\', this.value)" placeholder="es. gambe pesanti, ottime sensazioni…" class="' + CLS + '"></label></div>' +
     '<p class="text-xs text-slate-500 mt-2">Tipo, sforzo e note si salvano in questo browser (su un altro dispositivo non compaiono).</p></div>';
   const valutazione = '<div id="attValutazione">' + htmlValutazione(an) + '</div>';
@@ -2135,7 +2235,7 @@ function disegnaMetricaAtt() {
 // ==== CALENDARIO ====
 let calMese = null;
 const MESI_IT = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-const COLORI_TIPO_CAL = { facile: '#10b981', lungo: '#38bdf8', progressivo: '#84cc16', soglia: '#ff9d00', ritmogara: '#ff6b00', ripetute: '#ef4444', fartlek: '#f43f5e', gara: '#eab308', corsa: '#94a3b8', forza: '#a855f7', altro: '#64748b' };
+const COLORI_TIPO_CAL = { riposo: '#64748b', facile: '#10b981', lungo: '#38bdf8', progressivo: '#84cc16', soglia: '#ff9d00', ritmogara: '#ff6b00', ripetute: '#ef4444', fartlek: '#f43f5e', gara: '#eab308', corsa: '#94a3b8', forza: '#a855f7', altro: '#64748b' };
 
 function calSposta(delta) { calMese = new Date(calMese.getFullYear(), calMese.getMonth() + delta, 1); renderCalendario(); }
 function calOggi() { const o = new Date(); calMese = new Date(o.getFullYear(), o.getMonth(), 1); renderCalendario(); }
@@ -2181,26 +2281,134 @@ function renderCalendario() {
 
   let kmMese = 0, minMese = 0, sessMese = 0; const giorniAttivi = {};
   for (let w = 0; w < settimane; w++) {
-    let kmSett = 0, minSett = 0, nSett = 0, celle = '';
+    let kmSett = 0, minSett = 0, nSett = 0, kmPian = 0, celle = '';
     for (let g = 0; g < 7; g++) {
       const d = new Date(inizio.getFullYear(), inizio.getMonth(), inizio.getDate() + w * 7 + g);
       const k = isoLocale(d), fuori = d.getMonth() !== mese;
       const lista = perGiorno[k] || [];
+      (pianoGiorno[k] || []).forEach(p => { if (RUN_TIPI.indexOf(p.tipo) >= 0) kmPian += Number(p.distanza_km || 0); });
       lista.forEach(a => { if (eCorsa(a)) kmSett += Number(a.distance_km || 0); minSett += Number(a.duration_min || 0); nSett += 1; });
       if (!fuori && lista.length) { giorniAttivi[k] = true; lista.forEach(a => { if (eCorsa(a)) kmMese += Number(a.distance_km || 0); minMese += Number(a.duration_min || 0); sessMese += 1; }); }
       const chips = lista.slice(0, 3).map(a => chipCal(a, base, note)).join('') + (lista.length > 3 ? '<p class="text-[10px] text-slate-500">+' + (lista.length - 3) + ' altre</p>' : '');
-      const piani = (pianoGiorno[k] || []).map(p => '<div class="rounded-md px-1.5 py-1 mb-1 text-[10px] leading-tight border border-dashed border-white/30 text-slate-300 truncate" title="' + esc(p.titolo || p.tipo || 'Piano') + '">Piano: ' + esc(NOMI_TIPO[p.tipo] || p.titolo || p.tipo || '') + (Number(p.distanza_km) > 0 ? ' ' + fmtNum(p.distanza_km, 0) + ' km' : '') + '</div>').join('');
+      const piani = (pianoGiorno[k] || []).map(p => {
+        const st = statoPiano(p, k, oggiIso, perGiorno, pianoGiorno), col = COLORI_TIPO_CAL[p.tipo] || '#64748b';
+        const nome = p.tipo === 'riposo' ? 'Riposo' : (NOMI_TIPO[p.tipo] || p.tipo) + (Number(p.distanza_km) > 0 ? ' ' + fmtNum(p.distanza_km, 0) + ' km' : (p.workout ? ' ' + p.workout : ''));
+        const stCol = st === 'fatto' ? '#34d399' : st === 'parziale' ? '#fbbf24' : st === 'saltato' ? '#f87171' : '#94a3b8';
+        const simbolo = { fatto: '✓', parziale: '◐', saltato: '✗', previsto: '', riposo: '' }[st];
+        return '<button onclick="apriPiano(\'' + k + '\')" title="' + esc(p.titolo || nome) + '" class="block w-full text-left rounded-md px-1.5 py-1 mb-1 text-[10px] leading-tight truncate border border-dashed hover:brightness-125 transition" style="border-color:' + col + ';color:#cbd5e1"><span style="color:' + stCol + ';font-weight:800">' + simbolo + '</span> <span class="font-bold">' + esc(nome) + '</span></button>';
+      }).join('');
       celle += '<div class="min-h-[76px] sm:min-h-[96px] rounded-lg border border-white/5 bg-slate-900/40 p-1 ' + (fuori ? 'opacity-35 ' : '') + (k === oggiIso ? 'ring-1 ring-orange-400' : '') + '">' +
         '<p class="text-[10px] ' + (k === oggiIso ? 'text-orange-400 font-extrabold' : 'text-slate-500') + ' mb-1">' + d.getDate() + '</p>' + piani + chips + '</div>';
     }
-    celle += '<div class="rounded-lg bg-slate-800/40 p-1.5 text-center flex flex-col justify-center"><p class="text-xs font-black text-white">' + (kmSett > 0 ? fmtNum(kmSett, 1) + ' km' : '—') + '</p><p class="text-[10px] text-slate-400">' + (minSett > 0 ? formatOreMinuti(minSett / 60) : '') + '</p><p class="text-[10px] text-slate-500">' + (nSett ? nSett + (nSett === 1 ? ' sess.' : ' sess.') : '') + '</p></div>';
+    celle += '<div class="rounded-lg bg-slate-800/40 p-1.5 text-center flex flex-col justify-center"><p class="text-xs font-black text-white">' + (kmSett > 0 ? fmtNum(kmSett, 1) + ' km' : '—') + '</p><p class="text-[10px] text-slate-400">' + (minSett > 0 ? formatOreMinuti(minSett / 60) : '') + '</p><p class="text-[10px] text-slate-500">' + (nSett ? nSett + ' sess.' : '') + '</p>' + (kmPian > 0 ? '<p class="text-[10px] text-sky-400">piano ' + fmtNum(kmPian, 0) + ' km</p>' : '') + '</div>';
     html += '<div style="' + colonne + '" class="mb-1">' + celle + '</div>';
   }
   griglia.innerHTML = html;
   document.getElementById('calRiepilogo').innerText = 'Nel mese: ' + fmtNum(kmMese, 1) + ' km di corsa • ' + formatOreMinuti(minMese / 60) + ' di attività • ' + sessMese + (sessMese === 1 ? ' sessione' : ' sessioni') + ' • ' + Object.keys(giorniAttivi).length + ' giorni attivi';
   const leg = ['facile', 'lungo', 'progressivo', 'soglia', 'ritmogara', 'ripetute', 'fartlek', 'gara', 'corsa'].map(t => '<span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1" style="background:' + COLORI_TIPO_CAL[t] + '"></span>' + (NOMI_TIPO[t] || t) + '</span>')
     .concat(['Forza', 'Tennis', 'Bici', 'Camminata'].map(n => '<span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1" style="background:' + (COLORI_DISCIPLINA[n] || COLORI_TIPO_CAL.altro) + '"></span>' + n + '</span>'));
-  document.getElementById('calLegenda').innerHTML = leg.join('');
+  document.getElementById('calLegenda').innerHTML = leg.join('') + (Array.isArray(pianoDati) && pianoDati.length ? '<span>• tratteggiato = previsto dal piano: <span style="color:#34d399">✓</span> fatto, <span style="color:#fbbf24">◐</span> in parte, <span style="color:#f87171">✗</span> saltato</span>' : '');
+  renderPianoCard();
+  renderDettaglioPiano();
+}
+let calGiornoSel = null;
+
+function statoPiano(p, k, oggiIso, perGiorno, pianoGiorno) {
+  if (p.tipo === 'riposo') return 'riposo';
+  const corsa = RUN_TIPI.indexOf(p.tipo) >= 0;
+  const adatta = x => corsa ? eCorsa(x) : p.tipo === 'forza' ? tipoSport(x) === 'forza' : false;
+  let trovate = (perGiorno[k] || []).filter(adatta);
+  if (!trovate.length) {   // seduta spostata di un giorno (se quel giorno non ne aveva una sua)
+    [-1, 1].forEach(dd => {
+      if (trovate.length) return;
+      const k2 = shiftIso(k, dd);
+      const sua = (pianoGiorno[k2] || []).some(q => q.tipo !== 'riposo' && (RUN_TIPI.indexOf(q.tipo) >= 0) === corsa && (q.tipo === 'forza') === (p.tipo === 'forza'));
+      if (!sua) trovate = (perGiorno[k2] || []).filter(adatta);
+    });
+  }
+  if (trovate.length) {
+    if (corsa && Number(p.distanza_km) > 0) { const km = trovate.reduce((s2, x) => s2 + Number(x.distance_km || 0), 0); return km >= Number(p.distanza_km) * 0.75 ? 'fatto' : 'parziale'; }
+    return 'fatto';
+  }
+  return k < oggiIso ? 'saltato' : 'previsto';
+}
+
+function mappeGiorni() {
+  const perGiorno = {}, pianoGiorno = {};
+  (rawData.activities || []).forEach(a => { const d = dataAttivita(a); if (isNaN(d) || !(Number(a.duration_min) > 0)) return; const k = isoLocale(d); (perGiorno[k] = perGiorno[k] || []).push(a); });
+  (Array.isArray(pianoDati) ? pianoDati : []).forEach(p => { if (p && p.date) (pianoGiorno[p.date] = pianoGiorno[p.date] || []).push(p); });
+  return { perGiorno, pianoGiorno };
+}
+
+function apriPiano(iso) {
+  calGiornoSel = iso;
+  renderDettaglioPiano();
+  const el = document.getElementById('calDettaglioPiano');
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function chiudiPiano() { calGiornoSel = null; renderDettaglioPiano(); }
+
+function renderDettaglioPiano() {
+  const box = document.getElementById('calDettaglioPiano');
+  if (!box) return;
+  const voci = calGiornoSel ? pianoDelGiorno(calGiornoSel) : [];
+  if (!voci.length) { box.innerHTML = ''; return; }
+  const dt = new Date(calGiornoSel + 'T00:00:00');
+  const fatte = (rawData.activities || []).filter(a => String(a.date || '').slice(0, 10) === calGiornoSel && Number(a.duration_min) > 0);
+  const maps = mappeGiorni(), oggiIso = isoLocale(new Date());
+  box.innerHTML = '<div class="glass-card neon-purple p-6"><div class="flex justify-between items-start gap-3 mb-3"><p class="text-xs font-extrabold uppercase tracking-wider text-purple-400">Piano • ' + esc(fmtData(dt)) + '</p><button onclick="chiudiPiano()" class="text-slate-500 hover:text-white text-sm">✕</button></div>' +
+    voci.map(p => {
+      const st = statoPiano(p, calGiornoSel, oggiIso, maps.perGiorno, maps.pianoGiorno);
+      const target = [Number(p.distanza_km) > 0 ? fmtNum(p.distanza_km, 1) + ' km' : '', p.passo_min_s ? fmtPasso(p.passo_min_s) + '–' + fmtPasso(p.passo_max_s) : '', p.fc_max ? 'FC < ' + p.fc_max + ' bpm' : '', p.dolore_max !== undefined ? 'dolore ≤ ' + p.dolore_max + '/10' : '', p.scarpa || ''].filter(Boolean);
+      const stTxt = { fatto: '✓ fatto', parziale: '◐ fatto in parte', saltato: '✗ saltato', previsto: 'previsto', riposo: '' }[st];
+      return '<h3 class="text-lg font-black text-white">' + esc(p.titolo || p.tipo) + (stTxt ? ' <span class="text-xs font-bold ' + (st === 'fatto' ? 'text-emerald-400' : st === 'parziale' ? 'text-amber-400' : st === 'saltato' ? 'text-red-400' : 'text-slate-400') + '">' + stTxt + '</span>' : '') + '</h3>' +
+        (target.length ? '<p class="text-xs text-sky-400 mt-1">' + target.map(esc).join(' • ') + '</p>' : '') +
+        (p.descrizione ? '<p class="text-sm text-slate-300 mt-2">' + esc(p.descrizione) + '</p>' : '') +
+        (p.obiettivo ? '<p class="text-xs text-slate-400 mt-2"><span class="font-bold text-orange-300">Obiettivo:</span> ' + esc(p.obiettivo) + '</p>' : '') +
+        (p.kpi ? '<p class="text-xs text-slate-400 mt-1"><span class="font-bold text-emerald-300">Come capire che è andata bene:</span> ' + esc(p.kpi) + '</p>' : '') +
+        (Array.isArray(p.esercizi) && p.esercizi.length ? '<div class="overflow-x-auto mt-3"><table class="w-full text-xs min-w-[320px]"><thead><tr class="text-slate-500 text-left"><th class="pb-1">Esercizio</th><th class="pb-1">Attrezzo</th><th class="pb-1">Serie × rip.</th><th class="pb-1">Note</th></tr></thead><tbody>' +
+          p.esercizi.map(e => '<tr class="border-t border-white/5"><td class="py-1.5 pr-2 text-white">' + esc(e.nome) + '</td><td class="py-1.5 pr-2 text-slate-400">' + esc(e.attrezzo || '') + '</td><td class="py-1.5 pr-2 text-slate-300">' + e.serie + ' × ' + e.rip + '</td><td class="py-1.5 text-slate-500">' + esc(e.nota || '') + '</td></tr>').join('') + '</tbody></table></div>' : '');
+    }).join('<hr class="border-white/10 my-4">') +
+    (fatte.length ? '<p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-4 mb-2">Attività di quel giorno</p><div class="flex flex-wrap gap-2">' + fatte.map(a => '<button onclick="apriDaCalendario(\'' + esc(chiaveAtt(a)) + '\')" class="px-3 py-2 rounded-lg border border-white/10 text-xs text-slate-200 hover:text-white transition">' + esc((a.name || disciplinaDi(a)) + (Number(a.distance_km) > 0 ? ' • ' + fmtNum(a.distance_km, 1) + ' km' : '')) + ' →</button>').join('') + '</div>' : '') +
+    '</div>';
+}
+
+function renderPianoCard() {
+  const box = document.getElementById('pianoRiepilogo');
+  if (!box) return;
+  if (!Array.isArray(pianoDati) || !pianoDati.length) { box.innerHTML = '<p class="text-xs text-slate-400">Nessun piano caricato: metti un file piano.json accanto a index.html e comparirà qui, nel calendario e nelle valutazioni degli allenamenti.</p>'; return; }
+  const meta = pianoMeta || {}, oggiIso = isoLocale(new Date()), maps = mappeGiorni();
+  let html = '<p class="text-sm font-bold text-white">' + esc(meta.nome || 'Piano di allenamento') + '</p>';
+  const dettagli = [];
+  if (meta.obiettivi) dettagli.push('Obiettivo A: ' + esc(meta.obiettivi.A || '') + ' • Obiettivo B: ' + esc(meta.obiettivi.B || ''));
+  if (meta.gara && meta.gara.data) { const g = Math.round((new Date(meta.gara.data + 'T00:00:00') - new Date(new Date().setHours(0, 0, 0, 0))) / 86400000); dettagli.push(esc(meta.gara.nome || 'Gara') + ': ' + fmtData(new Date(meta.gara.data + 'T00:00:00')) + (g > 0 ? ' (tra ' + g + ' giorni)' : '')); }
+  if (meta.scarpe) dettagli.push('Scarpe: ' + esc(meta.scarpe));
+  html += '<p class="text-xs text-slate-400 mt-1 mb-4">' + dettagli.join(' • ') + '</p>';
+
+  const settimane = Array.isArray(meta.settimane) ? meta.settimane : [];
+  if (settimane.length) {
+    html += '<div class="overflow-x-auto"><table class="w-full text-xs min-w-[460px]"><thead><tr class="text-slate-500 uppercase tracking-wider text-left"><th class="pb-2">Settimana</th><th class="pb-2">Km piano</th><th class="pb-2">Km fatti</th><th class="pb-2">Sedute</th></tr></thead><tbody>' + settimane.map(w => {
+      let kmF = 0, prev = 0, fatte = 0;
+      Object.keys(maps.perGiorno).forEach(k => { if (k >= w.da && k <= w.a) maps.perGiorno[k].forEach(a => { if (eCorsa(a)) kmF += Number(a.distance_km || 0); }); });
+      pianoDati.forEach(p => {
+        if (p.date < w.da || p.date > w.a || p.tipo === 'riposo' || p.date > oggiIso) return;
+        const st = statoPiano(p, p.date, oggiIso, maps.perGiorno, maps.pianoGiorno);
+        prev += 1; fatte += st === 'fatto' ? 1 : st === 'parziale' ? 0.5 : 0;
+      });
+      const pct = w.km > 0 ? Math.min(100, kmF / w.km * 100) : 0;
+      return '<tr class="border-t border-white/5"><td class="py-2 pr-3 text-white font-semibold">' + esc(w.nome || (w.da + ' – ' + w.a)) + '<br><span class="text-slate-500 font-normal">' + esc(formatDateShort(new Date(w.da + 'T00:00:00')) + ' – ' + formatDateShort(new Date(w.a + 'T00:00:00'))) + '</span></td>' +
+        '<td class="py-2 pr-3 text-slate-300">' + (w.km || '—') + '</td><td class="py-2 pr-3 text-slate-300">' + fmtNum(kmF, 1) + '<div class="h-1.5 rounded-full bg-white/10 mt-1 overflow-hidden"><div class="h-1.5 rounded-full bg-sky-400" style="width:' + pct + '%"></div></div></td>' +
+        '<td class="py-2 text-slate-300">' + (prev ? fatte.toString().replace('.5', ',5') + ' su ' + prev + ' finora' : 'da iniziare') + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  }
+  const prossime = pianoDati.filter(p => p.date >= oggiIso && p.tipo !== 'riposo').slice(0, 4);
+  if (prossime.length) html += '<p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-5 mb-2">Prossime sedute</p><div class="space-y-1.5">' + prossime.map(p => {
+    const g = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'][new Date(p.date + 'T00:00:00').getDay()];
+    const t = [Number(p.distanza_km) > 0 ? fmtNum(p.distanza_km, 0) + ' km' : '', p.passo_min_s ? fmtPasso(p.passo_min_s) + '–' + fmtPasso(p.passo_max_s) : '', p.fc_max ? 'FC < ' + p.fc_max : ''].filter(Boolean).join(' • ');
+    return '<button onclick="apriPiano(\'' + p.date + '\')" class="block w-full text-left text-xs text-slate-300 hover:text-white transition"><span class="font-bold" style="color:' + (COLORI_TIPO_CAL[p.tipo] || '#94a3b8') + '">' + g + ' ' + p.date.slice(8, 10) + '/' + p.date.slice(5, 7) + '</span> — ' + esc(p.titolo || p.tipo) + (t ? ' <span class="text-slate-500">(' + esc(t) + ')</span>' : '') + '</button>';
+  }).join('') + '</div>';
+  if (Array.isArray(meta.regole) && meta.regole.length) html += '<p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-5 mb-2">Regole del piano</p><ul class="list-disc pl-5 space-y-1 text-xs text-slate-400">' + meta.regole.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>';
+  box.innerHTML = html;
 }
 // ==== FINE CALENDARIO ====
 
