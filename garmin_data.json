@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-17 21:57:50",
+ "last_updated": "2026-11-18 01:15:35",
  "activities": [
   {
    "id": 25111376644,
@@ -3586,10 +3586,22 @@
  ],
  "daily_health": [
   {
-   "steps": 5183,
+   "resting_hr": 50,
+   "calories": 93,
+   "stress_level": 14,
+   "body_battery": 45,
+   "body_battery_min": 40,
+   "respiration_rate": 14,
+   "intensity_minutes": 0,
+   "date": "2026-11-18",
+   "fitness_age": 18,
+   "vo2_max": 55
+  },
+  {
+   "steps": 5728,
    "resting_hr": 46,
-   "calories": 2184,
-   "stress_level": 20,
+   "calories": 2462,
+   "stress_level": 21,
    "body_battery": 100,
    "body_battery_min": 36,
    "respiration_rate": 14,
@@ -3603,9 +3615,7 @@
    "hrv": 87,
    "hrv_weekly_avg": 73,
    "hrv_stato": "BALANCED",
-   "date": "2026-11-17",
-   "fitness_age": 18,
-   "vo2_max": 55
+   "date": "2026-11-17"
   },
   {
    "steps": 14541,
