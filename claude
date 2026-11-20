@@ -1,0 +1,18 @@
+un mio amico mi aiuterebbe nella creazione del sito grazie anche al suo Claude Pro, per cui ho bisogno di un file da poter caricare su Github (dove lo invito), dove lui possa prendere tutte le cose che vorrei fare e possa inviare il file al suo chatbot come prompt per creare il codice adatto. Cerca anche di ordinarle in grado di realizzibalità e difficoltà di codifica/implementazione, spiegando affianco ad ogni obiettivo che cosa eventualmente occorrebbe fare in più. Gli obiettivi sono:
+
+* indicare nel grafico, in base alla settimana di lavoro, la pendenza della retta delle previsioni verso la gara;
+* permettere di variare l'obiettivo dal sito;
+* possibilità di inserire le previsioni di garmin direttamente dal sito, potendole modificare più facilmente;
+* aggiungere nelle valutazioni degli allenamenti una indicazione di "sensazione" come fa garmin, tipo "normale" o "bene" o "molto bene" o "male" e così via, in modo che cambi di conseguenza la valutazione dell'allenamento;
+* pensare di implementare, come le funzioni di strava premium, tutte le funzioni di Garmin di qualità superiore (come le funzioni del Forerunner 965 o altri orologi garmin di fascia alta/altissima);
+* rendere la web app, una app scaricabile per telefono e pc;
+* ampliare l'uso del sito a più utenti;
+* ampliare i dati possibili anche più orologi garmin/prenderli da strava(valutare opzioni di altre marche di orologi, come apple watch che sarebbe utile per la mia ragazza);
+* capire la questione, ampliando il bacino di utenti, relativa a privacy, trattamento dati e possibile utilizzo di più dati da più utenti per migliorare stime ed equazioni che possono benificiare tutti;
+* permettere di cambiare l grafica del sito(colori/temi, chiaro/scuro, diverse grafiche e/o disposizioni, gestione di grafiche diverse in base ai modelli/dati raccolti, mettere a grafica anche il modello di Garmin usato, se possibile);
+* nel tennis, avere la possibilità di poter scegliere i set giocati e sfruttare lo spazio di conseguenza per non lasciare troppi buchi;
+* sempre nel tennis, possibilità di poter mettere un livello dei propri avversari per potere tracciare anche i propri progressi in base al livello dell'avversario;
+* trovare un modo per dare rilievo ad analisi di sport come bici e nuoto, soprattutto per atleti che preparano triathlon/fanno multisport;
+* specializzare il nuoto sincronizzato (sport della mia ragazza), ci tengo particolarmete che al suo sport venga data importanza in modo che anche lei possa tracciare i suoi progressi!;
+* implementare una nuova pagina apposta dedicata agli infortuni, specificando eventuali problemi, come questi evolvono nel tempo, e tutti i relativi effetti sui vari allenamenti. a riguardo tutto il lavoro già fatto su informazioni come dolore negli allenamenti, periodi di stop nelle previsioni possono essere collegati a questa pagina e di conseguenza alle valutazioni;
+* possibilità di mettere anche allenamenti a mano, così persone come il mio amico che non hanno orologi hanno la possibilità di poter comunque tracciare i propri allenamenti;
