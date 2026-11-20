@@ -991,12 +991,12 @@ function renderQualita() {
   if (haKm) scales.y1 = { position: 'right', reverse: true, ticks: { color: '#00f0ff', callback: (v) => fmtPasso(v) }, grid: { drawOnChartArea: false } };
   chartQualitaInstance = new Chart(canvas.getContext('2d'), {
     type: 'line',
-    data: { labels: q.punti.map(p => formatDateShort(p.data) + ' • ' + (String(p.a.name || '').slice(0, 18))), datasets },
+    data: { labels: q.punti.map(p => formatDateShort(p.data)), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { labels: { color: '#94a3b8' } },
-        tooltip: { callbacks: { label: (ctx) => ctx.dataset.yAxisID === 'y1' ? ctx.dataset.label + ': ' + fmtPasso(ctx.parsed.y) : ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2).replace('.', ',') } }
+        tooltip: { callbacks: { afterTitle: (items) => items.length ? String(q.punti[items[0].dataIndex].a.name || '') : '', label: (ctx) => ctx.dataset.yAxisID === 'y1' ? ctx.dataset.label + ': ' + fmtPasso(ctx.parsed.y) : ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2).replace('.', ',') } }
       },
       scales
     }
@@ -1498,7 +1498,7 @@ function renderListaAttivita() {
       '<p class="text-xs text-slate-400">' + esc(fmtData(dt)) + ' • ' + esc(disciplinaDi(a)) + (a.location ? ' • ' + esc(a.location) : '') + '</p></div>' +
       '<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300">' +
       num(Number(a.distance_km) > 0, fmtNum(a.distance_km, 2) + ' km') + num(Number(a.duration_min) > 0, fmtTempo(Number(a.duration_min) * 60)) +
-      num(eCorsa(a) && passoAtt(a), fmtPasso(passoAtt(a))) + num(Number(a.avg_hr) > 0, '❤ ' + Math.round(a.avg_hr)) + '</div></div></button>';
+      num(eCorsa(a) && passoAtt(a), fmtPasso(passoAtt(a))) + num(Number(a.avg_hr) > 0, '❤ ' + Math.round(a.avg_hr)) + num(caricoAttivita(a), 'RE ' + Math.round((caricoAttivita(a) || { re: 0 }).re)) + '</div></div></button>';
   }).join('') || '<p class="text-sm text-slate-400">Nessuna attività con questi filtri.</p>';
   document.getElementById('attAltre').classList.toggle('hidden', attFiltrate.length <= attVisibili);
 }
@@ -1628,7 +1628,8 @@ function datiMetrica(a, det, m) {
   if (SPORT_METRICHE[m.k] && SPORT_METRICHE[m.k].indexOf(tipoSport(a)) < 0) return null;
   const s = det.serie;
   if (s && s.t) {
-    const x = s.d ? s.d.map(v => v === null ? null : v / 1000) : s.t.map(v => v === null ? null : v / 60);
+    const senzaDist = ['forza', 'tennis'].indexOf(tipoSport(a)) >= 0 || !s.d || Math.max.apply(null, s.d.filter(v => v !== null && v !== undefined).concat([0])) < 200;
+    const x = senzaDist ? s.t.map(v => v === null ? null : v / 60) : s.d.map(v => v === null ? null : v / 1000);
     let vals = null;
     if (m.k === 'pace') {
       const maxP = tipoSport(a) === 'camminata' ? 1500 : 600;
@@ -1636,16 +1637,17 @@ function datiMetrica(a, det, m) {
     } else if (m.k === 'vel') {
       if (s.spd) vals = s.spd.map((v, i) => { const w = []; for (let j = i - 2; j <= i + 2; j++) if (s.spd[j] >= 0) w.push(s.spd[j]); return w.length ? mediaArr(w) * 3.6 : null; });
     } else if (s[m.k]) vals = m.rif ? allineaUnita(s[m.k], Number(a[m.rif])) : s[m.k];
-    if (vals) return { punti: vals.map((y, i) => ({ x: x[i], y: y === undefined ? null : y })).filter(p => p.x !== null && p.x !== undefined), unita: s.d ? 'km' : 'min' };
+    if (vals) return { punti: vals.map((y, i) => ({ x: x[i], y: y === undefined ? null : y })).filter(p => p.x !== null && p.x !== undefined), unita: senzaDist ? 'min' : 'km' };
   }
   if (det.laps && det.laps.length) {
     let cum = 0;
-    const xs = det.laps.map(l => { cum += l.d; return cum / 1000; });
+    const inMinuti = ['forza', 'tennis'].indexOf(tipoSport(a)) >= 0;
+    const xs = det.laps.map(l => { cum += inMinuti ? l.t / 60 : l.d / 1000; return cum; });
     let vals = null;
     if (m.k === 'pace') vals = det.laps.map(l => l.t / l.d * 1000);
     else if (m.k === 'vel') vals = det.laps.map(l => l.d / l.t * 3.6);
     else if (m.k !== 'el' && det.laps.some(l => l[m.k] > 0)) { const raw = det.laps.map(l => l[m.k] > 0 ? l[m.k] : null); vals = m.rif ? allineaUnita(raw, Number(a[m.rif])) : raw; }
-    if (vals) return { punti: vals.map((y, i) => ({ x: xs[i], y })), unita: 'km' };
+    if (vals) return { punti: vals.map((y, i) => ({ x: xs[i], y })), unita: inMinuti ? 'min' : 'km' };
   }
   return null;
 }
@@ -1765,6 +1767,9 @@ function righeEsercizi() {
   return out.sort((x, y) => x.data - y.data);
 }
 
+// Per i progressi contano solo gli esercizi con un carico aggiuntivo (kg > 0): il corpo libero non entra
+function righeCarico() { return righeEsercizi().filter(r => r.kg > 0); }
+
 function seduteForza() {
   const per = {};
   righeEsercizi().forEach(r => { (per[r.k] = per[r.k] || { k: r.k, data: r.data, volume: 0, serie: 0 }); per[r.k].volume += r.serie * r.rip * r.kg; per[r.k].serie += r.serie; });
@@ -1877,7 +1882,7 @@ function htmlRegistroEsercizi(note) {
     '<div class="overflow-x-auto"><table class="w-full text-xs min-w-[460px]"><thead><tr class="text-slate-500 uppercase tracking-wider text-left"><th class="pb-2 font-bold">Esercizio</th><th class="pb-2 font-bold">Attrezzo</th><th class="pb-2 font-bold">Serie</th><th class="pb-2 font-bold">Rip.</th><th class="pb-2 font-bold">Kg</th><th></th></tr></thead><tbody>' + righe + '</tbody></table></div>' +
     '<button onclick="aggiungiEsercizio()" class="mt-3 px-3 py-2 rounded-lg border border-white/10 text-xs text-slate-300 hover:text-white transition">+ Aggiungi esercizio</button>' +
     '<p id="attTotaliForza" class="text-xs text-slate-400 mt-3">' + testoTotaliForza(ex) + '</p>' +
-    '<p class="text-xs text-slate-500 mt-1">Per più carichi diversi sullo stesso esercizio aggiungi più righe. Kg = carico per ogni ripetizione (0 per corpo libero). Si salva in questo browser.</p>';
+    '<p class="text-xs text-slate-500 mt-1">Per più carichi diversi sullo stesso esercizio aggiungi più righe. Kg = carico aggiuntivo (0 per corpo libero: quegli esercizi non entrano nei progressi dei carichi). Si salva in questo browser.</p>';
 }
 function testoTotaliForza(ex) { const t = totaliEsercizi(ex); return ex.length ? 'Totale: ' + t.serie + ' serie • ' + t.rip + ' ripetizioni • volume ' + Math.round(t.volume).toLocaleString('it-IT') + ' kg' : 'Nessun esercizio inserito.'; }
 
@@ -1914,8 +1919,8 @@ function eliminaEsercizio(i) {
 
 // ---- progressi sui carichi ----
 function htmlProgressiForza(pref, preferito) {
-  const righe = righeEsercizi();
-  if (!righe.length) return '<p class="text-sm text-slate-400">Quando inserirai esercizi e carichi nelle sedute di forza, qui compariranno i progressi: carico massimo, 1RM stimato e volume.</p>';
+  const righe = righeCarico();
+  if (!righe.length) return '<p class="text-sm text-slate-400">Qui compaiono solo gli esercizi con pesi aggiuntivi (kg maggiori di 0): inseriscili nel registro e vedrai carico massimo, 1RM stimato e volume. Il corpo libero non è incluso.</p>';
   const nomi = {};
   righe.forEach(r => { if (!nomi[r.nomeNorm]) nomi[r.nomeNorm] = r.nome; });
   const CLS = 'bg-slate-900 text-white text-xs rounded-lg border border-white/10 px-3 py-2';
@@ -1939,7 +1944,7 @@ function disegnaProgressiForza(pref) {
   vecchi.forEach(c => { try { c.destroy(); } catch (e) { /* ok */ } });
   const resto = lista.filter(c => c._pref !== pref);
   lista.length = 0; resto.forEach(c => lista.push(c));
-  const righe = righeEsercizi().filter(r => r.nomeNorm === sel.value);
+  const righe = righeCarico().filter(r => r.nomeNorm === sel.value);
   const perSeduta = {};
   righe.forEach(r => { const p = perSeduta[r.k] = perSeduta[r.k] || { data: r.data, kg: 0, e1rm: 0 }; p.kg = Math.max(p.kg, r.kg); p.e1rm = Math.max(p.e1rm, r.e1rm || 0); });
   const punti = Object.keys(perSeduta).map(k => perSeduta[k]).sort((x, y) => x.data - y.data);
@@ -2075,6 +2080,8 @@ function renderDettaglio(a, det) {
   if (kind === 'corsa' || kind === 'bici') add('Potenza', '⚡', Number(a.avg_power) > 0 ? Math.round(a.avg_power) + ' W' : null, (Number(a.norm_power) > 0 ? 'normalizzata ' + Math.round(a.norm_power) + ' W' : '') + (Number(a.max_power) > 0 ? ' • max ' + Math.round(a.max_power) + ' W' : ''));
   add('Body Battery', '🔋', Number(a.body_battery_delta) ? (a.body_battery_delta > 0 ? '+' : '') + a.body_battery_delta : null, 'variazione durante l\'attività');
   if (kind === 'forza' && (note.esercizi || []).length) { const t = totaliEsercizi(note.esercizi); add('Volume sollevato', '🏋️', Math.round(t.volume).toLocaleString('it-IT') + ' kg', t.serie + ' serie • ' + t.rip + ' ripetizioni'); }
+  const car2 = caricoAttivita(a);
+  if (car2) { const cat = categoriaRE(car2.re); add('Sforzo relativo', '💪', String(Math.round(car2.re)), (cat ? cat.testo + ' rispetto al tuo solito (' + fmtNum(cat.rapporto, 1) + '×)' : '') + (car2.stima ? ' • stima dai battiti medi' : '')); }
   const m = a.meteo;
   if (m && m.t !== null && m.t !== undefined && kind !== 'forza') add('Meteo', '🌤️', Math.round(m.t) + ' °C', [testoMeteo(m.codice), Number(m.app) === m.app ? 'percepita ' + Math.round(m.app) + ' °C' : '', Number(m.um) > 0 ? 'umidità ' + Math.round(m.um) + '%' : '', Number(m.vento) >= 0 && m.vento !== null ? 'vento ' + Math.round(m.vento) + ' km/h' : '', Number(m.pioggia) > 0 ? 'pioggia ' + fmtNum(m.pioggia, 1) + ' mm' : ''].filter(Boolean).join(' • '));
   html += sezAtt('neon-cyan-bright', 'Numeri chiave', '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + car.map((c, i) => cartaRecord(NEON_CLASSI[i % NEON_CLASSI.length], c)).join('') + '</div>');
@@ -2412,6 +2419,125 @@ function renderPianoCard() {
 }
 // ==== FINE CALENDARIO ====
 
+// ==== CARICO ====
+const ZONE_FC = [97, 135, 154, 174, 183, 193];   // limiti delle zone cardiache di Garmin (FC massima 193): si possono cambiare
+const PESI_ZONA = [1, 2, 3, 4, 5];
+const TAU_FITNESS = 42, TAU_FATICA = 7;
+let chartFFInstance = null, chartRESettInstance = null;
+let ffGiorni = 90;
+let cacheCarico = { raw: null, val: null };
+
+// Sforzo relativo: minuti in ogni zona cardiaca pesati 1-5 (metodo TRIMP di Edwards). Senza zone: stima dai battiti medi.
+function caricoAttivita(a) {
+  const min = Number(a.duration_min);
+  if (!(min > 0)) return null;
+  const z = Array.isArray(a.hr_zones_sec) ? a.hr_zones_sec.map(v => Number(v) || 0) : [];
+  if (z.length === 5 && z.reduce((s, v) => s + v, 0) > 0) return { re: z.reduce((s, v, i) => s + v / 60 * PESI_ZONA[i], 0), stima: false };
+  const hr = Number(a.avg_hr);
+  if (hr > 0) {
+    let w = 0.5;
+    for (let i = 0; i < 5; i++) if (hr >= ZONE_FC[i]) w = PESI_ZONA[i];
+    return { re: min * w, stima: true };
+  }
+  return null;
+}
+
+function categoriaRE(re) {
+  const lim = Date.now() - 56 * 86400000;
+  const v = (rawData.activities || []).filter(a => dataAttivita(a).getTime() >= lim).map(caricoAttivita).filter(Boolean).map(c => c.re).filter(x => x > 0);
+  const med = medianaArr(v);
+  if (!(med > 0)) return null;
+  const r = re / med;
+  return { testo: r < 0.6 ? 'leggero' : r < 1.2 ? 'normale' : r < 1.8 ? 'impegnativo' : 'molto impegnativo', rapporto: r };
+}
+
+function serieFF() {
+  if (cacheCarico.raw === rawData) return cacheCarico.val;
+  const giorni = {};
+  (rawData.activities || []).forEach(a => { const c = caricoAttivita(a), d = dataAttivita(a); if (!c || isNaN(d)) return; const k = isoLocale(d); giorni[k] = (giorni[k] || 0) + c.re; });
+  const ks = Object.keys(giorni).sort();
+  let val = null;
+  if (ks.length) {
+    const inizio = new Date(ks[0] + 'T00:00:00'), oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const n = Math.round((oggi - inizio) / 86400000) + 1;
+    const kF = 1 - Math.exp(-1 / TAU_FITNESS), kA = 1 - Math.exp(-1 / TAU_FATICA);
+    const date = [], carico = [], fit = [], fat = [], forma = [];
+    let ctl = 0, atl = 0;
+    for (let i = 0; i < n; i++) {
+      const d = new Date(inizio.getFullYear(), inizio.getMonth(), inizio.getDate() + i), c = giorni[isoLocale(d)] || 0;
+      ctl += (c - ctl) * kF; atl += (c - atl) * kA;
+      date.push(d); carico.push(c); fit.push(ctl); fat.push(atl); forma.push(ctl - atl);
+    }
+    val = { date, carico, fit, fat, forma };
+  }
+  cacheCarico = { raw: rawData, val };
+  return val;
+}
+
+function ffImposta(n) { ffGiorni = n; renderCarico(); }
+
+function giudizioForma(f) {
+  if (f >= 10) return ['Molto fresco', 'sei riposato: va bene per una gara o una seduta intensa; se resti a lungo così perdi un po\' di forma'];
+  if (f >= 5) return ['Fresco', 'carico basso rispetto alla forma costruita'];
+  if (f >= -10) return ['Equilibrio', 'carico in linea con la tua forma'];
+  if (f >= -30) return ['Carico produttivo', 'stai caricando: bene se è voluto e se dormi e recuperi'];
+  return ['Carico molto alto', 'rischio di sovraccarico: serve recupero'];
+}
+
+function renderCarico() {
+  const canvas = document.getElementById('chartFF');
+  if (!canvas || !rawData) return;
+  if (chartFFInstance) { try { chartFFInstance.destroy(); } catch (e) { /* ok */ } chartFFInstance = null; }
+  if (chartRESettInstance) { try { chartRESettInstance.destroy(); } catch (e) { /* ok */ } chartRESettInstance = null; }
+  const f = serieFF(), stato = document.getElementById('ffStato');
+  if (!f) { stato.innerHTML = '<p class="text-sm text-slate-400 col-span-3">Servono attività con la frequenza cardiaca per calcolare forma e fatica.</p>'; return; }
+  const n = f.date.length, i = n - 1, i7 = Math.max(0, n - 8);
+  const dFit = f.fit[i] - f.fit[i7], g = giudizioForma(f.forma[i]);
+  stato.innerHTML = [
+    { titolo: 'Fitness', icona: '📈', valore: String(Math.round(f.fit[i])), sub: 'media a 42 giorni • ' + (dFit >= 0 ? '+' : '') + dFit.toFixed(1).replace('.', ',') + ' in 7 giorni' + (dFit > 6 ? ' (aumento rapido: attenzione)' : '') },
+    { titolo: 'Fatica', icona: '🔥', valore: String(Math.round(f.fat[i])), sub: 'media a 7 giorni' },
+    { titolo: 'Forma', icona: '🟢', valore: (f.forma[i] >= 0 ? '+' : '') + Math.round(f.forma[i]), sub: g[0] + ': ' + g[1] }
+  ].map((c, k) => cartaRecord(['neon-azure', 'neon-coral', 'neon-emerald'][k], c)).join('');
+  document.getElementById('ffRange').innerHTML = [[30, '30 giorni'], [60, '60 giorni'], [90, '90 giorni'], [180, '6 mesi'], [0, 'Tutto']].map(r =>
+    '<button onclick="ffImposta(' + r[0] + ')" class="px-3 py-1.5 text-xs rounded-full border transition ' + (ffGiorni === r[0] ? 'font-extrabold text-slate-950 border-transparent bg-sky-400' : 'font-bold text-slate-300 border-white/10 hover:text-white') + '">' + r[1] + '</button>').join('');
+  const da = ffGiorni === 0 ? 0 : Math.max(0, n - ffGiorni);
+  const fetta = arr => arr.slice(da).map(v => Math.round(v * 10) / 10);
+  chartFFInstance = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels: f.date.slice(da).map(formatDateShort), datasets: [
+      { label: 'Fitness', data: fetta(f.fit), borderColor: '#38bdf8', backgroundColor: '#38bdf8', borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+      { label: 'Fatica', data: fetta(f.fat), borderColor: '#ff6b00', backgroundColor: '#ff6b00', borderWidth: 2, pointRadius: 0, tension: 0.25 },
+      { label: 'Forma', data: fetta(f.forma), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: 'origin' }] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: { x: { ticks: { color: '#64748b', maxTicksLimit: 8, autoSkip: true }, grid: { display: false } }, y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+  });
+
+  // sforzo relativo per settimana (ultime 12), a colori per disciplina
+  const lun = lunediDi(new Date()), settimane = [];
+  for (let k = 11; k >= 0; k--) { const d = new Date(lun.getTime()); d.setDate(d.getDate() - 7 * k); settimane.push(d); }
+  const t0 = settimane[0].getTime(), per = settimane.map(() => ({}));
+  (rawData.activities || []).forEach(a => {
+    const c = caricoAttivita(a), d = dataAttivita(a);
+    if (!c || isNaN(d) || d.getTime() < t0) return;
+    const w = Math.min(11, Math.floor((d.getTime() - t0) / (7 * 86400000)));
+    const nome = disciplinaDi(a);
+    per[w][nome] = (per[w][nome] || 0) + c.re;
+  });
+  const tot = {};
+  per.forEach(w => Object.keys(w).forEach(k => { tot[k] = (tot[k] || 0) + w[k]; }));
+  const disc = Object.keys(tot).sort((x, y) => tot[y] - tot[x]);
+  let extra = 0;
+  chartRESettInstance = new Chart(document.getElementById('chartRESett').getContext('2d'), {
+    type: 'bar',
+    data: { labels: settimane.map(formatDateShort), datasets: disc.map(nm => ({ label: nm, data: per.map(w => Math.round(w[nm] || 0)), backgroundColor: COLORI_DISCIPLINA[nm] || COLORI_EXTRA[extra++ % COLORI_EXTRA.length], borderRadius: 3, stack: 're' })) },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } }, tooltip: { callbacks: { footer: (items) => 'Totale: ' + Math.round(items.reduce((s, it) => s + it.parsed.y, 0)) } } },
+      scales: { x: { stacked: true, ticks: { color: '#64748b' }, grid: { display: false } }, y: { stacked: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+  });
+}
+// ==== FINE CARICO ====
+
 function changeWeek(direction) {
   weekOffset += direction;
   renderOverview();
@@ -2438,6 +2564,7 @@ async function loadDashboard() {
     renderComparazione();
     renderAttivita();
     renderCalendario();
+    renderCarico();
   } catch (err) {
     console.error("Errore nel caricamento dei dati della dashboard:", err);
     if (typeof window.INTERVALS_DATA !== 'undefined') {
