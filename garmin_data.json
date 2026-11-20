@@ -1,5 +1,5 @@
 {
- "last_updated": "2026-11-20 11:45:41",
+ "last_updated": "2026-11-20 20:27:28",
  "activities": [
   {
    "id": 25122835478,
@@ -3665,13 +3665,13 @@
  ],
  "daily_health": [
   {
-   "steps": 61,
+   "steps": 2510,
    "resting_hr": 51,
-   "calories": 939,
-   "stress_level": 22,
+   "calories": 1628,
+   "stress_level": 23,
    "body_battery": 71,
    "body_battery_min": 14,
-   "respiration_rate": 16,
+   "respiration_rate": 14,
    "intensity_minutes": 0,
    "sleep_hours": 8.45,
    "sleep_score": 78,
